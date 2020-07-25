@@ -187,8 +187,6 @@ namespace Winstreak.Parser.V1
 			Width = maxKey.Key;
 		}
 
-		public abstract object GetPlayerName(IList<string> exempt = null);
-
 		public abstract bool IsValidColor(Color color);
 
 		public void CropImage(int x, int y, int dx, int dy)
