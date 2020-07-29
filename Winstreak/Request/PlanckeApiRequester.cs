@@ -35,6 +35,7 @@ namespace Winstreak.Request
 			IDictionary<string, string> returnVal = new Dictionary<string, string>();
 			for (int i = 0; i < Names.Count; i++)
 			{
+				// does this even work?
 				returnVal.Add(Names[i], await responses[i].Content.ReadAsStringAsync());
 			}
 

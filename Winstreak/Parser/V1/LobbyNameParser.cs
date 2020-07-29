@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using Winstreak.Extension;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants; 
 
@@ -41,7 +42,7 @@ namespace Winstreak.Parser.V1
 				bool canBreak = false;
 				for (int x = 0; x < base.Img.Width; x++)
 				{
-					if (base.Img.GetPixel(x, y) == BossBarColor)
+					if (BossBarColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
 					{
 						topLeftX = x;
 						topLeftY = y;
@@ -65,7 +66,7 @@ namespace Winstreak.Parser.V1
 				bool canBreak = false;
 				for (int y = base.Img.Height - 1; y >= 0; y--)
 				{
-					if (base.Img.GetPixel(x, y) == StoreHypixelNetDarkColor)
+					if (StoreHypixelNetDarkColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
 					{
 						bottomRightX = x;
 						bottomRightY = y;
@@ -215,12 +216,12 @@ namespace Winstreak.Parser.V1
 
 		public override bool IsValidColor(Color c)
 		{
-			return c == MvpPlusPlus
-			       || c == MvpPlus
-			       || c == Mvp
-			       || c == VipPlus
-			       || c == Vip
-			       || c == None;
+			return MvpPlusPlus.IsRgbEqualTo(c)
+			       || MvpPlus.IsRgbEqualTo(c)
+				   || Mvp.IsRgbEqualTo(c)
+				   || VipPlus.IsRgbEqualTo(c)
+				   || Vip.IsRgbEqualTo(c)
+				   || None.IsRgbEqualTo(c);
 		}
 	}
 }

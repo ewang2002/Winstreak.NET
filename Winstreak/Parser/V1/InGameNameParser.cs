@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Net.Sockets;
 using System.Text;
+using Winstreak.Extension;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
@@ -65,7 +64,7 @@ namespace Winstreak.Parser.V1
 				bool canBreak = false;
 				for (int y = base.Img.Height - 1; y >= 0; y--)
 				{
-					if (base.Img.GetPixel(x, y) == StoreHypixelNetDarkColor)
+					if (StoreHypixelNetDarkColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
 					{
 						bottomRightX = x;
 						bottomRightY = y;
@@ -299,10 +298,10 @@ namespace Winstreak.Parser.V1
 		/// <returns>Whether the color is valid or not.</returns>
 		public override bool IsValidColor(Color color)
 		{
-			return color == RedTeamColor
-			       || color == BlueTeamColor
-			       || color == YellowTeamColor
-			       || color == GreenTeamColor;
+			return RedTeamColor.IsRgbEqualTo(color)
+			       || BlueTeamColor.IsRgbEqualTo(color)
+				   || YellowTeamColor.IsRgbEqualTo(color)
+				   || GreenTeamColor.IsRgbEqualTo(color);
 		}
 	}
 }

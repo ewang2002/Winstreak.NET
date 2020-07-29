@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
+using Winstreak.Extension;
 using Winstreak.Parser.ImgExcept;
+using static Winstreak.Parser.Constants;
 
 namespace Winstreak.Parser.V1
 {
 	public abstract class AbstractNameParser
 	{
 		// private general variables
-		protected DirectBitmap Img { get; private set; }
+		protected LockBitmap Img { get; private set; }
 		protected int Width { get; private set; }
 
 		// for control
@@ -24,7 +27,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="image">The bitmap.</param>
 		protected AbstractNameParser(Bitmap image)
 		{
-			Img = new DirectBitmap(image);
+			Img = new LockBitmap(image);
 		}
 
 		/// <summary>
@@ -33,7 +36,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="file">The file URL.</param>
 		protected AbstractNameParser(string file)
 		{
-			Img = new DirectBitmap(new Bitmap(file));
+			Img = new LockBitmap(new Bitmap(file));
 		}
 
 		public abstract void CropImageIfFullScreen();
@@ -211,7 +214,7 @@ namespace Winstreak.Parser.V1
 			using Graphics g = Graphics.FromImage(image);
 			g.DrawImage(image, x, y, rect, GraphicsUnit.Pixel);
 
-			Img = new DirectBitmap(image);
+			Img = new LockBitmap(image);
 		}
 
 		public int NumberParticlesInHorizontalLine(int y)
@@ -240,6 +243,26 @@ namespace Winstreak.Parser.V1
 			}
 
 			return particles;
+		}
+
+		public static bool IsInLobby(Bitmap image)
+		{
+			using LockBitmap bitmap = new LockBitmap(image);
+			bitmap.LockBits();
+			for (int y = 0; y < bitmap.Height; y++)
+			{
+				for (int x = 0; x < bitmap.Width; x++)
+				{
+					Color color = bitmap.GetPixel(x, y);
+					if (BossBarColor.IsRgbEqualTo(color))
+					{
+						return true;
+					}
+				}
+			}
+			bitmap.UnlockBits();
+			bitmap.Dispose();
+			return false;
 		}
 	}
 }
