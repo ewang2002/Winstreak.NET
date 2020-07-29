@@ -18,11 +18,19 @@ namespace Winstreak.Parser.V1
 		protected bool CalledMakeBlkWtFunc = false;
 		protected bool CalledFixImgFunc = false;
 
+		/// <summary>
+		/// A constructor that accepts a Bitmap.
+		/// </summary>
+		/// <param name="image">The bitmap.</param>
 		protected AbstractNameParser(Bitmap image)
 		{
 			Img = new DirectBitmap(image);
 		}
 
+		/// <summary>
+		/// A constructor that accepts a file URL. 
+		/// </summary>
+		/// <param name="file">The file URL.</param>
 		protected AbstractNameParser(string file)
 		{
 			Img = new DirectBitmap(new Bitmap(file));
@@ -30,6 +38,9 @@ namespace Winstreak.Parser.V1
 
 		public abstract void CropImageIfFullScreen();
 
+		/// <summary>
+		/// Adjusts the color of the picture.
+		/// </summary>
 		public void AdjustColors()
 		{
 			if (CalledMakeBlkWtFunc)
@@ -69,6 +80,9 @@ namespace Winstreak.Parser.V1
 			}
 		}
 
+		/// <summary>
+		/// Attempts to crop the header and footer of the image. 
+		/// </summary>
 		public void CropHeaderAndFooter()
 		{
 			if (CalledCropHeaderFooter)
