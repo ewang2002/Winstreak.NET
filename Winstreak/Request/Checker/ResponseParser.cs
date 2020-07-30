@@ -51,8 +51,8 @@ namespace Winstreak.Request.Checker
 
 				if (data is { } nonNullData)
 				{
-					TotalBedsBroken += nonNullData.BrokenBeds;
-					TotalFinalKills += nonNullData.FinalKills;
+					totalBrokenBeds += nonNullData.BrokenBeds;
+					totalFinalKills += nonNullData.FinalKills;
 
 					if (nonNullData.BrokenBeds >= MinimumBrokenBeds || nonNullData.FinalKills >= MinimumFinalKills)
 					{

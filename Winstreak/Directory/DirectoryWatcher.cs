@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Winstreak.Extensions;
+using Winstreak.MethodExtensions;
 using Winstreak.Parser;
 using Winstreak.Parser.V1;
 using Winstreak.Request;
@@ -77,7 +77,6 @@ namespace Winstreak.Directory
 			parser.IdentifyWidth();
 
 			IList<string> allNames = parser.GetPlayerName();
-			Console.WriteLine(allNames.ToReadableString());
 			processingTime.Stop();
 			TimeSpan imageProcessingTime = processingTime.Elapsed;
 			processingTime.Reset();
@@ -219,6 +218,7 @@ namespace Winstreak.Directory
 
 			InGameNameParser parser = new InGameNameParser(bitmap);
 			parser.CropImageIfFullScreen();
+			Console.WriteLine();
 			parser.AdjustColors();
 			parser.CropHeaderAndFooter();
 			parser.FixImage();

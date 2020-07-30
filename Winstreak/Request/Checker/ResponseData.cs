@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Winstreak.MethodExtensions;
 
 namespace Winstreak.Request.Checker
 {
@@ -25,6 +26,16 @@ namespace Winstreak.Request.Checker
          */
 		public ResponseData Parse()
 		{
+			if (HtmlContent.Contains("Player does not exist!"))
+			{
+				SoloDataInfo = null;
+				DoubleDataInfo = null;
+				ThreesDataInfo = null;
+				FoursDataInfo = null;
+				TotalDataInfo = null;
+				return this;
+			}
+
 			// only get bedwars data
 			string bedwarsData = HtmlContent
 				.Split("Bed Wars </a>")[1]
@@ -44,7 +55,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			string[] soloDataArr = soloData
 				.Replace(",", "")
-				.Split("</td>|<td>");
+				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			soloDataArr = soloDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -73,7 +84,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			string[] doubleDataArr = doubleData
 				.Replace(",", "")
-				.Split("</td>|<td>");
+				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			doubleDataArr = doubleDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -103,7 +114,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			string[] threeDataArr = threeData
 				.Replace(",", "")
-				.Split("</td>|<td>");
+				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			threeDataArr = threeDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -132,7 +143,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			string[] fourDataArr = fourData
 				.Replace(",", "")
-				.Split("</td>|<td>");
+				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			fourDataArr = fourDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -154,7 +165,8 @@ namespace Winstreak.Request.Checker
 			}
 
 
-			if (SoloDataInfo is { } oneData && DoubleDataInfo is { } twoData && ThreesDataInfo is { } threesData && FoursDataInfo is { } foursData)
+			if (SoloDataInfo is { } oneData && DoubleDataInfo is { } twoData && ThreesDataInfo is { } threesData &&
+			    FoursDataInfo is { } foursData)
 			{
 				TotalDataInfo = new BedwarsData(
 					oneData.Kills + twoData.Kills + threesData.Kills + foursData.Kills,
@@ -171,7 +183,7 @@ namespace Winstreak.Request.Checker
 			{
 				TotalDataInfo = null;
 			}
-			
+
 			return this;
 		}
 	}

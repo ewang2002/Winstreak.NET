@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Text;
 using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
@@ -166,7 +167,6 @@ namespace Winstreak.Parser.V1
 
 				break;
 			}
-			// now we need to determine where to start
 
 			// make another copy
 			base.CropImage(secondX, secondY, base.Img.Width - secondX, base.Img.Height - secondY);
@@ -176,6 +176,7 @@ namespace Winstreak.Parser.V1
 		{
 			if (!base.CalledMakeBlkWtFunc && !base.CalledFixImgFunc)
 			{
+				Console.WriteLine("A");
 				return new Dictionary<TeamColors, IList<string>>();
 			}
 
@@ -190,7 +191,7 @@ namespace Winstreak.Parser.V1
 			while (y <= base.Img.Height)
 			{
 				StringBuilder name = new StringBuilder();
-				int x = 0 - 1;
+				int x = 0;
 
 				while (true)
 				{

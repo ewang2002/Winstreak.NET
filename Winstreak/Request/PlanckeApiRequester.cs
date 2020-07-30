@@ -8,8 +8,14 @@ namespace Winstreak.Request
 {
 	public class PlanckeApiRequester
 	{
-		private static readonly HttpClient Client = new HttpClient();
+		private static readonly HttpClient Client;
 		public IList<string> Names { get; }
+
+		static PlanckeApiRequester()
+		{
+			Client = new HttpClient();
+			Client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
+		}
 
 		public PlanckeApiRequester(IList<string> allNames)
 		{
@@ -18,6 +24,12 @@ namespace Winstreak.Request
 
 		public async Task<IDictionary<string, string>> SendRequests()
 		{
+			if (Client.DefaultRequestHeaders.Contains("X-Forwarded-For"))
+			{
+				Client.DefaultRequestHeaders.Remove("X-Forwarded-For");
+			}
+			Client.DefaultRequestHeaders.Add("X-Forwarded-For", GenerateRandomIpAddress());
+
 			string[] urls = Names
 				.Select(x => $"https://plancke.io/hypixel/player/stats/{x}")
 				.ToArray();
