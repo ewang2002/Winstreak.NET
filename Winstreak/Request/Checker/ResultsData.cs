@@ -28,7 +28,7 @@ namespace Winstreak.Request.Checker
 
 		public TeamInfoResults(
 			TeamColors color,
-			List<ResponseCheckerResults> availablePlayers,
+			IList<ResponseCheckerResults> availablePlayers,
 			IList<string> errored,
 			int totalFinals,
 			int totalBroken

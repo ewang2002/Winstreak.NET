@@ -214,6 +214,9 @@ namespace Winstreak.Parser.V1
 			using Graphics g = Graphics.FromImage(image);
 			g.DrawImage(image, x, y, rect, GraphicsUnit.Pixel);
 
+			// kill old image 
+			Img.UnlockBits();
+			Img.Dispose();
 			Img = new LockBitmap(image);
 		}
 

@@ -268,27 +268,15 @@ namespace Winstreak.Parser.V1
 
 		private TeamColors GetCurrentColor(Color color)
 		{
-			if (color == BlueTeamColor)
-			{
-				return TeamColors.Blue;
-			}
-
-			if (color == RedTeamColor)
-			{
-				return TeamColors.Red;
-			}
-
-			if (color == YellowTeamColor)
-			{
-				return TeamColors.Yellow;
-			}
-
-			if (color == GreenTeamColor)
-			{
-				return TeamColors.Green;
-			}
-
-			return TeamColors.Unknown;
+			return BlueTeamColor.IsRgbEqualTo(color)
+				? TeamColors.Blue
+				: RedTeamColor.IsRgbEqualTo(color)
+					? TeamColors.Red
+					: YellowTeamColor.IsRgbEqualTo(color)
+						? TeamColors.Yellow
+						: GreenTeamColor.IsRgbEqualTo(color)
+							? TeamColors.Green
+							: TeamColors.Unknown;
 		}
 
 		/// <summary>

@@ -37,7 +37,7 @@ namespace Winstreak
 			Console.WriteLine("[INFO] Starting Service.");
 			Console.WriteLine($"[INFO] Checking: {path}");
 			Console.WriteLine("=========================");
-			DirectoryWatcher.Run(path, finalKills, brokenBeds);
+			DirectoryWatcher.Run(path, finalKills, brokenBeds, amtTryHards);
 		}
 	}
 }

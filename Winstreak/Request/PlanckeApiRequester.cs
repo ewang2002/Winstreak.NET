@@ -9,9 +9,9 @@ namespace Winstreak.Request
 	public class PlanckeApiRequester
 	{
 		private static readonly HttpClient Client = new HttpClient();
-		public List<string> Names { get; }
+		public IList<string> Names { get; }
 
-		public PlanckeApiRequester(List<string> allNames)
+		public PlanckeApiRequester(IList<string> allNames)
 		{
 			Names = allNames;
 		}
