@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using Winstreak.Extension;
+using System.Threading;
+using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants; 
 
@@ -23,12 +24,12 @@ namespace Winstreak.Parser.V1
 
 		public override void CropImageIfFullScreen()
 		{
-			if (base.CalledCropHeaderFooter)
+			if (base.CalledCropIfFullScreen)
 			{
 				return;
 			}
 
-			base.CalledCropHeaderFooter = true;
+			base.CalledCropIfFullScreen = true;
 
 
 			// top to bottom, left to right
@@ -42,13 +43,15 @@ namespace Winstreak.Parser.V1
 				bool canBreak = false;
 				for (int x = 0; x < base.Img.Width; x++)
 				{
-					if (BossBarColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
+					if (!BossBarColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
 					{
-						topLeftX = x;
-						topLeftY = y;
-						canBreak = true;
-						break;
+						continue;
 					}
+
+					topLeftX = x;
+					topLeftY = y;
+					canBreak = true;
+					break;
 				}
 
 				if (canBreak)
@@ -80,14 +83,17 @@ namespace Winstreak.Parser.V1
 					break;
 				}
 			}
-
+			
 			if (topLeftX == -1 || topLeftY == -1)
 			{
-				throw new InvalidImageException(
+				throw new Exception(
 					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
 			}
 
-			base.CropImage(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
+			TopLeftX = topLeftX;
+			TopLeftY = topLeftY;
+			BottomRightX = bottomRightX;
+			BottomRightY = bottomRightY;
 		}
 
 		public override void FixImage()
@@ -101,14 +107,12 @@ namespace Winstreak.Parser.V1
 
 			// try to crop the
 			// list of players
-			int startingXVal;
-			int startingYVal;
-			int minStartingXVal = base.Img.Width;
-			int minStartingYVal = base.Img.Height;
+			int minStartingXVal = BottomRightX;
+			int minStartingYVal = BottomRightY;
 			// left to right, top to bottom
-			for (int y = 0; y < base.Img.Height; y++)
+			for (int y = TopLeftY; y < BottomRightY; y++)
 			{
-				for (int x = 0; x < base.Img.Width; x++)
+				for (int x = TopLeftX; x < BottomRightX; x++)
 				{
 					if (!this.IsValidColor(base.Img.GetPixel(x, y)))
 					{
@@ -127,18 +131,14 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			startingXVal = minStartingXVal;
-			startingYVal = minStartingYVal;
-
-			if (startingXVal == base.Img.Width || startingYVal == base.Img.Height)
+			TopLeftX = minStartingXVal;
+			TopLeftY = minStartingYVal;
+			if (TopLeftX == base.Img.Width || TopLeftY == base.Img.Height)
 			{
-				throw new InvalidImageException("Couldn't crop the image. Make " +
+				throw new Exception("Couldn't crop the image. Make " +
 				                                "sure the image was processed beforehand; perhaps try to " +
 				                                "run the adjustColors() method first!");
 			}
-
-			// make new copy of the image
-			base.CropImage(startingXVal, startingYVal, base.Img.Width - startingXVal, base.Img.Height - startingYVal);
 		}
 
 		public IList<string> GetPlayerName(IList<string> exempt = null)
@@ -151,26 +151,27 @@ namespace Winstreak.Parser.V1
 			exempt ??= new List<string>();
 
 			IList<string> names = new List<string>();
-			int y = 0;
+			int y = TopLeftY;
 
-			while (y <= base.Img.Height)
+			Console.WriteLine($"{TopLeftX} | {TopLeftY} | {Width}");
+			while (y <= BottomRightY)
 			{
 				StringBuilder name = new StringBuilder();
-				int x = 0;
+				int x = TopLeftX - 1;
 
 				while (true)
 				{
 					StringBuilder ttlBytes = new StringBuilder();
 					bool errored = false;
 
-					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) == "00000000")
+					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						try
 						{
 							StringBuilder columnBytes = new StringBuilder();
 							for (int dy = 0; dy < 8 * base.Width; dy += base.Width)
 							{
-								columnBytes.Append(IsValidColor(base.Img.GetPixel(x, y)) ? "1" : "0");
+								columnBytes.Append(IsValidColor(base.Img.GetPixel(x, y + dy)) ? "1" : "0");
 							}
 
 							ttlBytes.Append(columnBytes.ToString());
@@ -211,6 +212,9 @@ namespace Winstreak.Parser.V1
 				.Where(x => x.Length != 0)
 				.ToList();
 
+
+			Img.UnlockBits();
+			Img.Dispose();
 			return names;
 		}
 

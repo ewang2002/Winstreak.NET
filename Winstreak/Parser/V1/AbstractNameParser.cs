@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
-using Winstreak.Extension;
+using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
@@ -14,6 +14,11 @@ namespace Winstreak.Parser.V1
 		// private general variables
 		protected LockBitmap Img { get; private set; }
 		protected int Width { get; private set; }
+
+		protected int TopLeftX { get; set; }
+		protected int TopLeftY { get; set; }
+		protected int BottomRightX { get; set; }
+		protected int BottomRightY { get; set; }
 
 		// for control
 		protected bool CalledCropIfFullScreen = false;
@@ -28,6 +33,7 @@ namespace Winstreak.Parser.V1
 		protected AbstractNameParser(Bitmap image)
 		{
 			Img = new LockBitmap(image);
+			Img.LockBits();
 		}
 
 		/// <summary>
@@ -37,6 +43,7 @@ namespace Winstreak.Parser.V1
 		protected AbstractNameParser(string file)
 		{
 			Img = new LockBitmap(new Bitmap(file));
+			Img.LockBits();
 		}
 
 		public abstract void CropImageIfFullScreen();
@@ -54,9 +61,9 @@ namespace Winstreak.Parser.V1
 			CalledMakeBlkWtFunc = true;
 
 			// replace any invalid colors with white
-			for (int y = 0; y < Img.Height; y++)
+			for (int y = TopLeftY; y < BottomRightY; y++)
 			{
-				for (int x = 0; x < Img.Width; x++)
+				for (int x = TopLeftX; x < BottomRightX; x++)
 				{
 					if (!IsValidColor(Img.GetPixel(x, y)))
 					{
@@ -65,7 +72,7 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			for (int x = 0; x < this.Img.Width; x++)
+			for (int x = TopLeftX; x < BottomRightX; x++)
 			{
 				int numParticles = NumberParticlesInVerticalLine(x);
 				if (numParticles > 10)
@@ -73,7 +80,7 @@ namespace Winstreak.Parser.V1
 					break;
 				}
 
-				for (int y = 0; y < Img.Height; y++)
+				for (int y = TopLeftY; y < BottomRightY; y++)
 				{
 					if (IsValidColor(Img.GetPixel(x, y)))
 					{
@@ -98,9 +105,8 @@ namespace Winstreak.Parser.V1
 			bool topFirstBlankPast = false;
 			bool topSepFound = false;
 			int topY = -1;
-
 			// top to bottom
-			for (int y = 0; y < Img.Height; y++)
+			for (int y = TopLeftY; y < BottomRightY; y++)
 			{
 				bool isSep = NumberParticlesInHorizontalLine(y) == 0;
 				if (topFirstBlankPast)
@@ -131,7 +137,8 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			for (int y = this.Img.Height - 1; y >= 0; y--)
+			// bottom to top 
+			for (int y = BottomRightY - 1; y >= TopLeftY; y--)
 			{
 				bool isSep = NumberParticlesInHorizontalLine(y) == 0;
 				if (isSep)
@@ -139,9 +146,9 @@ namespace Winstreak.Parser.V1
 					break;
 				}
 
-				for (int x = 0; x < Img.Width; x++)
+				for (int x = TopLeftX; x < BottomRightX; x++)
 				{
-					if (Img.GetPixel(x, y) != Color.White)
+					if (!Img.GetPixel(x, y).IsRgbEqualTo(Color.White))
 					{
 						Img.SetPixel(x, y, Color.White);
 					}
@@ -150,10 +157,10 @@ namespace Winstreak.Parser.V1
 
 			if (topY == -1)
 			{
-				throw new InvalidImageException("Couldn't crop the image. Please make sure the image was processed beforehand.");
+				throw new Exception("Couldn't crop the image. Please make sure the image was processed beforehand.");
 			}
 
-			CropImage(0, topY, Img.Width, Img.Height - topY);
+			TopLeftY = topY;
 		}
 
 		public abstract void FixImage();
@@ -199,26 +206,12 @@ namespace Winstreak.Parser.V1
 			}
 
 			KeyValuePair<int, int> maxKey = possibleWidths
-				.OrderBy(x => x.Value)
+				.OrderByDescending(x => x.Value)
 				.First();
 			Width = maxKey.Key;
 		}
 
 		public abstract bool IsValidColor(Color color);
-
-		public void CropImage(int x, int y, int dx, int dy)
-		{
-			Rectangle rect = new Rectangle(x, y, dx, dy);
-			Bitmap image = new Bitmap(Img.Bitmap);
-
-			using Graphics g = Graphics.FromImage(image);
-			g.DrawImage(image, x, y, rect, GraphicsUnit.Pixel);
-
-			// kill old image 
-			Img.UnlockBits();
-			Img.Dispose();
-			Img = new LockBitmap(image);
-		}
 
 		public int NumberParticlesInHorizontalLine(int y)
 		{

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Winstreak.Extensions;
 using Winstreak.Parser;
 using Winstreak.Parser.V1;
 using Winstreak.Request;
@@ -110,7 +111,7 @@ namespace Winstreak.Directory
 				}
 			}
 
-			Console.WriteLine($"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToString()}");
+			Console.WriteLine($"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
 			Console.WriteLine($"[INFO] Tryhards: {namesToWorryAbout.Count}");
 			Console.WriteLine($"[INFO] Total: {allNames.Count}");
 			Console.WriteLine($"[INFO] All Names: {allNames.Count}");
@@ -213,16 +214,21 @@ namespace Winstreak.Directory
 		public static async Task GameCheck(string bitmap)
 		{
 			Console.WriteLine($"[INFO] Checking Game: {bitmap}");
-			Console.WriteLine($"[INFO] Checking Lobby: {bitmap}");
 			Stopwatch processingTime = new Stopwatch();
 			processingTime.Start();
 
 			InGameNameParser parser = new InGameNameParser(bitmap);
+			Console.WriteLine("A");
 			parser.CropImageIfFullScreen();
+			Console.WriteLine("B");
 			parser.AdjustColors();
+			Console.WriteLine("C");
 			parser.CropHeaderAndFooter();
+			Console.WriteLine("D");
 			parser.FixImage();
+			Console.WriteLine("E");
 			parser.IdentifyWidth();
+			Console.WriteLine("F");
 
 			IDictionary<TeamColors, IList<string>> teams = parser.GetPlayerName();
 
@@ -261,7 +267,7 @@ namespace Winstreak.Directory
 					.OrderByDescending(x => x.BedsBroken)
 					.Select(x => x.Name)
 					.ToList()
-					.ToString();
+					.ToReadableString();
 
 				StringBuilder b = new StringBuilder()
 					.Append($"[{rank}] {result.Color} ({result.AvailablePlayers.Count + result.ErroredPlayers.Count})")

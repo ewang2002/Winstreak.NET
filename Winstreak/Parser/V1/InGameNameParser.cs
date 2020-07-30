@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
-using Winstreak.Extension;
+using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
@@ -38,7 +38,7 @@ namespace Winstreak.Parser.V1
 				bool canBreak = false;
 				for (int x = 0; x < base.Img.Width; x++)
 				{
-					if (base.Img.GetPixel(x, y) != BossBarColor)
+					if (!YouArePlayingOnColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
 					{
 						continue;
 					}
@@ -81,11 +81,14 @@ namespace Winstreak.Parser.V1
 
 			if (topLeftX == -1 || topLeftY == -1)
 			{
-				throw new InvalidImageException(
+				throw new Exception(
 					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
 			}
 
-			base.CropImage(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
+			TopLeftX = topLeftX;
+			TopLeftY = topLeftY;
+			BottomRightX = bottomRightX;
+			BottomRightY = bottomRightY;
 		}
 
 		public override void FixImage()
@@ -96,11 +99,11 @@ namespace Winstreak.Parser.V1
 			}
 
 			base.CalledFixImgFunc = true;
-			int minStartingXVal = base.Img.Width;
-			int minStartingYVal = base.Img.Height;
-			for (int y = 0; y < base.Img.Height; y++)
+			int minStartingXVal = BottomRightX;
+			int minStartingYVal = BottomRightY;
+			for (int y = TopLeftY; y < BottomRightY; y++)
 			{
-				for (int x = 0; x < base.Img.Width; x++)
+				for (int x = TopLeftX; x < BottomRightX; x++)
 				{
 					if (!IsValidColor(base.Img.GetPixel(x, y)))
 					{
@@ -119,24 +122,20 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			int startingXVal = minStartingXVal;
-			int startingYVal = minStartingYVal;
+			TopLeftX = minStartingXVal;
+			TopLeftY = minStartingYVal;
 
-			if (startingXVal == base.Img.Width || startingYVal == base.Img.Height)
+			if (BottomRightX == base.Img.Width || BottomRightY == base.Img.Height)
 			{
-				throw new InvalidImageException(
+				throw new Exception(
 					"Couldn't crop the image. Make sure the image was processed beforehand.");
 			}
 
-			base.CropImage(startingXVal, startingYVal, base.Img.Width - startingXVal, base.Img.Height - startingYVal);
-
-
 			// let's remove any blanks
-			int secondY = 0;
-			for (; secondY < base.Img.Height; secondY++)
+			int secondY = TopLeftY;
+			for (; secondY < BottomRightY; secondY++)
 			{
-				if (this.IsValidColor(base.Img.GetPixel(0, secondY)) &&
-				    this.IsValidColor(base.Img.GetPixel(base.Width, secondY)))
+				if (this.IsValidColor(base.Img.GetPixel(0, secondY)) && this.IsValidColor(base.Img.GetPixel(base.Width, secondY)))
 				{
 					break;
 				}
@@ -146,7 +145,7 @@ namespace Winstreak.Parser.V1
 			// but this time we're going to look
 			// for the separator between the B/R/G/Y and the names of teammates
 			bool foundYSep = false;
-			int secondX = 0;
+			int secondX = TopLeftX;
 			for (; secondX < base.Img.Width; secondX++)
 			{
 				int numberParticles = base.NumberParticlesInVerticalLine(secondX);
@@ -155,20 +154,22 @@ namespace Winstreak.Parser.V1
 					foundYSep = true;
 				}
 
-				if (foundYSep)
+				if (!foundYSep)
 				{
-					if (numberParticles == 0)
-					{
-						continue;
-					}
-
-					break;
+					continue;
 				}
+				if (numberParticles == 0)
+				{
+					continue;
+				}
+
+				break;
 			}
 			// now we need to determine where to start
 
 			// make another copy
-			base.CropImage(secondX, secondY, base.Img.Width - secondX, base.Img.Height - secondY);
+			TopLeftX = secondX;
+			TopLeftY = secondY;
 		}
 
 		public IDictionary<TeamColors, IList<string>> GetPlayerName(IList<string> exempt = null)
@@ -183,20 +184,20 @@ namespace Winstreak.Parser.V1
 			IDictionary<TeamColors, IList<string>> teammates = new Dictionary<TeamColors, IList<string>>();
 			IList<TeamColors> colorsToIgnore = new List<TeamColors>();
 
-			int y = 0;
+			int y = TopLeftY;
 
 			TeamColors currentColor = TeamColors.Unknown;
-			while (y <= base.Img.Height)
+			while (y <= BottomRightY)
 			{
 				StringBuilder name = new StringBuilder();
-				int x = 0;
+				int x = TopLeftX - 1;
 
 				while (true)
 				{
 					StringBuilder ttlBytes = new StringBuilder();
 					bool errored = false;
 
-					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) == "00000000")
+					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						try
 						{
@@ -263,6 +264,8 @@ namespace Winstreak.Parser.V1
 				y += 9 * base.Width;
 			}
 
+			Img.UnlockBits();
+			Img.Dispose();
 			return teammates; 
 		}
 

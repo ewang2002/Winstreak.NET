@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace Winstreak.Extension
+namespace Winstreak.Extensions
 {
 	public static class ColorExtension
 	{
