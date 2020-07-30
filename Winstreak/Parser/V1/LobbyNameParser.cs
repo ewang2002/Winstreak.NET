@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
-using static Winstreak.Parser.Constants; 
+using static Winstreak.Parser.Constants;
 
 namespace Winstreak.Parser.V1
 {
@@ -14,12 +14,10 @@ namespace Winstreak.Parser.V1
 	{
 		public LobbyNameParser(Bitmap img) : base(img)
 		{
-
 		}
 
 		public LobbyNameParser(string path) : base(path)
 		{
-
 		}
 
 		public override void CropImageIfFullScreen()
@@ -83,17 +81,14 @@ namespace Winstreak.Parser.V1
 					break;
 				}
 			}
-			
+
 			if (topLeftX == -1 || topLeftY == -1)
 			{
 				throw new Exception(
 					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
 			}
 
-			TopLeftX = topLeftX;
-			TopLeftY = topLeftY;
-			BottomRightX = bottomRightX;
-			BottomRightY = bottomRightY;
+			base.CropImage(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
 		}
 
 		public override void FixImage()
@@ -107,12 +102,12 @@ namespace Winstreak.Parser.V1
 
 			// try to crop the
 			// list of players
-			int minStartingXVal = BottomRightX;
-			int minStartingYVal = BottomRightY;
+			int minStartingXVal = base.Img.Width;
+			int minStartingYVal = base.Img.Height;
 			// left to right, top to bottom
-			for (int y = TopLeftY; y < BottomRightY; y++)
+			for (int y = 0; y < base.Img.Height; y++)
 			{
-				for (int x = TopLeftX; x < BottomRightX; x++)
+				for (int x = 0; x < base.Img.Width; x++)
 				{
 					if (!this.IsValidColor(base.Img.GetPixel(x, y)))
 					{
@@ -131,14 +126,16 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			TopLeftX = minStartingXVal;
-			TopLeftY = minStartingYVal;
-			if (TopLeftX == base.Img.Width || TopLeftY == base.Img.Height)
+			int startingXVal = minStartingXVal;
+			int startingYVal = minStartingYVal;
+
+			if (startingXVal == base.Img.Width || startingYVal == base.Img.Height)
 			{
-				throw new Exception("Couldn't crop the image. Make " +
-				                                "sure the image was processed beforehand; perhaps try to " +
-				                                "run the adjustColors() method first!");
+				throw new InvalidImageException(
+					"Couldn't crop the image. Make sure the image was processed beforehand.");
 			}
+
+			base.CropImage(startingXVal, startingYVal, base.Img.Width - startingXVal, base.Img.Height - startingYVal);
 		}
 
 		public IList<string> GetPlayerName(IList<string> exempt = null)
@@ -151,13 +148,12 @@ namespace Winstreak.Parser.V1
 			exempt ??= new List<string>();
 
 			IList<string> names = new List<string>();
-			int y = TopLeftY;
+			int y = 0;
 
-			Console.WriteLine($"{TopLeftX} | {TopLeftY} | {Width}");
-			while (y <= BottomRightY)
+			while (y <= base.Img.Height)
 			{
 				StringBuilder name = new StringBuilder();
-				int x = TopLeftX - 1;
+				int x = 0;
 
 				while (true)
 				{
@@ -166,22 +162,24 @@ namespace Winstreak.Parser.V1
 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
-						try
+						StringBuilder columnBytes = new StringBuilder();
+						for (int dy = 0; dy < 8 * base.Width; dy += base.Width)
 						{
-							StringBuilder columnBytes = new StringBuilder();
-							for (int dy = 0; dy < 8 * base.Width; dy += base.Width)
+							if (y + dy >= Img.Height)
 							{
-								columnBytes.Append(IsValidColor(base.Img.GetPixel(x, y + dy)) ? "1" : "0");
+								errored = true;
+								break;
 							}
-
-							ttlBytes.Append(columnBytes.ToString());
-							x += base.Width;
+							columnBytes.Append(IsValidColor(base.Img.GetPixel(x, y + dy)) ? "1" : "0");
 						}
-						catch (Exception)
+
+						if (errored)
 						{
-							errored = true;
 							break;
 						}
+
+						ttlBytes.Append(columnBytes.ToString());
+						x += base.Width;
 					}
 
 					if (!errored)
@@ -213,7 +211,6 @@ namespace Winstreak.Parser.V1
 				.ToList();
 
 
-			Img.UnlockBits();
 			Img.Dispose();
 			return names;
 		}
@@ -222,10 +219,10 @@ namespace Winstreak.Parser.V1
 		{
 			return MvpPlusPlus.IsRgbEqualTo(c)
 			       || MvpPlus.IsRgbEqualTo(c)
-				   || Mvp.IsRgbEqualTo(c)
-				   || VipPlus.IsRgbEqualTo(c)
-				   || Vip.IsRgbEqualTo(c)
-				   || None.IsRgbEqualTo(c);
+			       || Mvp.IsRgbEqualTo(c)
+			       || VipPlus.IsRgbEqualTo(c)
+			       || Vip.IsRgbEqualTo(c)
+			       || None.IsRgbEqualTo(c);
 		}
 	}
 }

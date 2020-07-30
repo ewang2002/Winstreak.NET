@@ -77,7 +77,7 @@ namespace Winstreak.Directory
 			parser.IdentifyWidth();
 
 			IList<string> allNames = parser.GetPlayerName();
-
+			Console.WriteLine(allNames.ToReadableString());
 			processingTime.Stop();
 			TimeSpan imageProcessingTime = processingTime.Elapsed;
 			processingTime.Reset();
@@ -218,17 +218,11 @@ namespace Winstreak.Directory
 			processingTime.Start();
 
 			InGameNameParser parser = new InGameNameParser(bitmap);
-			Console.WriteLine("A");
 			parser.CropImageIfFullScreen();
-			Console.WriteLine("B");
 			parser.AdjustColors();
-			Console.WriteLine("C");
 			parser.CropHeaderAndFooter();
-			Console.WriteLine("D");
 			parser.FixImage();
-			Console.WriteLine("E");
 			parser.IdentifyWidth();
-			Console.WriteLine("F");
 
 			IDictionary<TeamColors, IList<string>> teams = parser.GetPlayerName();
 

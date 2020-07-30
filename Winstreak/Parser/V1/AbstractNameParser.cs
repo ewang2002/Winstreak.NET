@@ -12,13 +12,8 @@ namespace Winstreak.Parser.V1
 	public abstract class AbstractNameParser
 	{
 		// private general variables
-		protected LockBitmap Img { get; private set; }
+		protected Bitmap Img { get; private set; }
 		protected int Width { get; private set; }
-
-		protected int TopLeftX { get; set; }
-		protected int TopLeftY { get; set; }
-		protected int BottomRightX { get; set; }
-		protected int BottomRightY { get; set; }
 
 		// for control
 		protected bool CalledCropIfFullScreen = false;
@@ -32,8 +27,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="image">The bitmap.</param>
 		protected AbstractNameParser(Bitmap image)
 		{
-			Img = new LockBitmap(image);
-			Img.LockBits();
+			Img = new Bitmap(image);
 		}
 
 		/// <summary>
@@ -42,8 +36,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="file">The file URL.</param>
 		protected AbstractNameParser(string file)
 		{
-			Img = new LockBitmap(new Bitmap(file));
-			Img.LockBits();
+			Img = new Bitmap(new Bitmap(file));
 		}
 
 		public abstract void CropImageIfFullScreen();
@@ -61,9 +54,9 @@ namespace Winstreak.Parser.V1
 			CalledMakeBlkWtFunc = true;
 
 			// replace any invalid colors with white
-			for (int y = TopLeftY; y < BottomRightY; y++)
+			for (int y = 0; y < Img.Height; y++)
 			{
-				for (int x = TopLeftX; x < BottomRightX; x++)
+				for (int x = 0; x < Img.Width; x++)
 				{
 					if (!IsValidColor(Img.GetPixel(x, y)))
 					{
@@ -72,7 +65,7 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			for (int x = TopLeftX; x < BottomRightX; x++)
+			for (int x = 0; x < this.Img.Width; x++)
 			{
 				int numParticles = NumberParticlesInVerticalLine(x);
 				if (numParticles > 10)
@@ -80,7 +73,7 @@ namespace Winstreak.Parser.V1
 					break;
 				}
 
-				for (int y = TopLeftY; y < BottomRightY; y++)
+				for (int y = 0; y < Img.Height; y++)
 				{
 					if (IsValidColor(Img.GetPixel(x, y)))
 					{
@@ -106,7 +99,7 @@ namespace Winstreak.Parser.V1
 			bool topSepFound = false;
 			int topY = -1;
 			// top to bottom
-			for (int y = TopLeftY; y < BottomRightY; y++)
+			for (int y = 0; y < Img.Height; y++)
 			{
 				bool isSep = NumberParticlesInHorizontalLine(y) == 0;
 				if (topFirstBlankPast)
@@ -138,7 +131,7 @@ namespace Winstreak.Parser.V1
 			}
 
 			// bottom to top 
-			for (int y = BottomRightY - 1; y >= TopLeftY; y--)
+			for (int y = this.Img.Height - 1; y >= 0; y--)
 			{
 				bool isSep = NumberParticlesInHorizontalLine(y) == 0;
 				if (isSep)
@@ -146,7 +139,7 @@ namespace Winstreak.Parser.V1
 					break;
 				}
 
-				for (int x = TopLeftX; x < BottomRightX; x++)
+				for (int x = 0; x < Img.Width; x++)
 				{
 					if (!Img.GetPixel(x, y).IsRgbEqualTo(Color.White))
 					{
@@ -160,7 +153,7 @@ namespace Winstreak.Parser.V1
 				throw new Exception("Couldn't crop the image. Please make sure the image was processed beforehand.");
 			}
 
-			TopLeftY = topY;
+			CropImage(0, topY, Img.Width, Img.Height - topY);
 		}
 
 		public abstract void FixImage();
@@ -194,6 +187,7 @@ namespace Winstreak.Parser.V1
 						{
 							possibleWidths.Add(width, 1);
 						}
+
 						width = 0;
 						++numWidthProcessed;
 					}
@@ -243,8 +237,7 @@ namespace Winstreak.Parser.V1
 
 		public static bool IsInLobby(Bitmap image)
 		{
-			using LockBitmap bitmap = new LockBitmap(image);
-			bitmap.LockBits();
+			using Bitmap bitmap = new Bitmap(image);
 			for (int y = 0; y < bitmap.Height; y++)
 			{
 				for (int x = 0; x < bitmap.Width; x++)
@@ -256,9 +249,18 @@ namespace Winstreak.Parser.V1
 					}
 				}
 			}
-			bitmap.UnlockBits();
+
 			bitmap.Dispose();
 			return false;
+		}
+
+		public void CropImage(int x, int y, int width, int height)
+		{
+			using Bitmap croppedImage = Img.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
+			// dispose old image
+			Img.Dispose();
+			// and use new image
+			Img = new Bitmap(croppedImage);
 		}
 	}
 }

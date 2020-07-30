@@ -85,10 +85,7 @@ namespace Winstreak.Parser.V1
 					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
 			}
 
-			TopLeftX = topLeftX;
-			TopLeftY = topLeftY;
-			BottomRightX = bottomRightX;
-			BottomRightY = bottomRightY;
+			base.CropImage(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
 		}
 
 		public override void FixImage()
@@ -99,11 +96,11 @@ namespace Winstreak.Parser.V1
 			}
 
 			base.CalledFixImgFunc = true;
-			int minStartingXVal = BottomRightX;
-			int minStartingYVal = BottomRightY;
-			for (int y = TopLeftY; y < BottomRightY; y++)
+			int minStartingXVal = base.Img.Width;
+			int minStartingYVal = base.Img.Height;
+			for (int y = 0; y < base.Img.Height; y++)
 			{
-				for (int x = TopLeftX; x < BottomRightX; x++)
+				for (int x = 0; x < base.Img.Width; x++)
 				{
 					if (!IsValidColor(base.Img.GetPixel(x, y)))
 					{
@@ -122,20 +119,23 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			TopLeftX = minStartingXVal;
-			TopLeftY = minStartingYVal;
+			int startingXVal = minStartingXVal;
+			int startingYVal = minStartingYVal;
 
-			if (BottomRightX == base.Img.Width || BottomRightY == base.Img.Height)
+			if (startingXVal == base.Img.Width || startingYVal == base.Img.Height)
 			{
-				throw new Exception(
+				throw new InvalidImageException(
 					"Couldn't crop the image. Make sure the image was processed beforehand.");
 			}
 
+			base.CropImage(startingXVal, startingYVal, base.Img.Width - startingXVal, base.Img.Height - startingYVal);
+
 			// let's remove any blanks
-			int secondY = TopLeftY;
-			for (; secondY < BottomRightY; secondY++)
+			int secondY = 0;
+			for (; secondY < base.Img.Height; secondY++)
 			{
-				if (this.IsValidColor(base.Img.GetPixel(0, secondY)) && this.IsValidColor(base.Img.GetPixel(base.Width, secondY)))
+				if (this.IsValidColor(base.Img.GetPixel(0, secondY)) &&
+				    this.IsValidColor(base.Img.GetPixel(base.Width, secondY)))
 				{
 					break;
 				}
@@ -145,7 +145,7 @@ namespace Winstreak.Parser.V1
 			// but this time we're going to look
 			// for the separator between the B/R/G/Y and the names of teammates
 			bool foundYSep = false;
-			int secondX = TopLeftX;
+			int secondX = 0;
 			for (; secondX < base.Img.Width; secondX++)
 			{
 				int numberParticles = base.NumberParticlesInVerticalLine(secondX);
@@ -158,6 +158,7 @@ namespace Winstreak.Parser.V1
 				{
 					continue;
 				}
+
 				if (numberParticles == 0)
 				{
 					continue;
@@ -168,8 +169,7 @@ namespace Winstreak.Parser.V1
 			// now we need to determine where to start
 
 			// make another copy
-			TopLeftX = secondX;
-			TopLeftY = secondY;
+			base.CropImage(secondX, secondY, base.Img.Width - secondX, base.Img.Height - secondY);
 		}
 
 		public IDictionary<TeamColors, IList<string>> GetPlayerName(IList<string> exempt = null)
@@ -184,13 +184,13 @@ namespace Winstreak.Parser.V1
 			IDictionary<TeamColors, IList<string>> teammates = new Dictionary<TeamColors, IList<string>>();
 			IList<TeamColors> colorsToIgnore = new List<TeamColors>();
 
-			int y = TopLeftY;
+			int y = 0;
 
 			TeamColors currentColor = TeamColors.Unknown;
-			while (y <= BottomRightY)
+			while (y <= base.Img.Height)
 			{
 				StringBuilder name = new StringBuilder();
-				int x = TopLeftX - 1;
+				int x = 0 - 1;
 
 				while (true)
 				{
@@ -199,31 +199,34 @@ namespace Winstreak.Parser.V1
 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
-						try
+						StringBuilder columnBytes = new StringBuilder();
+						for (int dy = 0; dy < 8 * base.Width; dy += base.Width)
 						{
-							StringBuilder columnBytes = new StringBuilder();
-							for (int dy = 0; dy < 8 * base.Width; dy += base.Width)
+							if (y + dy >= Img.Height)
 							{
-								Color color = base.Img.GetPixel(x, y + dy);
-								if (IsValidColor(color))
-								{
-									currentColor = GetCurrentColor(color);
-									columnBytes.Append("1");
-								}
-								else
-								{
-									columnBytes.Append("0");
-								}
+								errored = true;
+								break;
 							}
 
-							ttlBytes.Append(columnBytes.ToString());
-							x += base.Width;
+							Color color = base.Img.GetPixel(x, y + dy);
+							if (IsValidColor(color))
+							{
+								currentColor = GetCurrentColor(color);
+								columnBytes.Append("1");
+							}
+							else
+							{
+								columnBytes.Append("0");
+							}
 						}
-						catch (Exception)
+
+						if (errored)
 						{
-							errored = true;
 							break;
 						}
+
+						ttlBytes.Append(columnBytes.ToString());
+						x += base.Width;
 					}
 
 					if (!errored)
@@ -264,9 +267,8 @@ namespace Winstreak.Parser.V1
 				y += 9 * base.Width;
 			}
 
-			Img.UnlockBits();
 			Img.Dispose();
-			return teammates; 
+			return teammates;
 		}
 
 		private TeamColors GetCurrentColor(Color color)
@@ -291,8 +293,8 @@ namespace Winstreak.Parser.V1
 		{
 			return RedTeamColor.IsRgbEqualTo(color)
 			       || BlueTeamColor.IsRgbEqualTo(color)
-				   || YellowTeamColor.IsRgbEqualTo(color)
-				   || GreenTeamColor.IsRgbEqualTo(color);
+			       || YellowTeamColor.IsRgbEqualTo(color)
+			       || GreenTeamColor.IsRgbEqualTo(color);
 		}
 	}
 }
