@@ -35,9 +35,6 @@ namespace Winstreak.Request.Checker
 				TotalDataInfo = null;
 				return this;
 			}
-			Console.Clear();
-			//Console.WriteLine(Name);
-			//Console.WriteLine(HtmlContent);
 
 			// only get bedwars data
 			string bedwarsData = HtmlContent

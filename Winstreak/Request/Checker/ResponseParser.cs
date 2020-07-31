@@ -91,8 +91,8 @@ namespace Winstreak.Request.Checker
 
 				if (data is { } nonNullData)
 				{
-					TotalBedsBroken += nonNullData.BrokenBeds;
-					TotalFinalKills += nonNullData.FinalKills;
+					totalBrokenBeds += nonNullData.BrokenBeds;
+					totalFinalKills += nonNullData.FinalKills;
 
 					ResponseCheckerResults results = new ResponseCheckerResults(entry.Key, nonNullData.BrokenBeds, nonNullData.FinalKills);
 					namesToWorryAbout.Add(results);

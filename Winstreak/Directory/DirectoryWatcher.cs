@@ -258,7 +258,7 @@ namespace Winstreak.Directory
 			{
 				string allAvailablePlayers = result.AvailablePlayers
 					.OrderByDescending(x => x.BedsBroken)
-					.Select(x => x.Name)
+					.Select(x => $"{x.Name} ({x.BedsBroken})")
 					.ToList()
 					.ToReadableString();
 
@@ -271,7 +271,7 @@ namespace Winstreak.Directory
 					.AppendLine()
 					.Append($"Players: {allAvailablePlayers}")
 					.AppendLine()
-					.Append($"Errored: {result.ErroredPlayers}")
+					.Append($"Errored: {result.ErroredPlayers.ToReadableString()}")
 					.AppendLine();
 
 				Console.WriteLine(b.ToString());
