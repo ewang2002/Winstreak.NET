@@ -36,7 +36,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="file">The file URL.</param>
 		protected AbstractNameParser(string file)
 		{
-			Img = new Bitmap(new Bitmap(file));
+			Img = new Bitmap(file);
 		}
 
 		public abstract void CropImageIfFullScreen();
