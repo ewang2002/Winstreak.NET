@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using Winstreak.Extensions;
-using Winstreak.Parser.ImgExcept;
+using Winstreak.Imaging;
 using static Winstreak.Parser.Constants;
 
 namespace Winstreak.Parser.V1
@@ -12,8 +11,9 @@ namespace Winstreak.Parser.V1
 	public abstract class AbstractNameParser
 	{
 		// private general variables
-		protected Bitmap Img { get; private set; }
+		protected UnmanagedImage Img { get; private set; }
 		protected int Width { get; private set; }
+		protected Bitmap Bitmap { get; private set;  }
 
 		// for control
 		protected bool CalledCropIfFullScreen = false;
@@ -27,7 +27,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="image">The bitmap.</param>
 		protected AbstractNameParser(Bitmap image)
 		{
-			Img = new Bitmap(image);
+			Img = UnmanagedImage.FromManagedImage(image);
 		}
 
 		/// <summary>
@@ -36,7 +36,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="file">The file URL.</param>
 		protected AbstractNameParser(string file)
 		{
-			Img = new Bitmap(file);
+			Img = UnmanagedImage.FromManagedImage(new Bitmap(file));
 		}
 
 		public abstract void CropImageIfFullScreen();
@@ -237,12 +237,12 @@ namespace Winstreak.Parser.V1
 
 		public static bool IsInLobby(Bitmap image)
 		{
-			using Bitmap bitmap = new Bitmap(image);
-			for (int y = 0; y < bitmap.Height; y++)
+			using UnmanagedImage img = UnmanagedImage.FromManagedImage(image);
+			for (int y = 0; y < img.Height; y++)
 			{
-				for (int x = 0; x < bitmap.Width; x++)
+				for (int x = 0; x < img.Width; x++)
 				{
-					Color color = bitmap.GetPixel(x, y);
+					Color color = img.GetPixel(x, y);
 					if (BossBarColor.IsRgbEqualTo(color))
 					{
 						return true;
@@ -250,17 +250,16 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			bitmap.Dispose();
+			img.Dispose();
 			return false;
 		}
 
 		public void CropImage(int x, int y, int width, int height)
 		{
-			using Bitmap croppedImage = Img.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
-			// dispose old image
-			Img.Dispose();
+			using Bitmap origImage = Img.ToManagedImage();
+			using Bitmap croppedImage = origImage.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
 			// and use new image
-			Img = new Bitmap(croppedImage);
+			Img = UnmanagedImage.FromManagedImage(croppedImage);
 		}
 	}
 }
