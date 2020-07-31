@@ -13,7 +13,6 @@ namespace Winstreak.Parser.V1
 		// private general variables
 		protected UnmanagedImage Img { get; private set; }
 		protected int Width { get; private set; }
-		protected Bitmap Bitmap { get; private set;  }
 
 		// for control
 		protected bool CalledCropIfFullScreen = false;
@@ -36,7 +35,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="file">The file URL.</param>
 		protected AbstractNameParser(string file)
 		{
-			Img = UnmanagedImage.FromManagedImage(new Bitmap(file));
+			Img = UnmanagedImage.FromManagedImage(ImageHelper.FromFile(file));
 		}
 
 		public abstract void CropImageIfFullScreen();

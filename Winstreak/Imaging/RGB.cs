@@ -54,12 +54,8 @@ namespace Winstreak.Imaging
     /// <code source="Unit Tests\Accord.Tests.Imaging\Colors\ColorsTest.cs" region="doc_hsl" />
     /// <code source="Unit Tests\Accord.Tests.Imaging\Colors\ColorsTest.cs" region="doc_ycbcr" />
     /// </example>
-    /// 
-    /// <seealso cref="HSL"/>
-    /// <seealso cref="YCbCr"/>
-    /// 
     [Serializable]
-    public struct RGB
+    public struct Rgb
     {
         /// <summary>
         /// Index of red component.
@@ -104,7 +100,7 @@ namespace Winstreak.Imaging
         /// <summary>
         /// <see cref="System.Drawing.Color">Color</see> value of the class.
         /// </summary>
-        public System.Drawing.Color Color
+        public Color Color
 		{
 			get => Color.FromArgb(Alpha, Red, Green, Blue);
 			set
@@ -117,14 +113,14 @@ namespace Winstreak.Imaging
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="RGB"/> class.
+		/// Initializes a new instance of the <see cref="Rgb"/> class.
 		/// </summary>
 		/// 
 		/// <param name="red">Red component.</param>
 		/// <param name="green">Green component.</param>
 		/// <param name="blue">Blue component.</param>
 		/// 
-		public RGB(byte red, byte green, byte blue)
+		public Rgb(byte red, byte green, byte blue)
         {
             this.Red = red;
             this.Green = green;
@@ -133,7 +129,7 @@ namespace Winstreak.Imaging
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RGB"/> class.
+        /// Initializes a new instance of the <see cref="Rgb"/> class.
         /// </summary>
         /// 
         /// <param name="red">Red component.</param>
@@ -141,7 +137,7 @@ namespace Winstreak.Imaging
         /// <param name="blue">Blue component.</param>
         /// <param name="alpha">Alpha component.</param>
         /// 
-        public RGB(byte red, byte green, byte blue, byte alpha)
+        public Rgb(byte red, byte green, byte blue, byte alpha)
         {
             this.Red = red;
             this.Green = green;
@@ -150,12 +146,12 @@ namespace Winstreak.Imaging
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RGB"/> class.
+        /// Initializes a new instance of the <see cref="Rgb"/> class.
         /// </summary>
         /// 
         /// <param name="color">Initialize from specified <see cref="System.Drawing.Color">color.</see></param>
         /// 
-        public RGB(Color color)
+        public Rgb(Color color)
         {
 	        this.Red = color.R;
 	        this.Green = color.G;

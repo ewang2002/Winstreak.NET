@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Winstreak.Imaging;
 using Winstreak.MethodExtensions;
 using Winstreak.Parser;
 using Winstreak.Parser.V1;
@@ -17,9 +18,9 @@ namespace Winstreak.Directory
 {
 	public class DirectoryWatcher
 	{
-		private static int FinalKills;
-		private static int BrokenBeds;
-		private static int MaxTryHards;
+		public static int FinalKills;
+		public static int BrokenBeds;
+		public static int MaxTryHards;
 
 		public static void Run(string path, int finalKills, int brokenBeds, int maxTryhards)
 		{
@@ -48,7 +49,7 @@ namespace Winstreak.Directory
 		private static void OnChanged(object source, FileSystemEventArgs e)
 		{
 			Thread.Sleep(350);
-			Bitmap bitmap = new Bitmap(e.FullPath);
+			Bitmap bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			if (AbstractNameParser.IsInLobby(bitmap))
 			{
 #pragma warning disable 4014
@@ -70,11 +71,19 @@ namespace Winstreak.Directory
 			processingTime.Start();
 
 			LobbyNameParser parser = new LobbyNameParser(bitmap);
-			parser.CropImageIfFullScreen();
-			parser.AdjustColors();
-			parser.CropHeaderAndFooter();
-			parser.FixImage();
-			parser.IdentifyWidth();
+			try
+			{
+				parser.CropImageIfFullScreen();
+				parser.AdjustColors();
+				parser.CropHeaderAndFooter();
+				parser.FixImage();
+				parser.IdentifyWidth();
+			}
+			catch (Exception)
+			{
+				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
+				return;
+			}
 
 			IList<string> allNames = parser.GetPlayerName();
 			processingTime.Stop();
@@ -217,11 +226,19 @@ namespace Winstreak.Directory
 			processingTime.Start();
 
 			InGameNameParser parser = new InGameNameParser(bitmap);
-			parser.CropImageIfFullScreen();
-			parser.AdjustColors();
-			parser.CropHeaderAndFooter();
-			parser.FixImage();
-			parser.IdentifyWidth();
+			try
+			{
+				parser.CropImageIfFullScreen();
+				parser.AdjustColors();
+				parser.CropHeaderAndFooter();
+				parser.FixImage();
+				parser.IdentifyWidth();
+			}
+			catch (Exception)
+			{
+				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
+				return;
+			}
 
 			IDictionary<TeamColors, IList<string>> teams = parser.GetPlayerName();
 

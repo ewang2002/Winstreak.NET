@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Winstreak.Imaging
@@ -128,10 +129,12 @@ namespace Winstreak.Imaging
 
         // Win32 memory copy function
         [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        [SuppressMessage("Microsoft.Design", "IDE1006", Justification = "DLL method.")]
         private static extern unsafe byte* memcpy(byte* dst, byte* src, int count);
 
         // Win32 memory set function
         [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        [SuppressMessage("Microsoft.Design", "IDE1006", Justification = "DLL method.")]
         private static extern unsafe byte* memset(byte* dst, int filler, int count);
 
     }

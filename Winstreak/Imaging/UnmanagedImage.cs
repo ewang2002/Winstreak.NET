@@ -30,7 +30,6 @@
 // Due to use of outdated libraries. 
 
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -87,71 +86,34 @@ namespace Winstreak.Imaging
 	/// 
 	public class UnmanagedImage : IDisposable
 	{
-		// pointer to image data in unmanaged memory
-		private IntPtr imageData;
-
-		// image size
-		private int width, height;
-
-		// image stride (line size)
-		private int stride;
-
-		// image pixel format
-		private PixelFormat pixelFormat;
-
 		// flag which indicates if the image should be disposed or not
-		private bool mustBeDisposed;
+		private bool _mustBeDisposed;
 
 
 		/// <summary>
 		/// Pointer to image data in unmanaged memory.
 		/// </summary>
-		public IntPtr ImageData
-		{
-			get { return imageData; }
-		}
+		public IntPtr ImageData { get; private set; }
 
 		/// <summary>
 		/// Image width in pixels.
 		/// </summary>
-		public int Width
-		{
-			get { return width; }
-		}
+		public int Width { get; private set; }
 
 		/// <summary>
 		/// Image height in pixels.
 		/// </summary>
-		public int Height
-		{
-			get { return height; }
-		}
+		public int Height { get; private set; }
 
 		/// <summary>
 		/// Image stride (line size in bytes).
 		/// </summary>
-		public int Stride
-		{
-			get { return stride; }
-		}
+		public int Stride { get; private set; }
 
 		/// <summary>
 		/// Image pixel format.
 		/// </summary>
-		public PixelFormat PixelFormat
-		{
-			get { return pixelFormat; }
-		}
-
-		/// <summary>
-		/// Obsolete. Please use <see cref="NumberOfBytes"/> instead.
-		/// </summary>
-		/// 
-		[Obsolete("Please use NumberOfBytes instead.")]
-		public int Bytes
-		{
-			get { return NumberOfBytes; }
-		}
+		public PixelFormat PixelFormat { get; private set; }
 
 		/// <summary>
 		/// Gets the image size, in bytes.
@@ -159,7 +121,7 @@ namespace Winstreak.Imaging
 		/// 
 		public int NumberOfBytes
 		{
-			get { return stride * height; }
+			get { return Stride * Height; }
 		}
 
 		/// <summary>
@@ -168,7 +130,7 @@ namespace Winstreak.Imaging
 		/// 
 		public int Size
 		{
-			get { return width * height; }
+			get { return Width * Height; }
 		}
 
 		/// <summary>
@@ -176,20 +138,14 @@ namespace Winstreak.Imaging
 		/// as <see cref="Stride"/> - <see cref="Width"/> * <see cref="PixelSize"/>.
 		/// </summary>
 		/// 
-		public int Offset
-		{
-			get { return stride - width * PixelSize; }
-		}
+		public int Offset => Stride - Width * PixelSize;
 
 		/// <summary>
 		/// Gets the size of the pixels in this image, in bytes. For 
 		/// example, a 8-bpp grayscale image would have pixel size 1.
 		/// </summary>
 		/// 
-		public int PixelSize
-		{
-			get { return Bitmap.GetPixelFormatSize(pixelFormat) / 8; }
-		}
+		public int PixelSize => Image.GetPixelFormatSize(PixelFormat) / 8;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="UnmanagedImage"/> class.
@@ -207,7 +163,7 @@ namespace Winstreak.Imaging
 		/// 
 		public UnmanagedImage(IntPtr imageData, int width, int height, int stride, PixelFormat pixelFormat)
 		{
-			init(imageData, width, height, stride, pixelFormat);
+			Init(imageData, width, height, stride, pixelFormat);
 		}
 
 		/// <summary>
@@ -222,16 +178,16 @@ namespace Winstreak.Imaging
 		/// 
 		public UnmanagedImage(BitmapData bitmapData)
 		{
-			init(bitmapData.Scan0, bitmapData.Width, bitmapData.Height, bitmapData.Stride, bitmapData.PixelFormat);
+			Init(bitmapData.Scan0, bitmapData.Width, bitmapData.Height, bitmapData.Stride, bitmapData.PixelFormat);
 		}
 
-		private void init(IntPtr imageData, int width, int height, int stride, PixelFormat pixelFormat)
+		private void Init(IntPtr imageData, int width, int height, int stride, PixelFormat pixelFormat)
 		{
-			this.imageData = imageData;
-			this.width = width;
-			this.height = height;
-			this.stride = stride;
-			this.pixelFormat = pixelFormat;
+			ImageData = imageData;
+			Width = width;
+			Height = height;
+			Stride = stride;
+			PixelFormat = pixelFormat;
 		}
 
 		/// <summary>
@@ -246,15 +202,8 @@ namespace Winstreak.Imaging
 		/// <summary>
 		/// Dispose the object.
 		/// </summary>
-		/// 
-		/// <remarks><para>Frees unmanaged resources used by the object. The object becomes unusable
-		/// after that.</para>
-		/// 
-		/// <par><note>The method needs to be called only in the case if unmanaged image was allocated
-		/// using <see cref="Create(int, int, PixelFormat)"/> method. In the case if the class instance 
-		/// was created using constructor, this method does not free unmanaged memory.</note></par>
-		/// </remarks>
-		/// 
+		/// <remarks>Frees unmanaged resources used by the object. The object becomes unusable
+		///     after that.</remarks>
 		public void Dispose()
 		{
 			Dispose(true);
@@ -270,220 +219,15 @@ namespace Winstreak.Imaging
 		/// 
 		protected virtual void Dispose(bool disposing)
 		{
-			if (disposing)
-			{
-				// dispose managed resources
-			}
-
 			// free image memory if the image was allocated using this class
-			if ((mustBeDisposed) && (imageData != IntPtr.Zero))
+			if (!_mustBeDisposed || ImageData == IntPtr.Zero)
 			{
-				Marshal.FreeHGlobal(imageData);
-				GC.RemoveMemoryPressure(stride * height);
-				imageData = IntPtr.Zero;
-			}
-		}
-
-		/// <summary>
-		/// Clone the unmanaged images.
-		/// </summary>
-		/// 
-		/// <returns>Returns clone of the unmanaged image.</returns>
-		/// 
-		/// <remarks><para>The method does complete cloning of the object.</para></remarks>
-		/// 
-		public UnmanagedImage Clone()
-		{
-			// allocate memory for the image
-			IntPtr newImageData = Marshal.AllocHGlobal(stride * height);
-			GC.AddMemoryPressure(stride * height);
-
-			UnmanagedImage newImage = new UnmanagedImage(newImageData, width, height, stride, pixelFormat);
-			newImage.mustBeDisposed = true;
-
-			SystemTools.CopyUnmanagedMemory(newImageData, imageData, stride * height);
-
-			return newImage;
-		}
-
-		[Conditional("DEBUG")]
-		internal unsafe void CheckBounds(byte* address)
-		{
-			byte* src = (byte*) imageData.ToPointer();
-			byte* end = src + stride * height;
-			if (address < src || address >= end)
-				throw new IndexOutOfRangeException("address");
-		}
-
-		/// <summary>
-		/// Copy unmanaged image.
-		/// </summary>
-		/// 
-		/// <param name="destImage">Destination image to copy this image to.</param>
-		/// 
-		/// <remarks><para>The method copies current unmanaged image to the specified image.
-		/// Size and pixel format of the destination image must be exactly the same.</para></remarks>
-		/// 
-		/// <exception cref="InvalidImagePropertiesException">Destination image has different size or pixel format.</exception>
-		/// 
-		public void Copy(UnmanagedImage destImage)
-		{
-			if (
-				(width != destImage.width) || (height != destImage.height) ||
-				(pixelFormat != destImage.pixelFormat))
-			{
-				throw new Exception("Destination image has different size or pixel format.");
+				return;
 			}
 
-			if (stride == destImage.stride)
-			{
-				// copy entire image
-				SystemTools.CopyUnmanagedMemory(destImage.imageData, imageData, stride * height);
-			}
-			else
-			{
-				unsafe
-				{
-					int dstStride = destImage.stride;
-					int copyLength = (stride < dstStride) ? stride : dstStride;
-
-					byte* src = (byte*) imageData.ToPointer();
-					byte* dst = (byte*) destImage.imageData.ToPointer();
-
-					// copy line by line
-					for (int i = 0; i < height; i++)
-					{
-						SystemTools.CopyUnmanagedMemory(dst, src, copyLength);
-
-						dst += dstStride;
-						src += stride;
-					}
-				}
-			}
-		}
-
-		/// <summary>
-		/// Allocate new image in unmanaged memory.
-		/// </summary>
-		/// 
-		/// <param name="width">Image width.</param>
-		/// <param name="height">Image height.</param>
-		/// <param name="pixelFormat">Image pixel format.</param>
-		/// 
-		/// <returns>Return image allocated in unmanaged memory.</returns>
-		/// 
-		/// <remarks><para>Allocate new image with specified attributes in unmanaged memory.</para>
-		/// 
-		/// <para><note>The method supports only
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format8bppIndexed</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format16bppGrayScale</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format24bppRgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format32bppRgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format32bppArgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format32bppPArgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format48bppRgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format64bppArgb</see> and
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format64bppPArgb</see> pixel formats.
-		/// In the case if <see cref="System.Drawing.Imaging.PixelFormat">Format8bppIndexed</see>
-		/// format is specified, pallete is not not created for the image (supposed that it is
-		/// 8 bpp grayscale image).
-		/// </note></para>
-		/// </remarks>
-		/// 
-		/// <exception cref="UnsupportedImageFormatException">Unsupported pixel format was specified.</exception>
-		/// <exception cref="InvalidImagePropertiesException">Invalid image size was specified.</exception>
-		/// 
-		public static UnmanagedImage Create(int width, int height, PixelFormat pixelFormat)
-		{
-			int bytesPerPixel = GetBytesPerPixel(pixelFormat);
-
-			// calculate stride
-			int stride = width * bytesPerPixel;
-
-			if (stride % 4 != 0)
-			{
-				stride += (4 - (stride % 4));
-			}
-
-			return Create(width, height, stride, pixelFormat);
-		}
-
-		/// <summary>
-		/// Allocate new image in unmanaged memory.
-		/// </summary>
-		/// 
-		/// <param name="width">Image width.</param>
-		/// <param name="height">Image height.</param>
-		/// <param name="stride">Image stride.</param>
-		/// <param name="pixelFormat">Image pixel format.</param>
-		/// 
-		/// <returns>Return image allocated in unmanaged memory.</returns>
-		/// 
-		/// <remarks><para>Allocate new image with specified attributes in unmanaged memory.</para>
-		/// 
-		/// <para><note>The method supports only
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format8bppIndexed</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format16bppGrayScale</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format24bppRgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format32bppRgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format32bppArgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format32bppPArgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format48bppRgb</see>,
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format64bppArgb</see> and
-		/// <see cref="System.Drawing.Imaging.PixelFormat">Format64bppPArgb</see> pixel formats.
-		/// In the case if <see cref="System.Drawing.Imaging.PixelFormat">Format8bppIndexed</see>
-		/// format is specified, pallete is not not created for the image (supposed that it is
-		/// 8 bpp grayscale image).
-		/// </note></para>
-		/// </remarks>
-		/// 
-		/// <exception cref="UnsupportedImageFormatException">Unsupported pixel format was specified.</exception>
-		/// <exception cref="InvalidImagePropertiesException">Invalid image size was specified.</exception>
-		/// 
-		public static UnmanagedImage Create(int width, int height, int stride, PixelFormat pixelFormat)
-		{
-
-			// check image size
-			if ((width <= 0) || (height <= 0))
-				throw new InvalidImageException("Invalid image size specified.");
-
-			if (stride < width)
-				throw new InvalidImageException("Stride is smaller than image width.");
-
-			// allocate memory for the image
-			IntPtr imageData = Marshal.AllocHGlobal(stride * height);
-			SystemTools.SetUnmanagedMemory(imageData, 0, stride * height);
-			GC.AddMemoryPressure(stride * height);
-
-			UnmanagedImage image = new UnmanagedImage(imageData, width, height, stride, pixelFormat);
-			image.mustBeDisposed = true;
-
-			return image;
-		}
-
-		private static int GetBytesPerPixel(PixelFormat pixelFormat)
-		{
-			// calculate bytes per pixel
-			switch (pixelFormat)
-			{
-				case PixelFormat.Format8bppIndexed:
-					return 1;
-				case PixelFormat.Format16bppGrayScale:
-					return 2;
-				case PixelFormat.Format24bppRgb:
-					return 3;
-				case PixelFormat.Format32bppRgb:
-				case PixelFormat.Format32bppArgb:
-				case PixelFormat.Format32bppPArgb:
-					return 4;
-				case PixelFormat.Format48bppRgb:
-					return 6;
-				case PixelFormat.Format64bppArgb:
-				case PixelFormat.Format64bppPArgb:
-					return 8;
-				default:
-					throw new InvalidImageException("Can not create image with specified pixel format.");
-			}
+			Marshal.FreeHGlobal(ImageData);
+			GC.RemoveMemoryPressure(Stride * Height);
+			ImageData = IntPtr.Zero;
 		}
 
 		/// <summary>
@@ -515,11 +259,8 @@ namespace Winstreak.Imaging
 		/// just a wrapper around the unmanaged image. So if unmanaged image is disposed, the
 		/// managed image becomes no longer valid and accessing it will generate an exception.</para></remarks>
 		/// 
-		/// <exception cref="InvalidImagePropertiesException">The unmanaged image has some invalid properties, which results
-		/// in failure of converting it to managed image. This may happen if user used the
-		/// <see cref="UnmanagedImage(IntPtr, int, int, int, PixelFormat)"/> constructor specifying some
-		/// invalid parameters.</exception>
-		/// 
+		/// <exception cref="InvalidImageException">The unmanaged image has some invalid properties, which results
+		/// in failure of converting it to managed image.</exception>
 		public Bitmap ToManagedImage(bool makeCopy)
 		{
 			Bitmap dstImage = null;
@@ -528,8 +269,8 @@ namespace Winstreak.Imaging
 			{
 				if (!makeCopy)
 				{
-					dstImage = new Bitmap(width, height, stride, pixelFormat, imageData);
-					if (pixelFormat == PixelFormat.Format8bppIndexed)
+					dstImage = new Bitmap(Width, Height, Stride, PixelFormat, ImageData);
+					if (PixelFormat == PixelFormat.Format8bppIndexed)
 					{
 						dstImage.SetGrayscalePalette();
 					}
@@ -537,36 +278,36 @@ namespace Winstreak.Imaging
 				else
 				{
 					// create new image of required format
-					dstImage = (pixelFormat == PixelFormat.Format8bppIndexed)
-						? Image.CreateGrayscaleImage(width, height)
-						: new Bitmap(width, height, pixelFormat);
+					dstImage = (PixelFormat == PixelFormat.Format8bppIndexed)
+						? ImageHelper.CreateGrayscaleImage(Width, Height)
+						: new Bitmap(Width, Height, PixelFormat);
 
 					// lock destination bitmap data
 					BitmapData dstData = dstImage.LockBits(
-						new Rectangle(0, 0, width, height),
+						new Rectangle(0, 0, Width, Height),
 						ImageLockMode.ReadWrite, dstImage.PixelFormat);
 
 					int dstStride = dstData.Stride;
-					int lineSize = Math.Min(stride, dstStride);
+					int lineSize = Math.Min(Stride, dstStride);
 
 					unsafe
 					{
 						byte* dst = (byte*) dstData.Scan0.ToPointer();
-						byte* src = (byte*) imageData.ToPointer();
+						byte* src = (byte*) ImageData.ToPointer();
 
-						if (stride != dstStride)
+						if (Stride != dstStride)
 						{
 							// copy image
-							for (int y = 0; y < height; y++)
+							for (int y = 0; y < Height; y++)
 							{
 								SystemTools.CopyUnmanagedMemory(dst, src, lineSize);
 								dst += dstStride;
-								src += stride;
+								src += Stride;
 							}
 						}
 						else
 						{
-							SystemTools.CopyUnmanagedMemory(dst, src, stride * height);
+							SystemTools.CopyUnmanagedMemory(dst, src, Stride * Height);
 						}
 					}
 
@@ -578,10 +319,7 @@ namespace Winstreak.Imaging
 			}
 			catch (Exception)
 			{
-				if (dstImage != null)
-				{
-					dstImage.Dispose();
-				}
+				dstImage?.Dispose();
 
 				throw new InvalidImageException(
 					"The unmanaged image has some invalid properties, which results in failure of converting it to managed image.");
@@ -599,11 +337,11 @@ namespace Winstreak.Imaging
 		/// <remarks><para>The method creates an exact copy of specified managed image, but allocated
 		/// in unmanaged memory.</para></remarks>
 		/// 
-		/// <exception cref="UnsupportedImageFormatException">Unsupported pixel format of source image.</exception>
+		/// <exception cref="InvalidImageException">Unsupported pixel format of source image.</exception>
 		/// 
 		public static UnmanagedImage FromManagedImage(Bitmap image)
 		{
-			UnmanagedImage dstImage = null;
+			UnmanagedImage dstImage;
 
 			BitmapData sourceData = image.LockBits(
 				new Rectangle(0, 0, image.Width, image.Height),
@@ -666,7 +404,7 @@ namespace Winstreak.Imaging
 
 			UnmanagedImage image = new UnmanagedImage(dstImageData, width, height, stride, pixelFormat);
 			SystemTools.CopyUnmanagedMemory(dstImageData, imageData, stride * height);
-			image.mustBeDisposed = true;
+			image._mustBeDisposed = true;
 
 			return image;
 		}
@@ -689,45 +427,22 @@ namespace Winstreak.Imaging
 		/// </code>
 		/// </para>
 		/// </remarks>
-		/// 
 		public void SetPixel(int x, int y, Color color)
 		{
 			SetPixel(x, y, color.R, color.G, color.B, color.A);
 		}
 
-		/// <summary>
-		/// Set pixel with the specified coordinates to the specified value.
-		/// </summary>
-		///
-		/// <param name="x">X coordinate of the pixel to set.</param>
-		/// <param name="y">Y coordinate of the pixel to set.</param>
-		/// <param name="value">Pixel value to set.</param>
-		/// 
-		/// <remarks><para>The method sets all color components of the pixel to the specified value.
-		/// If it is a grayscale image, then pixel's intensity is set to the specified value.
-		/// If it is a color image, then pixel's R/G/B components are set to the same specified value
-		/// (if an image has alpha channel, then it is set to maximum value - 255 or 65535).</para>
-		/// 
-		/// <para><note>For images having 16 bpp per color plane, the method extends the specified color
-		/// value to 16 bit by multiplying it by 256.</note></para>
-		/// </remarks>
-		/// 
-		public void SetPixel(int x, int y, byte value)
-		{
-			SetPixel(x, y, value, value, value, 255);
-		}
-
 		private void SetPixel(int x, int y, byte r, byte g, byte b, byte a)
 		{
-			if ((x >= 0) && (y >= 0) && (x < width) && (y < height))
+			if (x >= 0 && y >= 0 && x < Width && y < Height)
 			{
 				unsafe
 				{
-					int pixelSize = System.Drawing.Image.GetPixelFormatSize(pixelFormat) / 8;
-					byte* ptr = (byte*) imageData.ToPointer() + y * stride + x * pixelSize;
+					int pixelSize = Image.GetPixelFormatSize(PixelFormat) / 8;
+					byte* ptr = (byte*) ImageData.ToPointer() + y * Stride + x * pixelSize;
 					ushort* ptr2 = (ushort*) ptr;
 
-					switch (pixelFormat)
+					switch (PixelFormat)
 					{
 						case PixelFormat.Format8bppIndexed:
 							*ptr = (byte) (0.2125 * r + 0.7154 * g + 0.0721 * b);
@@ -735,16 +450,16 @@ namespace Winstreak.Imaging
 
 						case PixelFormat.Format24bppRgb:
 						case PixelFormat.Format32bppRgb:
-							ptr[RGB.R] = r;
-							ptr[RGB.G] = g;
-							ptr[RGB.B] = b;
+							ptr[Rgb.R] = r;
+							ptr[Rgb.G] = g;
+							ptr[Rgb.B] = b;
 							break;
 
 						case PixelFormat.Format32bppArgb:
-							ptr[RGB.R] = r;
-							ptr[RGB.G] = g;
-							ptr[RGB.B] = b;
-							ptr[RGB.A] = a;
+							ptr[Rgb.R] = r;
+							ptr[Rgb.G] = g;
+							ptr[Rgb.B] = b;
+							ptr[Rgb.A] = a;
 							break;
 
 						case PixelFormat.Format16bppGrayScale:
@@ -752,21 +467,21 @@ namespace Winstreak.Imaging
 							break;
 
 						case PixelFormat.Format48bppRgb:
-							ptr2[RGB.R] = (ushort) (r << 8);
-							ptr2[RGB.G] = (ushort) (g << 8);
-							ptr2[RGB.B] = (ushort) (b << 8);
+							ptr2[Rgb.R] = (ushort) (r << 8);
+							ptr2[Rgb.G] = (ushort) (g << 8);
+							ptr2[Rgb.B] = (ushort) (b << 8);
 							break;
 
 						case PixelFormat.Format64bppArgb:
-							ptr2[RGB.R] = (ushort) (r << 8);
-							ptr2[RGB.G] = (ushort) (g << 8);
-							ptr2[RGB.B] = (ushort) (b << 8);
-							ptr2[RGB.A] = (ushort) (a << 8);
+							ptr2[Rgb.R] = (ushort) (r << 8);
+							ptr2[Rgb.G] = (ushort) (g << 8);
+							ptr2[Rgb.B] = (ushort) (b << 8);
+							ptr2[Rgb.A] = (ushort) (a << 8);
 							break;
 
 						default:
 							throw new InvalidImageException(
-								"The pixel format is not supported: " + pixelFormat);
+								"The pixel format is not supported: " + PixelFormat);
 					}
 				}
 			}
@@ -790,27 +505,26 @@ namespace Winstreak.Imaging
 		/// 
 		/// <exception cref="ArgumentOutOfRangeException">The specified pixel coordinate is out of image's bounds.</exception>
 		/// <exception cref="InvalidImageException">Pixel format of this image is not supported by the method.</exception>
-		/// 
 		public Color GetPixel(int x, int y)
 		{
-			if ((x < 0) || (y < 0))
+			if (x < 0 || y < 0)
 			{
-				throw new ArgumentOutOfRangeException("x", "The specified pixel coordinate is out of image's bounds.");
+				throw new ArgumentOutOfRangeException(nameof(x), "The specified pixel coordinate is out of image's bounds.");
 			}
 
-			if ((x >= width) || (y >= height))
+			if (x >= Width || y >= Height)
 			{
-				throw new ArgumentOutOfRangeException("y", "The specified pixel coordinate is out of image's bounds.");
+				throw new ArgumentOutOfRangeException(nameof(y), "The specified pixel coordinate is out of image's bounds.");
 			}
 
 			Color color;
 
 			unsafe
 			{
-				int pixelSize = pixelFormat.GetPixelFormatSize() / 8;
-				byte* ptr = (byte*) imageData.ToPointer() + y * stride + x * pixelSize;
+				int pixelSize = PixelFormat.GetPixelFormatSize() / 8;
+				byte* ptr = (byte*) ImageData.ToPointer() + y * Stride + x * pixelSize;
 
-				switch (pixelFormat)
+				switch (PixelFormat)
 				{
 					case PixelFormat.Format8bppIndexed:
 						color = Color.FromArgb(*ptr, *ptr, *ptr);
@@ -818,15 +532,15 @@ namespace Winstreak.Imaging
 
 					case PixelFormat.Format24bppRgb:
 					case PixelFormat.Format32bppRgb:
-						color = Color.FromArgb(ptr[RGB.R], ptr[RGB.G], ptr[RGB.B]);
+						color = Color.FromArgb(ptr[Rgb.R], ptr[Rgb.G], ptr[Rgb.B]);
 						break;
 
 					case PixelFormat.Format32bppArgb:
-						color = Color.FromArgb(ptr[RGB.A], ptr[RGB.R], ptr[RGB.G], ptr[RGB.B]);
+						color = Color.FromArgb(ptr[Rgb.A], ptr[Rgb.R], ptr[Rgb.G], ptr[Rgb.B]);
 						break;
 
 					default:
-						throw new InvalidImageException("The pixel format is not supported: " + pixelFormat);
+						throw new InvalidImageException("The pixel format is not supported: " + PixelFormat);
 				}
 			}
 
