@@ -43,7 +43,6 @@ namespace Winstreak.Parser.V1
 					{
 						continue;
 					}
-
 					topLeftX = x;
 					topLeftY = y;
 					canBreak = true;
@@ -65,13 +64,14 @@ namespace Winstreak.Parser.V1
 				bool canBreak = false;
 				for (int y = base.Img.Height - 1; y >= 0; y--)
 				{
-					if (StoreHypixelNetDarkColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
+					if (!StoreHypixelNetDarkColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
 					{
-						bottomRightX = x;
-						bottomRightY = y;
-						canBreak = true;
-						break;
+						continue;
 					}
+					bottomRightX = x;
+					bottomRightY = y;
+					canBreak = true;
+					break;
 				}
 
 				if (canBreak)
@@ -91,7 +91,7 @@ namespace Winstreak.Parser.V1
 
 		public override void FixImage()
 		{
-			if (base.CalledMakeBlkWtFunc)
+			if (base.CalledFixImgFunc)
 			{
 				return;
 			}

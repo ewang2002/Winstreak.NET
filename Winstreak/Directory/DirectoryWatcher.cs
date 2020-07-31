@@ -218,7 +218,6 @@ namespace Winstreak.Directory
 
 			InGameNameParser parser = new InGameNameParser(bitmap);
 			parser.CropImageIfFullScreen();
-			Console.WriteLine();
 			parser.AdjustColors();
 			parser.CropHeaderAndFooter();
 			parser.FixImage();

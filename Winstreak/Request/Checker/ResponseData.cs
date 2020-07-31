@@ -35,18 +35,21 @@ namespace Winstreak.Request.Checker
 				TotalDataInfo = null;
 				return this;
 			}
+			Console.Clear();
+			//Console.WriteLine(Name);
+			//Console.WriteLine(HtmlContent);
 
 			// only get bedwars data
 			string bedwarsData = HtmlContent
-				.Split("Bed Wars </a>")[1]
-				.Split("Build Battle </a>")[0]
+				.Split(new string[] { "Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
+				.Split("Build Battle")[0]
 				.Split("</thead>")[1]
 				.Split("</div>")[0];
+
 			// clean up data
 			bedwarsData = bedwarsData
 				.Replace("<td style=\"border-right: 1px solid #f3f3f3\">", "")
 				.Replace("<th scope=\"row\" style=\"border-right: 1px solid #f3f3f3\">", "");
-
 			// get data for solos
 			string soloData = bedwarsData
 				.Split("Solo")[1]
