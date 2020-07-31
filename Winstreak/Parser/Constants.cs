@@ -21,7 +21,7 @@ namespace Winstreak.Parser
 		public static readonly Color StoreHypixelNetDarkColor = Color.FromArgb(0x3F1515);
 		public static readonly Color BossBarColor = Color.FromArgb(0x76005C);
 
-		public static readonly int ListedNumsOffset = 30;
+		public static readonly int ListedNumsOffset = 60;
 
 		public static readonly IDictionary<string, string> BinaryToCharactersMap;
 

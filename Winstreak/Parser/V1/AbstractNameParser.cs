@@ -257,6 +257,7 @@ namespace Winstreak.Parser.V1
 		{
 			using Bitmap origImage = Img.ToManagedImage();
 			using Bitmap croppedImage = origImage.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
+			Img.Dispose();
 			// and use new image
 			Img = UnmanagedImage.FromManagedImage(croppedImage);
 		}

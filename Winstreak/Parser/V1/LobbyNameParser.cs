@@ -80,7 +80,7 @@ namespace Winstreak.Parser.V1
 				}
 			}
 
-			if (topLeftX == -1 || topLeftY == -1)
+			if (topLeftX == -1 || topLeftY == -1 || bottomRightY == -1 || bottomRightX == -1)
 			{
 				throw new InvalidImageException("Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
 			}
