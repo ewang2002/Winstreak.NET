@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Winstreak.Directory;
 
 namespace Winstreak
@@ -32,10 +33,9 @@ namespace Winstreak
 
 			Console.Clear();
 			// @"C:\Users\ewang\AppData\Roaming\.minecraft\screenshots"
-			string path = Path.Join("C:", "Users", "ewang", "AppData", "Roaming", ".minecraft", "screenshots");
+			string path = Path.Join("C:", "Users", "ewang", "AppData", "Roaming", ".minecraft");
 			Console.WriteLine("[INFO] Starting Service.");
-			Console.WriteLine($"[INFO] Checking: {path}");
-			Console.WriteLine("=========================");
+			Console.WriteLine($"[INFO] Checking: {Path.Join(path, "screenshots")}");
 			DirectoryWatcher.Run(path, finalKills, brokenBeds, amtTryHards);
 		}
 	}

@@ -8,11 +8,11 @@ using static Winstreak.Parser.Constants;
 
 namespace Winstreak.Parser.V1
 {
-	public abstract class AbstractNameParser
+	public abstract class AbstractNameParser : IDisposable
 	{
 		// private general variables
 		protected UnmanagedImage Img { get; private set; }
-		protected int Width { get; private set; }
+		public int Width { get; private set; }
 
 		// for control
 		protected bool CalledCropIfFullScreen = false;
@@ -36,6 +36,11 @@ namespace Winstreak.Parser.V1
 		protected AbstractNameParser(string file)
 		{
 			Img = UnmanagedImage.FromManagedImage(ImageHelper.FromFile(file));
+		}
+
+		public void SetGuiScale(int guiScale)
+		{
+			this.Width = guiScale;
 		}
 
 		public abstract void CropImageIfFullScreen();
@@ -157,6 +162,7 @@ namespace Winstreak.Parser.V1
 
 		public abstract void FixImage();
 
+
 		public void IdentifyWidth()
 		{
 			IDictionary<int, int> possibleWidths = new Dictionary<int, int>();
@@ -260,6 +266,11 @@ namespace Winstreak.Parser.V1
 			Img.Dispose();
 			// and use new image
 			Img = UnmanagedImage.FromManagedImage(croppedImage);
+		}
+
+		public void Dispose()
+		{
+			Img?.Dispose();
 		}
 	}
 }

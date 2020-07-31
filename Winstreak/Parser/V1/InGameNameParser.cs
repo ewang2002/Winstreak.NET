@@ -268,7 +268,6 @@ namespace Winstreak.Parser.V1
 				y += 9 * base.Width;
 			}
 
-			Img.Dispose();
 			return teammates;
 		}
 

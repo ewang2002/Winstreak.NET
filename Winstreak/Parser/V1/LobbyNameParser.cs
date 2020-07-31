@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -207,7 +208,6 @@ namespace Winstreak.Parser.V1
 				.Where(x => x.Length != 0)
 				.ToList();
 
-			Img.Dispose();
 			return names;
 		}
 

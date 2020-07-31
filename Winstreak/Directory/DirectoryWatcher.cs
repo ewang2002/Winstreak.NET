@@ -21,16 +21,24 @@ namespace Winstreak.Directory
 		public static int FinalKills;
 		public static int BrokenBeds;
 		public static int MaxTryHards;
+		public static string MCPath;
+		public static int GuiScale; 
 
 		public static void Run(string path, int finalKills, int brokenBeds, int maxTryhards)
 		{
 			FinalKills = finalKills;
 			BrokenBeds = brokenBeds;
 			MaxTryHards = maxTryhards;
+			MCPath = path;
+
+			GuiScale = ParserHelper.GetGuiScale(path);
+
+			Console.WriteLine($"[INFO] Determined Width: {(GuiScale == 0 ? "AUTO" : GuiScale.ToString())}");
+			Console.WriteLine("=========================");
 
 			using FileSystemWatcher watcher = new FileSystemWatcher
 			{
-				Path = path,
+				Path = Path.Join(path, "screenshots"),
 				// Only watch image files
 				Filter = "*.png",
 				// Filters
@@ -77,7 +85,16 @@ namespace Winstreak.Directory
 				parser.AdjustColors();
 				parser.CropHeaderAndFooter();
 				parser.FixImage();
-				parser.IdentifyWidth();
+
+				if (GuiScale == 0 || GuiScale == -1)
+				{
+					parser.IdentifyWidth();
+					GuiScale = parser.Width;
+				}
+				else
+				{
+					parser.SetGuiScale(GuiScale);
+				}
 			}
 			catch (Exception)
 			{
@@ -232,7 +249,16 @@ namespace Winstreak.Directory
 				parser.AdjustColors();
 				parser.CropHeaderAndFooter();
 				parser.FixImage();
-				parser.IdentifyWidth();
+
+				if (GuiScale == 0 || GuiScale == -1)
+				{
+					parser.IdentifyWidth();
+					GuiScale = parser.Width;
+				}
+				else
+				{
+					parser.SetGuiScale(GuiScale);
+				}
 			}
 			catch (Exception)
 			{
