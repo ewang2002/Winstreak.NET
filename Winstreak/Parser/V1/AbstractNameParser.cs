@@ -162,54 +162,6 @@ namespace Winstreak.Parser.V1
 
 		public abstract void FixImage();
 
-
-		public void IdentifyWidth()
-		{
-			IDictionary<int, int> possibleWidths = new Dictionary<int, int>();
-			int numWidthProcessed = 0;
-
-			for (int y = 0; y < Img.Height; y++)
-			{
-				int width = 0;
-				for (int x = 0; x < Img.Width; x++)
-				{
-					if (IsValidColor(Img.GetPixel(x, y)))
-					{
-						++width;
-					}
-					else
-					{
-						if (width == 0)
-						{
-							continue;
-						}
-
-						if (possibleWidths.ContainsKey(width))
-						{
-							possibleWidths[width] += 1;
-						}
-						else
-						{
-							possibleWidths.Add(width, 1);
-						}
-
-						width = 0;
-						++numWidthProcessed;
-					}
-				}
-
-				if (numWidthProcessed > 200)
-				{
-					break;
-				}
-			}
-
-			KeyValuePair<int, int> maxKey = possibleWidths
-				.OrderByDescending(x => x.Value)
-				.First();
-			Width = maxKey.Key;
-		}
-
 		public abstract bool IsValidColor(Color color);
 
 		public int NumberParticlesInHorizontalLine(int y)

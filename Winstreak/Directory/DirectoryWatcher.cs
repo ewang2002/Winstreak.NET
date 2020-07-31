@@ -33,7 +33,14 @@ namespace Winstreak.Directory
 
 			GuiScale = ParserHelper.GetGuiScale(path);
 
-			Console.WriteLine($"[INFO] Determined Width: {(GuiScale == 0 ? "AUTO" : GuiScale.ToString())}");
+			if (GuiScale == 0)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine("[ERROR] Please set a non-automatic GUI scale and then restart the program.");
+				Console.ResetColor();
+				return;
+			}
+			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
 			Console.WriteLine("=========================");
 
 			using FileSystemWatcher watcher = new FileSystemWatcher
@@ -81,20 +88,11 @@ namespace Winstreak.Directory
 			LobbyNameParser parser = new LobbyNameParser(bitmap);
 			try
 			{
+				parser.SetGuiScale(GuiScale);
 				parser.CropImageIfFullScreen();
 				parser.AdjustColors();
 				parser.CropHeaderAndFooter();
 				parser.FixImage();
-
-				if (GuiScale == 0 || GuiScale == -1)
-				{
-					parser.IdentifyWidth();
-					GuiScale = parser.Width;
-				}
-				else
-				{
-					parser.SetGuiScale(GuiScale);
-				}
 			}
 			catch (Exception)
 			{
@@ -245,20 +243,11 @@ namespace Winstreak.Directory
 			InGameNameParser parser = new InGameNameParser(bitmap);
 			try
 			{
+				parser.SetGuiScale(GuiScale);
 				parser.CropImageIfFullScreen();
 				parser.AdjustColors();
 				parser.CropHeaderAndFooter();
 				parser.FixImage();
-
-				if (GuiScale == 0 || GuiScale == -1)
-				{
-					parser.IdentifyWidth();
-					GuiScale = parser.Width;
-				}
-				else
-				{
-					parser.SetGuiScale(GuiScale);
-				}
 			}
 			catch (Exception)
 			{
