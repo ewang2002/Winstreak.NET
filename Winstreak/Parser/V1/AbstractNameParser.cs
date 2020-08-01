@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
+using System.Drawing.Imaging;
 using Winstreak.Extensions;
 using Winstreak.Imaging;
+using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
 namespace Winstreak.Parser.V1
@@ -12,13 +13,9 @@ namespace Winstreak.Parser.V1
 	{
 		// private general variables
 		protected UnmanagedImage Img { get; private set; }
-		public int Width { get; private set; }
-
-		// for control
-		protected bool CalledCropIfFullScreen = false;
-		protected bool CalledCropHeaderFooter = false;
-		protected bool CalledMakeBlkWtFunc = false;
-		protected bool CalledFixImgFunc = false;
+		public int GuiWidth { get; private set; }
+		protected Point StartingPoint { get; set; }
+		protected Point EndingPoint { get; set; }
 
 		/// <summary>
 		/// A constructor that accepts a Bitmap.
@@ -40,143 +37,90 @@ namespace Winstreak.Parser.V1
 
 		public void SetGuiScale(int guiScale)
 		{
-			this.Width = guiScale;
+			this.GuiWidth = guiScale;
 		}
 
-		public abstract void CropImageIfFullScreen();
-
 		/// <summary>
-		/// Adjusts the color of the picture.
+		/// Finds the starting and ending point of the image. 
 		/// </summary>
-		public void AdjustColors()
+		public void FindStartingPoint()
 		{
-			if (CalledMakeBlkWtFunc)
-			{
-				return;
-			}
+			// get top left point
+			int topLeftX = -1;
+			int topLeftY = 20 * GuiWidth;
 
-			CalledMakeBlkWtFunc = true;
-
-			// replace any invalid colors with white
-			for (int y = 0; y < Img.Height; y++)
+			for (int x = Img.Width / 4; x < Img.Width; x++)
 			{
-				for (int x = 0; x < Img.Width; x++)
+				if (YouArePlayingOnColor.IsRgbEqualTo(Img.GetPixel(x, 16 * GuiWidth)))
 				{
-					if (!IsValidColor(Img.GetPixel(x, y)))
-					{
-						Img.SetPixel(x, y, Color.White);
-					}
+					topLeftX = x;
+					break;
 				}
 			}
 
-			for (int x = 0; x < this.Img.Width; x++)
+			// right to left, bottom to top
+			int bottomRightX = -1;
+			int bottomRightY = -1;
+
+			for (int x = Img.Width - ListedNumsOffset; x >= 0; x--)
+			{
+				bool canBreak = false;
+				for (int y = Img.Height - 1; y >= 0; y--)
+				{
+					if (!StoreHypixelNetDarkColor.IsRgbEqualTo(Img.GetPixel(x, y)))
+						continue;
+					bottomRightX = x;
+					bottomRightY = y;
+					canBreak = true;
+					break;
+				}
+
+				if (canBreak)
+				{
+					break;
+				}
+			}
+
+			if (topLeftX == -1 || topLeftX == Img.Width - 1|| bottomRightY == -1 ||
+			    bottomRightX == -1)
+				throw new InvalidImageException(
+					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
+
+			StartingPoint = new Point(topLeftX, topLeftY);
+			// subtract two because bottomRightY is right below the
+			// right "roof" of the "T" 
+			EndingPoint = new Point(bottomRightX, bottomRightY - 2 * GuiWidth);
+		}
+
+		/// <summary>
+		/// Finds the x-value of the first name.
+		///
+		/// Precondition: There must be at least 4 names. 
+		/// </summary>
+		public void FindStartOfName()
+		{
+			int newTopLeftX = -1;
+			for (int x = StartingPoint.X; x < EndingPoint.X; x++)
 			{
 				int numParticles = NumberParticlesInVerticalLine(x);
-				if (numParticles > 10)
-				{
-					break;
-				}
+				if (numParticles < 30)
+					continue;
 
-				for (int y = 0; y < Img.Height; y++)
-				{
-					if (IsValidColor(Img.GetPixel(x, y)))
-					{
-						Img.SetPixel(x, y, Color.White);
-					}
-				}
+				newTopLeftX = x;
+				break;
 			}
+
+			if (newTopLeftX == -1)
+				throw new InvalidImageException("Invalid image given.");
+
+			int oldY = StartingPoint.Y;
+			StartingPoint = new Point(newTopLeftX, oldY);
 		}
-
-		/// <summary>
-		/// Attempts to crop the header and footer of the image. 
-		/// </summary>
-		public void CropHeaderAndFooter()
-		{
-			if (CalledCropHeaderFooter)
-			{
-				return;
-			}
-
-			CalledCropHeaderFooter = true;
-
-			bool topFirstBlankPast = false;
-			bool topSepFound = false;
-			int topY = -1;
-			// top to bottom
-			for (int y = 0; y < Img.Height; y++)
-			{
-				bool isSep = NumberParticlesInHorizontalLine(y) == 0;
-				if (topFirstBlankPast)
-				{
-					if (!topSepFound && isSep)
-					{
-						topSepFound = true;
-					}
-
-					if (topSepFound)
-					{
-						if (isSep)
-						{
-							topY = y;
-						}
-						else
-						{
-							break;
-						}
-					}
-				}
-				else
-				{
-					if (!isSep)
-					{
-						topFirstBlankPast = true;
-					}
-				}
-			}
-
-			// bottom to top 
-			for (int y = this.Img.Height - 1; y >= 0; y--)
-			{
-				bool isSep = NumberParticlesInHorizontalLine(y) == 0;
-				if (isSep)
-				{
-					break;
-				}
-
-				for (int x = 0; x < Img.Width; x++)
-				{
-					if (!Img.GetPixel(x, y).IsRgbEqualTo(Color.White))
-					{
-						Img.SetPixel(x, y, Color.White);
-					}
-				}
-			}
-
-			if (topY == -1)
-			{
-				throw new Exception("Couldn't crop the image. Please make sure the image was processed beforehand.");
-			}
-
-			CropImage(0, topY, Img.Width, Img.Height - topY);
-		}
-
-		public abstract void FixImage();
 
 		public abstract bool IsValidColor(Color color);
 
-		public int NumberParticlesInHorizontalLine(int y)
-		{
-			int particles = 0;
-			for (int x = 0; x < Img.Width; x++)
-			{
-				if (IsValidColor(Img.GetPixel(x, y)))
-				{
-					particles++;
-				}
-			}
-
-			return particles;
-		}
+		public abstract (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(
+			IList<string> exempt = null);
 
 		public int NumberParticlesInVerticalLine(int x)
 		{
@@ -211,18 +155,16 @@ namespace Winstreak.Parser.V1
 			return false;
 		}
 
-		public void CropImage(int x, int y, int width, int height)
-		{
-			using Bitmap origImage = Img.ToManagedImage();
-			using Bitmap croppedImage = origImage.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
-			Img.Dispose();
-			// and use new image
-			Img = UnmanagedImage.FromManagedImage(croppedImage);
-		}
-
 		public void Dispose()
 		{
 			Img?.Dispose();
+		}
+
+		public void SaveCroppedImage(int x, int y, int width, int height)
+		{
+			using Bitmap origImage = Img.ToManagedImage();
+			using Bitmap croppedImage = origImage.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
+			croppedImage.Save(@"C:\Users\ewang\Desktop\Test.png", ImageFormat.Png);
 		}
 	}
 }

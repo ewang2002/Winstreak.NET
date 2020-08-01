@@ -19,179 +19,41 @@ namespace Winstreak.Parser.V1
 		{
 		}
 
-		public override void CropImageIfFullScreen()
+		public void AccountForTeamLetters()
 		{
-			if (base.CalledCropIfFullScreen)
+			int newTopLeftX = -1;
+			for (int x = StartingPoint.X + 6 * GuiWidth; x < EndingPoint.X; x++)
 			{
-				return;
-			}
-
-			base.CalledCropIfFullScreen = true;
-
-			// top to bottom, left to right
-			// find the top left coordinates of the
-			// player list box
-			int topLeftX = -1;
-			int topLeftY = -1;
-
-			for (int y = 0; y < base.Img.Height; y++)
-			{
-				bool canBreak = false;
-				for (int x = 0; x < base.Img.Width; x++)
-				{
-					if (!YouArePlayingOnColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
-					{
-						continue;
-					}
-					topLeftX = x;
-					topLeftY = y;
-					canBreak = true;
-					break;
-				}
-
-				if (canBreak)
-				{
-					break;
-				}
-			}
-
-			// right to left, bottom to top
-			int bottomRightX = -1;
-			int bottomRightY = -1;
-
-			for (int x = base.Img.Width - ListedNumsOffset; x >= 0; x--)
-			{
-				bool canBreak = false;
-				for (int y = base.Img.Height - 1; y >= 0; y--)
-				{
-					if (!StoreHypixelNetDarkColor.IsRgbEqualTo(base.Img.GetPixel(x, y)))
-					{
-						continue;
-					}
-					bottomRightX = x;
-					bottomRightY = y;
-					canBreak = true;
-					break;
-				}
-
-				if (canBreak)
-				{
-					break;
-				}
-			}
-
-			if (topLeftX == -1 || topLeftY == -1)
-			{
-				throw new Exception(
-					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
-			}
-
-			base.CropImage(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
-		}
-
-		public override void FixImage()
-		{
-			if (base.CalledFixImgFunc)
-			{
-				return;
-			}
-
-			base.CalledFixImgFunc = true;
-			int minStartingXVal = base.Img.Width;
-			int minStartingYVal = base.Img.Height;
-			for (int y = 0; y < base.Img.Height; y++)
-			{
-				for (int x = 0; x < base.Img.Width; x++)
-				{
-					if (!IsValidColor(base.Img.GetPixel(x, y)))
-					{
-						continue;
-					}
-
-					if (x < minStartingXVal)
-					{
-						minStartingXVal = x;
-					}
-
-					if (y < minStartingYVal)
-					{
-						minStartingYVal = y;
-					}
-				}
-			}
-
-			int startingXVal = minStartingXVal;
-			int startingYVal = minStartingYVal;
-
-			if (startingXVal == base.Img.Width || startingYVal == base.Img.Height)
-			{
-				throw new InvalidImageException(
-					"Couldn't crop the image. Make sure the image was processed beforehand.");
-			}
-
-			base.CropImage(startingXVal, startingYVal, base.Img.Width - startingXVal, base.Img.Height - startingYVal);
-
-			// let's remove any blanks
-			int secondY = 0;
-			for (; secondY < base.Img.Height; secondY++)
-			{
-				if (this.IsValidColor(base.Img.GetPixel(0, secondY)) &&
-				    this.IsValidColor(base.Img.GetPixel(base.Width, secondY)))
-				{
-					break;
-				}
-			}
-
-			// now let's try again
-			// but this time we're going to look
-			// for the separator between the B/R/G/Y and the names of teammates
-			bool foundYSep = false;
-			int secondX = 0;
-			for (; secondX < base.Img.Width; secondX++)
-			{
-				int numberParticles = base.NumberParticlesInVerticalLine(secondX);
-				if (numberParticles == 0 && !foundYSep)
-				{
-					foundYSep = true;
-				}
-
-				if (!foundYSep)
-				{
+				int numParticles = NumberParticlesInVerticalLine(x);
+				if (numParticles < 30)
 					continue;
-				}
 
-				if (numberParticles == 0)
-				{
-					continue;
-				}
-
+				newTopLeftX = x;
 				break;
 			}
 
-			// make another copy
-			base.CropImage(secondX, secondY, base.Img.Width - secondX, base.Img.Height - secondY);
+			if (newTopLeftX == -1)
+				throw new InvalidImageException("Invalid image given.");
+
+			int oldY = StartingPoint.Y;
+			StartingPoint = new Point(newTopLeftX, oldY);
+			SaveCroppedImage(StartingPoint.X, StartingPoint.Y, EndingPoint.X - StartingPoint.X, EndingPoint.Y - 2 * GuiWidth - StartingPoint.Y);
 		}
 
-		public IDictionary<TeamColors, IList<string>> GetPlayerName(IList<string> exempt = null)
-		{
-			if (!base.CalledMakeBlkWtFunc && !base.CalledFixImgFunc)
-			{
-				Console.WriteLine("A");
-				return new Dictionary<TeamColors, IList<string>>();
-			}
 
+		public override (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(IList<string> exempt = null)
+		{
 			exempt ??= new List<string>();
 
 			IDictionary<TeamColors, IList<string>> teammates = new Dictionary<TeamColors, IList<string>>();
 			IList<TeamColors> colorsToIgnore = new List<TeamColors>();
 
-			int y = 0;
-
 			TeamColors currentColor = TeamColors.Unknown;
-			while (y <= base.Img.Height)
+			int y = StartingPoint.Y;
+			while (y <= EndingPoint.Y)
 			{
 				StringBuilder name = new StringBuilder();
-				int x = 0;
+				int x = StartingPoint.X;
 
 				while (true)
 				{
@@ -201,7 +63,7 @@ namespace Winstreak.Parser.V1
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						StringBuilder columnBytes = new StringBuilder();
-						for (int dy = 0; dy < 8 * base.Width; dy += base.Width)
+						for (int dy = 0; dy < 8 * base.GuiWidth; dy += base.GuiWidth)
 						{
 							if (y + dy >= Img.Height)
 							{
@@ -227,7 +89,7 @@ namespace Winstreak.Parser.V1
 						}
 
 						ttlBytes.Append(columnBytes.ToString());
-						x += base.Width;
+						x += base.GuiWidth;
 					}
 
 					if (!errored)
@@ -265,10 +127,10 @@ namespace Winstreak.Parser.V1
 					teammates[currentColor].Add(name.ToString());
 				}
 
-				y += 9 * base.Width;
+				y += 9 * base.GuiWidth;
 			}
 
-			return teammates;
+			return (new List<string>(), teammates);
 		}
 
 		private TeamColors GetCurrentColor(Color color)

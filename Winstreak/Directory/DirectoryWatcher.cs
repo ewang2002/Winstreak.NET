@@ -89,10 +89,8 @@ namespace Winstreak.Directory
 			try
 			{
 				parser.SetGuiScale(GuiScale);
-				parser.CropImageIfFullScreen();
-				parser.AdjustColors();
-				parser.CropHeaderAndFooter();
-				parser.FixImage();
+				parser.FindStartingPoint();
+				parser.FindStartOfName();
 			}
 			catch (Exception)
 			{
@@ -100,7 +98,8 @@ namespace Winstreak.Directory
 				return;
 			}
 
-			IList<string> allNames = parser.GetPlayerName();
+			IList<string> allNames = parser.GetPlayerName().lobby;
+			parser.Dispose();
 			processingTime.Stop();
 			TimeSpan imageProcessingTime = processingTime.Elapsed;
 			processingTime.Reset();
@@ -244,10 +243,9 @@ namespace Winstreak.Directory
 			try
 			{
 				parser.SetGuiScale(GuiScale);
-				parser.CropImageIfFullScreen();
-				parser.AdjustColors();
-				parser.CropHeaderAndFooter();
-				parser.FixImage();
+				parser.FindStartingPoint();
+				parser.FindStartOfName();
+				parser.AccountForTeamLetters();
 			}
 			catch (Exception)
 			{
@@ -255,8 +253,8 @@ namespace Winstreak.Directory
 				return;
 			}
 
-			IDictionary<TeamColors, IList<string>> teams = parser.GetPlayerName();
-
+			IDictionary<TeamColors, IList<string>> teams = parser.GetPlayerName().team;
+			parser.Dispose();
 			processingTime.Stop();
 			TimeSpan imageProcessingTime = processingTime.Elapsed;
 			processingTime.Reset();
