@@ -76,13 +76,10 @@ namespace Winstreak.Parser.V1
 				}
 
 				if (canBreak)
-				{
 					break;
-				}
 			}
 
-			if (topLeftX == -1 || topLeftX == Img.Width - 1|| bottomRightY == -1 ||
-			    bottomRightX == -1)
+			if (topLeftX == -1 || topLeftX == Img.Width - 1 || bottomRightY == -1 || bottomRightX == -1)
 				throw new InvalidImageException(
 					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
 
@@ -90,6 +87,7 @@ namespace Winstreak.Parser.V1
 			// subtract two because bottomRightY is right below the
 			// right "roof" of the "T" 
 			EndingPoint = new Point(bottomRightX, bottomRightY - 2 * GuiWidth);
+			//SaveCroppedImage(@"C:\Users\ewang\Desktop\A.png", StartingPoint.X, StartingPoint.Y, EndingPoint.X - StartingPoint.X, EndingPoint.Y - StartingPoint.Y);
 		}
 
 		/// <summary>
@@ -115,6 +113,7 @@ namespace Winstreak.Parser.V1
 
 			int oldY = StartingPoint.Y;
 			StartingPoint = new Point(newTopLeftX, oldY);
+			//SaveCroppedImage(@"C:\Users\ewang\Desktop\B.png", StartingPoint.X, StartingPoint.Y, EndingPoint.X - StartingPoint.X, EndingPoint.Y - StartingPoint.Y);
 		}
 
 		public abstract bool IsValidColor(Color color);
@@ -160,11 +159,11 @@ namespace Winstreak.Parser.V1
 			Img?.Dispose();
 		}
 
-		public void SaveCroppedImage(int x, int y, int width, int height)
+		public void SaveCroppedImage(string name, int x, int y, int width, int height)
 		{
 			using Bitmap origImage = Img.ToManagedImage();
 			using Bitmap croppedImage = origImage.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
-			croppedImage.Save(@"C:\Users\ewang\Desktop\Test.png", ImageFormat.Png);
+			croppedImage.Save(name, ImageFormat.Png);
 		}
 	}
 }

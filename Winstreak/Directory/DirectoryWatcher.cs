@@ -95,6 +95,7 @@ namespace Winstreak.Directory
 			catch (Exception)
 			{
 				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
+				Console.WriteLine("=====================================");
 				return;
 			}
 
@@ -250,6 +251,7 @@ namespace Winstreak.Directory
 			catch (Exception)
 			{
 				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
+				Console.WriteLine("=====================================");
 				return;
 			}
 

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Text;
 using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
@@ -37,7 +35,6 @@ namespace Winstreak.Parser.V1
 
 			int oldY = StartingPoint.Y;
 			StartingPoint = new Point(newTopLeftX, oldY);
-			SaveCroppedImage(StartingPoint.X, StartingPoint.Y, EndingPoint.X - StartingPoint.X, EndingPoint.Y - 2 * GuiWidth - StartingPoint.Y);
 		}
 
 
