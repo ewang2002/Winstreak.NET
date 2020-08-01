@@ -546,5 +546,17 @@ namespace Winstreak.Imaging
 
 			return color;
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		public Color this[int x, int y]
+		{
+			get => GetPixel(x, y);
+			set => SetPixel(x, y, value);
+		}
 	}
 }

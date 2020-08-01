@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Text;
 using Winstreak.Extensions;
 using Winstreak.Imaging;
 using Winstreak.Parser.ImgExcept;
@@ -35,6 +36,10 @@ namespace Winstreak.Parser.V1
 			Img = UnmanagedImage.FromManagedImage(ImageHelper.FromFile(file));
 		}
 
+		/// <summary>
+		/// Establishes the Gui scale that will be used to calculate pixels.
+		/// </summary>
+		/// <param name="guiScale">The Gui scale.</param>
 		public void SetGuiScale(int guiScale)
 		{
 			this.GuiWidth = guiScale;
@@ -87,7 +92,6 @@ namespace Winstreak.Parser.V1
 			// subtract two because bottomRightY is right below the
 			// right "roof" of the "T" 
 			EndingPoint = new Point(bottomRightX, bottomRightY - 2 * GuiWidth);
-			//SaveCroppedImage(@"C:\Users\ewang\Desktop\A.png", StartingPoint.X, StartingPoint.Y, EndingPoint.X - StartingPoint.X, EndingPoint.Y - StartingPoint.Y);
 		}
 
 		/// <summary>
@@ -97,43 +101,89 @@ namespace Winstreak.Parser.V1
 		/// </summary>
 		public void FindStartOfName()
 		{
-			int newTopLeftX = -1;
-			for (int x = StartingPoint.X; x < EndingPoint.X; x++)
+			int y = StartingPoint.Y;
+			int realX = -1;
+
+			int startX = StartingPoint.X;
+			int endX = Img.Width - startX;
+
+			bool errored = false;
+
+			while (y <= EndingPoint.Y)
 			{
-				int numParticles = NumberParticlesInVerticalLine(x);
-				if (numParticles < 30)
-					continue;
 
-				newTopLeftX = x;
-				break;
+				for (int x = startX; x < endX; x++)
+				{
+					bool foundValidColor = false;
+					for (int _dy = 0; _dy < 8 * GuiWidth; _dy += GuiWidth)
+					{
+						if (IsValidColor(Img[x, y + _dy]) || Color.White.IsRgbEqualTo(Img[x, y + _dy]) &&
+							(IsValidColor(Img[x + 1, y + _dy]) || Color.White.IsRgbEqualTo(Img[x + 1, y + _dy]) ||
+							 IsValidColor(Img[x + 2, y + _dy]) || Color.White.IsRgbEqualTo(Img[x + 2, y + _dy])))
+						{
+							foundValidColor = true;
+							break;
+						}
+					}
+
+					if (foundValidColor)
+					{
+						StringBuilder ttlBytes = new StringBuilder();
+
+						int tempX = x;
+						while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
+						{
+							StringBuilder columnBytes = new StringBuilder();
+							for (int dy = 0; dy < 8 * GuiWidth && tempX < EndingPoint.X; dy += GuiWidth)
+							{
+								if (y + dy >= EndingPoint.Y)
+								{
+									errored = true;
+									break;
+								}
+
+								Color pixel = Img[tempX, y + dy];
+								columnBytes.Append(IsValidColor(pixel) || Color.White.IsRgbEqualTo(pixel) ? "1" : "0");
+							}
+
+							if (errored)
+								break;
+
+							ttlBytes.Append(columnBytes.ToString());
+							tempX += GuiWidth;
+						}
+
+						if (errored)
+							break;
+
+						ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
+
+						if (BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
+						{
+							realX = x;
+							break;
+						}
+					}
+				}
+				// end for
+				if (realX != -1 || errored)
+					break;
+
+				y += 9 * GuiWidth;
 			}
+			// end while
 
-			if (newTopLeftX == -1)
-				throw new InvalidImageException("Invalid image given.");
+			if (realX == -1)
+				throw new InvalidImageException("Couldn't find any Minecraft characters.");
 
-			int oldY = StartingPoint.Y;
-			StartingPoint = new Point(newTopLeftX, oldY);
-			//SaveCroppedImage(@"C:\Users\ewang\Desktop\B.png", StartingPoint.X, StartingPoint.Y, EndingPoint.X - StartingPoint.X, EndingPoint.Y - StartingPoint.Y);
+
+			StartingPoint = new Point(realX, y);
 		}
 
 		public abstract bool IsValidColor(Color color);
 
 		public abstract (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(
 			IList<string> exempt = null);
-
-		public int NumberParticlesInVerticalLine(int x)
-		{
-			int particles = 0;
-			for (int y = 0; y < Img.Height; y++)
-			{
-				if (IsValidColor(Img.GetPixel(x, y)))
-				{
-					particles++;
-				}
-			}
-
-			return particles;
-		}
 
 		public static bool IsInLobby(Bitmap image)
 		{

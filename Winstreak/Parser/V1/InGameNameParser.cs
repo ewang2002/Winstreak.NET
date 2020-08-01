@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
+using System.Threading.Tasks;
 using Winstreak.Extensions;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
@@ -17,27 +19,8 @@ namespace Winstreak.Parser.V1
 		{
 		}
 
-		public void AccountForTeamLetters()
-		{
-			int newTopLeftX = -1;
-			for (int x = StartingPoint.X + 6 * GuiWidth; x < EndingPoint.X; x++)
-			{
-				int numParticles = NumberParticlesInVerticalLine(x);
-				if (numParticles < 30)
-					continue;
-
-				newTopLeftX = x;
-				break;
-			}
-
-			if (newTopLeftX == -1)
-				throw new InvalidImageException("Invalid image given.");
-
-			int oldY = StartingPoint.Y;
-			StartingPoint = new Point(newTopLeftX, oldY);
-		}
-
-
+		public void AccountForTeamLetters() => StartingPoint = new Point(StartingPoint.X + 12 * GuiWidth, StartingPoint.Y);
+		
 		public override (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(IList<string> exempt = null)
 		{
 			exempt ??= new List<string>();
@@ -47,6 +30,7 @@ namespace Winstreak.Parser.V1
 
 			TeamColors currentColor = TeamColors.Unknown;
 			int y = StartingPoint.Y;
+
 			while (y <= EndingPoint.Y)
 			{
 				StringBuilder name = new StringBuilder();
@@ -55,7 +39,7 @@ namespace Winstreak.Parser.V1
 				while (true)
 				{
 					StringBuilder ttlBytes = new StringBuilder();
-					bool errored = false;
+					bool hasErrored = false;
 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
@@ -64,7 +48,7 @@ namespace Winstreak.Parser.V1
 						{
 							if (y + dy >= Img.Height)
 							{
-								errored = true;
+								hasErrored = true;
 								break;
 							}
 
@@ -80,7 +64,7 @@ namespace Winstreak.Parser.V1
 							}
 						}
 
-						if (errored)
+						if (hasErrored)
 						{
 							break;
 						}
@@ -89,7 +73,7 @@ namespace Winstreak.Parser.V1
 						x += base.GuiWidth;
 					}
 
-					if (!errored)
+					if (!hasErrored)
 					{
 						ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 					}
