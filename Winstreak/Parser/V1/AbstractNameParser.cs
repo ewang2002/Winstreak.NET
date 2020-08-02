@@ -109,7 +109,6 @@ namespace Winstreak.Parser.V1
 		/// </summary>
 		public void FindStartOfName()
 		{
-			int y = StartingPoint.Y;
 			int realX = -1;
 
 			int startX = StartingPoint.X;
