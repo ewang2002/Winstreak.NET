@@ -63,6 +63,7 @@ namespace Winstreak.Directory
 
 		private static void OnChanged(object source, FileSystemEventArgs e)
 		{
+			// wait for image to fully load
 			Thread.Sleep(350);
 			Bitmap bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			if (AbstractNameParser.IsInLobby(bitmap))

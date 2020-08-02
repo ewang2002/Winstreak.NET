@@ -19,9 +19,11 @@ namespace Winstreak.Parser.V1
 		{
 		}
 
-		public void AccountForTeamLetters() => StartingPoint = new Point(StartingPoint.X + 12 * GuiWidth, StartingPoint.Y);
-		
-		public override (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(IList<string> exempt = null)
+		public void AccountForTeamLetters() =>
+			StartingPoint = new Point(StartingPoint.X + 12 * GuiWidth, StartingPoint.Y);
+
+		public override (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(
+			IList<string> exempt = null)
 		{
 			exempt ??= new List<string>();
 
@@ -29,9 +31,7 @@ namespace Winstreak.Parser.V1
 			IList<TeamColors> colorsToIgnore = new List<TeamColors>();
 
 			TeamColors currentColor = TeamColors.Unknown;
-			int y = StartingPoint.Y;
-
-			while (y <= EndingPoint.Y)
+			for (int y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
 				StringBuilder name = new StringBuilder();
 				int x = StartingPoint.X;
@@ -39,19 +39,12 @@ namespace Winstreak.Parser.V1
 				while (true)
 				{
 					StringBuilder ttlBytes = new StringBuilder();
-					bool hasErrored = false;
 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						StringBuilder columnBytes = new StringBuilder();
 						for (int dy = 0; dy < 8 * base.GuiWidth; dy += base.GuiWidth)
 						{
-							if (y + dy >= Img.Height)
-							{
-								hasErrored = true;
-								break;
-							}
-
 							Color color = base.Img.GetPixel(x, y + dy);
 							if (IsValidColor(color))
 							{
@@ -64,28 +57,16 @@ namespace Winstreak.Parser.V1
 							}
 						}
 
-						if (hasErrored)
-						{
-							break;
-						}
-
 						ttlBytes.Append(columnBytes.ToString());
 						x += base.GuiWidth;
 					}
 
-					if (!hasErrored)
-					{
-						ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
-					}
+					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 
 					if (BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
-					{
 						name.Append(BinaryToCharactersMap[ttlBytes.ToString()]);
-					}
 					else
-					{
 						break;
-					}
 				}
 
 				if (exempt.Contains(name.ToString()))
@@ -96,19 +77,13 @@ namespace Winstreak.Parser.V1
 				if (!colorsToIgnore.Contains(currentColor) && !name.ToString().Trim().Equals(string.Empty))
 				{
 					if (currentColor == TeamColors.Unknown)
-					{
 						continue;
-					}
 
 					if (!teammates.ContainsKey(currentColor))
-					{
 						teammates.Add(currentColor, new List<string>());
-					}
 
 					teammates[currentColor].Add(name.ToString());
 				}
-
-				y += 9 * base.GuiWidth;
 			}
 
 			return (new List<string>(), teammates);

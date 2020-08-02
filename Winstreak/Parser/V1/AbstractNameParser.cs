@@ -37,6 +37,14 @@ namespace Winstreak.Parser.V1
 		}
 
 		/// <summary>
+		/// 
+		/// </summary>
+		~AbstractNameParser()
+		{
+			Dispose();
+		}
+
+		/// <summary>
 		/// Establishes the Gui scale that will be used to calculate pixels.
 		/// </summary>
 		/// <param name="guiScale">The Gui scale.</param>
@@ -107,19 +115,16 @@ namespace Winstreak.Parser.V1
 			int startX = StartingPoint.X;
 			int endX = Img.Width - startX;
 
-			bool errored = false;
-
-			while (y <= EndingPoint.Y)
+			for (int y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
-
 				for (int x = startX; x < endX; x++)
 				{
 					bool foundValidColor = false;
-					for (int _dy = 0; _dy < 8 * GuiWidth; _dy += GuiWidth)
+					for (int dy = 0; dy < 8 * GuiWidth; dy += GuiWidth)
 					{
-						if (IsValidColor(Img[x, y + _dy]) || Color.White.IsRgbEqualTo(Img[x, y + _dy]) &&
-							(IsValidColor(Img[x + 1, y + _dy]) || Color.White.IsRgbEqualTo(Img[x + 1, y + _dy]) ||
-							 IsValidColor(Img[x + 2, y + _dy]) || Color.White.IsRgbEqualTo(Img[x + 2, y + _dy])))
+						if (IsValidColor(Img[x, y + dy]) || Color.White.IsRgbEqualTo(Img[x, y + dy]) &&
+							(IsValidColor(Img[x + 1, y + dy]) || Color.White.IsRgbEqualTo(Img[x + 1, y + dy]) ||
+							 IsValidColor(Img[x + 2, y + dy]) || Color.White.IsRgbEqualTo(Img[x + 2, y + dy])))
 						{
 							foundValidColor = true;
 							break;
@@ -136,25 +141,13 @@ namespace Winstreak.Parser.V1
 							StringBuilder columnBytes = new StringBuilder();
 							for (int dy = 0; dy < 8 * GuiWidth && tempX < EndingPoint.X; dy += GuiWidth)
 							{
-								if (y + dy >= EndingPoint.Y)
-								{
-									errored = true;
-									break;
-								}
-
 								Color pixel = Img[tempX, y + dy];
 								columnBytes.Append(IsValidColor(pixel) || Color.White.IsRgbEqualTo(pixel) ? "1" : "0");
 							}
 
-							if (errored)
-								break;
-
 							ttlBytes.Append(columnBytes.ToString());
 							tempX += GuiWidth;
 						}
-
-						if (errored)
-							break;
 
 						ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 
@@ -166,10 +159,8 @@ namespace Winstreak.Parser.V1
 					}
 				}
 				// end for
-				if (realX != -1 || errored)
+				if (realX != -1)
 					break;
-
-				y += 9 * GuiWidth;
 			}
 			// end while
 
