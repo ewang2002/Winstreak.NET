@@ -109,12 +109,13 @@ namespace Winstreak.Parser.V1
 		/// </summary>
 		public void FindStartOfName()
 		{
+			int y = StartingPoint.Y;
 			int realX = -1;
 
 			int startX = StartingPoint.X;
 			int endX = Img.Width - startX;
 
-			for (int y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
+			for (; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
 				for (int x = startX; x < endX; x++)
 				{
