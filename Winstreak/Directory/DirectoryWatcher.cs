@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,8 @@ namespace Winstreak.Directory
 		public static int BrokenBeds;
 		public static int MaxTryHards;
 		public static string MCPath;
-		public static int GuiScale; 
+		public static int GuiScale;
+		public static string[] ExemptPlayers;
 
 		public static void Run(string path, int finalKills, int brokenBeds, int maxTryhards)
 		{
@@ -31,6 +33,22 @@ namespace Winstreak.Directory
 			MaxTryHards = maxTryhards;
 			MCPath = path;
 
+			// get current directory
+			string assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			try
+			{
+				string realPath = Path.Join(assemblyDirectory, "exempt.txt");
+				if (File.Exists(realPath))
+					ExemptPlayers = File.ReadAllLines(realPath);
+				else
+					ExemptPlayers = new string[0];
+			}
+			finally
+			{
+				Console.WriteLine($"[INFO] Exempt Players Set: {ExemptPlayers.ToReadableString()}");
+			}
+
+			// Get gui scale
 			GuiScale = ParserHelper.GetGuiScale(path);
 
 			if (GuiScale == 0)
@@ -40,6 +58,7 @@ namespace Winstreak.Directory
 				Console.ResetColor();
 				return;
 			}
+
 			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
 			Console.WriteLine("=========================");
 
@@ -56,10 +75,12 @@ namespace Winstreak.Directory
 			};
 			watcher.Created += OnChanged;
 
+			// infinite loop
 			while (Console.ReadLine() != "q")
 			{
 			}
 		}
+
 		private static void OnChanged(object source, FileSystemEventArgs e)
 		{
 			// wait for image to fully load
@@ -78,6 +99,7 @@ namespace Winstreak.Directory
 #pragma warning restore 4014
 			}
 		}
+
 		private static async Task LobbyChecker(string bitmap)
 		{
 			Console.WriteLine($"[INFO] Checking Lobby: {bitmap}");
@@ -98,7 +120,7 @@ namespace Winstreak.Directory
 				return;
 			}
 
-			IList<string> allNames = parser.GetPlayerName().lobby;
+			IList<string> allNames = parser.GetPlayerName(ExemptPlayers).lobby;
 			parser.Dispose();
 			processingTime.Stop();
 			TimeSpan imageProcessingTime = processingTime.Elapsed;
@@ -133,7 +155,8 @@ namespace Winstreak.Directory
 				}
 			}
 
-			Console.WriteLine($"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
+			Console.WriteLine(
+				$"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
 			Console.WriteLine($"[INFO] Tryhards: {namesToWorryAbout.Count}");
 			Console.WriteLine($"[INFO] Total: {allNames.Count}");
 			Console.WriteLine($"[INFO] All Names: {allNames.Count}");
@@ -178,9 +201,7 @@ namespace Winstreak.Directory
 					? 1
 					: 0;
 				if (percentFinalKillsByTryhards > 0.5)
-				{
-					points += (int) ((percentFinalKillsByTryhards * 6) * finalKillsMultiplier);
-				}
+					points += (int) (percentFinalKillsByTryhards * 6 * finalKillsMultiplier);
 			}
 			else
 			{
@@ -276,7 +297,7 @@ namespace Winstreak.Directory
 			teamInfo = teamInfo
 				.OrderByDescending(x => x.TotalBrokenBeds)
 				.ToList();
-				
+
 			processingTime.Stop();
 			TimeSpan apiRequestTime = processingTime.Elapsed;
 			processingTime.Reset();
@@ -285,6 +306,7 @@ namespace Winstreak.Directory
 			processingTime.Start();
 			// start parsing the data
 			int rank = 1;
+
 			foreach (TeamInfoResults result in teamInfo)
 			{
 				string allAvailablePlayers = result.AvailablePlayers
@@ -296,19 +318,20 @@ namespace Winstreak.Directory
 				StringBuilder b = new StringBuilder()
 					.Append($"[{rank}] {result.Color} ({result.AvailablePlayers.Count + result.ErroredPlayers.Count})")
 					.AppendLine()
-					.Append($"Total Final Kills: {result.TotalFinalKills}")
+					.Append($"{"", 4}Total Final Kills: {result.TotalFinalKills}")
 					.AppendLine()
-					.Append($"Total Broken Beds: {result.TotalBrokenBeds}")
+					.Append($"{"", 4}Total Broken Beds: {result.TotalBrokenBeds}")
 					.AppendLine()
-					.Append($"Players: {allAvailablePlayers}")
+					.Append($"{"", 4}Players: {allAvailablePlayers}")
 					.AppendLine()
-					.Append($"Errored: {result.ErroredPlayers.ToReadableString()}")
+					.Append($"{"", 4}Errored: {result.ErroredPlayers.ToReadableString()}")
 					.AppendLine();
 
 				Console.WriteLine(b.ToString());
-				Console.WriteLine();
-				++rank; 
+				++rank;
 			}
+
+			Console.WriteLine($"[INFO] {string.Join(" ← ", teamInfo.Select(x => x.Color))}");
 
 			processingTime.Stop();
 			TimeSpan processedTime = processingTime.Elapsed;
