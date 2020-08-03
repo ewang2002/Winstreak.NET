@@ -60,7 +60,6 @@ namespace Winstreak.Directory
 			{
 			}
 		}
-
 		private static void OnChanged(object source, FileSystemEventArgs e)
 		{
 			// wait for image to fully load
@@ -79,7 +78,6 @@ namespace Winstreak.Directory
 #pragma warning restore 4014
 			}
 		}
-
 		private static async Task LobbyChecker(string bitmap)
 		{
 			Console.WriteLine($"[INFO] Checking Lobby: {bitmap}");
