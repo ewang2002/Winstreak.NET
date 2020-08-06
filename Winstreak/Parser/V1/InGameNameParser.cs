@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
-using System.Threading.Tasks;
 using Winstreak.Extensions;
-using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
 namespace Winstreak.Parser.V1

@@ -4,18 +4,17 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Winstreak.Extensions;
 using Winstreak.Imaging;
-using Winstreak.MethodExtensions;
 using Winstreak.Parser;
 using Winstreak.Parser.V1;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
 
-namespace Winstreak.Directory
+namespace Winstreak.Dir
 {
 	public class DirectoryWatcher
 	{
@@ -34,14 +33,11 @@ namespace Winstreak.Directory
 			MCPath = path;
 
 			// get current directory
-			string assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			string assemblyDirectory = Environment.CurrentDirectory;
 			try
 			{
-				string realPath = Path.Join(assemblyDirectory, "exempt.txt");
-				if (File.Exists(realPath))
-					ExemptPlayers = File.ReadAllLines(realPath);
-				else
-					ExemptPlayers = new string[0];
+				string realPath = Path.Join(assemblyDirectory, "Exempt.txt");
+				ExemptPlayers = File.Exists(realPath) ? File.ReadAllLines(realPath) : new string[0];
 			}
 			finally
 			{
@@ -110,7 +106,7 @@ namespace Winstreak.Directory
 			try
 			{
 				parser.SetGuiScale(GuiScale);
-				parser.FindStartingPoint();
+				parser.InitPoints();
 				parser.FindStartOfName();
 			}
 			catch (Exception)
@@ -264,7 +260,7 @@ namespace Winstreak.Directory
 			try
 			{
 				parser.SetGuiScale(GuiScale);
-				parser.FindStartingPoint();
+				parser.InitPoints();
 				parser.FindStartOfName();
 				parser.AccountForTeamLetters();
 			}

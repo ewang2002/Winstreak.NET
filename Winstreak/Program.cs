@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
-using Winstreak.Directory;
+using System.Runtime.InteropServices;
+using Winstreak.Dir;
 
 namespace Winstreak
 {
@@ -16,24 +16,60 @@ namespace Winstreak
 			do
 			{
 				Console.WriteLine("How many broken beds does a tryhard have? ");
-				brokenBeds = int.Parse(Console.ReadLine() ?? "250");
+				try
+				{
+					brokenBeds = int.Parse(Console.ReadLine() ?? "250");
+				}
+				catch (Exception)
+				{
+					brokenBeds = 300; 
+				}
 			} while (brokenBeds <= 0);
 
 			do
 			{
 				Console.WriteLine("How many final kills does a tryhard have? ");
-				finalKills = int.Parse(Console.ReadLine() ?? "750");
+				try
+				{
+					finalKills = int.Parse(Console.ReadLine() ?? "750");
+				}
+				catch (Exception)
+				{
+					finalKills = 850; 
+				}
 			} while (finalKills <= 0);
 
 			do
 			{
 				Console.WriteLine("How many tryhards in lobby before we recommend you leave? ");
-				amtTryHards = int.Parse(Console.ReadLine() ?? "250");
+				try
+				{
+					amtTryHards = int.Parse(Console.ReadLine() ?? "250");
+				}
+				catch (Exception)
+				{
+					amtTryHards = 4;
+				}
 			} while (amtTryHards <= 0);
 
 			Console.Clear();
-			// @"C:\Users\ewang\AppData\Roaming\.minecraft\screenshots"
-			string path = Path.Join("C:", "Users", "ewang", "AppData", "Roaming", ".minecraft");
+			string path;
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				path = Path.Join("C:", "Users", Environment.UserName, "AppData", "Roaming", ".minecraft");
+			}
+			else
+			{
+				Console.WriteLine("Please copy and paste the Minecraft folder here. The folder should end with \".minecraft.\"");
+				path = Console.ReadLine();
+			}
+
+			if (!Directory.Exists(path))
+			{
+				Console.WriteLine($"[ERROR] Your Minecraft folder wasn't found. Please type the path to your folder (ends with \".minecraft.\"");
+				path = Console.ReadLine();
+			}
+
 			Console.WriteLine("[INFO] Starting Service.");
 			Console.WriteLine($"[INFO] Checking: {Path.Join(path, "screenshots")}");
 			DirectoryWatcher.Run(path, finalKills, brokenBeds, amtTryHards);

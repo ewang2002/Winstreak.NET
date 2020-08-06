@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Winstreak.MethodExtensions;
 
 namespace Winstreak.Request.Checker
 {

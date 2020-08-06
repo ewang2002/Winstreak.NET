@@ -56,50 +56,10 @@ namespace Winstreak.Parser.V1
 		/// <summary>
 		/// Finds the starting and ending point of the image. 
 		/// </summary>
-		public void FindStartingPoint()
+		public void InitPoints()
 		{
-			// get top left point
-			int topLeftX = -1;
-			int topLeftY = 20 * GuiWidth;
-
-			for (int x = Img.Width / 4; x < Img.Width; x++)
-			{
-				if (YouArePlayingOnColor.IsRgbEqualTo(Img.GetPixel(x, 16 * GuiWidth)))
-				{
-					topLeftX = x;
-					break;
-				}
-			}
-
-			// right to left, bottom to top
-			int bottomRightX = -1;
-			int bottomRightY = -1;
-
-			for (int x = Img.Width - ListedNumsOffset; x >= 0; x--)
-			{
-				bool canBreak = false;
-				for (int y = Img.Height - 1; y >= 0; y--)
-				{
-					if (!StoreHypixelNetDarkColor.IsRgbEqualTo(Img.GetPixel(x, y)))
-						continue;
-					bottomRightX = x;
-					bottomRightY = y;
-					canBreak = true;
-					break;
-				}
-
-				if (canBreak)
-					break;
-			}
-
-			if (topLeftX == -1 || topLeftX == Img.Width - 1 || bottomRightY == -1 || bottomRightX == -1)
-				throw new InvalidImageException(
-					"Invalid image given. Either a player list wasn't detected or the \"background\" of the player list isn't just the sky. Make sure the image contains the player list and that the \"background\" of the player list is just the sky (no clouds).");
-
-			StartingPoint = new Point(topLeftX, topLeftY);
-			// subtract two because bottomRightY is right below the
-			// right "roof" of the "T" 
-			EndingPoint = new Point(bottomRightX, bottomRightY - 2 * GuiWidth);
+			StartingPoint = new Point(Img.Width / 4, 20 * GuiWidth);
+			EndingPoint = new Point(Img.Width - (Img.Width / 4), Img.Height / 2);
 		}
 
 		/// <summary>
@@ -122,6 +82,9 @@ namespace Winstreak.Parser.V1
 					bool foundValidColor = false;
 					for (int dy = 0; dy < 8 * GuiWidth; dy += GuiWidth)
 					{
+						// checking for white because
+						// sometimes, when you enter lobby
+						// some names will be white
 						if (IsValidColor(Img[x, y + dy]) || Color.White.IsRgbEqualTo(Img[x, y + dy]) &&
 							(IsValidColor(Img[x + 1, y + dy]) || Color.White.IsRgbEqualTo(Img[x + 1, y + dy]) ||
 							 IsValidColor(Img[x + 2, y + dy]) || Color.White.IsRgbEqualTo(Img[x + 2, y + dy])))

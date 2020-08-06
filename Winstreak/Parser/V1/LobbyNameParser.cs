@@ -24,7 +24,6 @@ namespace Winstreak.Parser.V1
 			exempt ??= new List<string>();
 
 			IList<string> names = new List<string>();
-
 			for (int y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
 				StringBuilder name = new StringBuilder();
@@ -40,7 +39,6 @@ namespace Winstreak.Parser.V1
 						for (int dy = 0; dy < 8 * base.GuiWidth; dy += base.GuiWidth)
 							columnBytes.Append(IsValidColor(base.Img.GetPixel(x, y + dy)) ? "1" : "0");
 
-
 						ttlBytes.Append(columnBytes.ToString());
 						x += base.GuiWidth;
 					}
@@ -50,7 +48,6 @@ namespace Winstreak.Parser.V1
 
 
 					if (BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
-
 						name.Append(BinaryToCharactersMap[ttlBytes.ToString()]);
 					else
 						break;
