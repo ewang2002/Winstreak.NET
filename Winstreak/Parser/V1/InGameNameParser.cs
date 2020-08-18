@@ -8,54 +8,58 @@ namespace Winstreak.Parser.V1
 {
 	public class InGameNameParser : AbstractNameParser
 	{
+		/// <inheritdoc />
 		public InGameNameParser(Bitmap image) : base(image)
 		{
 		}
 
+		/// <inheritdoc />
 		public InGameNameParser(string file) : base(file)
 		{
 		}
-
+		
+		/// <summary>
+		/// Accounts for the team letters (R, G, Y, B) by skipping the team letters altogether and going to the first name. 
+		/// </summary>
 		public void AccountForTeamLetters() =>
 			StartingPoint = new Point(StartingPoint.X + 12 * GuiWidth, StartingPoint.Y);
 
+		/// <inheritdoc />
 		public override (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(
 			IList<string> exempt = null)
 		{
 			exempt ??= new List<string>();
 
-			IDictionary<TeamColors, IList<string>> teammates = new Dictionary<TeamColors, IList<string>>();
-			IList<TeamColors> colorsToIgnore = new List<TeamColors>();
+			var teammates = new Dictionary<TeamColors, IList<string>>();
+			var colorsToIgnore = new List<TeamColors>();
 
-			TeamColors currentColor = TeamColors.Unknown;
-			for (int y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
+			var currentColor = TeamColors.Unknown;
+			for (var y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
-				StringBuilder name = new StringBuilder();
-				int x = StartingPoint.X;
+				var name = new StringBuilder();
+				var x = StartingPoint.X;
 
 				while (true)
 				{
-					StringBuilder ttlBytes = new StringBuilder();
+					var ttlBytes = new StringBuilder();
 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
-						StringBuilder columnBytes = new StringBuilder();
-						for (int dy = 0; dy < 8 * base.GuiWidth; dy += base.GuiWidth)
+						var columnBytes = new StringBuilder();
+						for (var dy = 0; dy < 8 * base.GuiWidth; dy += base.GuiWidth)
 						{
-							Color color = base.Img.GetPixel(x, y + dy);
+							var color = base.Img.GetPixel(x, y + dy);
 							if (IsValidColor(color))
 							{
 								currentColor = GetCurrentColor(color);
 								columnBytes.Append("1");
 							}
 							else
-							{
 								columnBytes.Append("0");
-							}
 						}
 
 						ttlBytes.Append(columnBytes.ToString());
-						x += base.GuiWidth;
+						x += GuiWidth;
 					}
 
 					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
@@ -67,25 +71,28 @@ namespace Winstreak.Parser.V1
 				}
 
 				if (exempt.Contains(name.ToString()))
-				{
 					colorsToIgnore.Add(currentColor);
-				}
 
-				if (!colorsToIgnore.Contains(currentColor) && !name.ToString().Trim().Equals(string.Empty))
-				{
-					if (currentColor == TeamColors.Unknown)
-						continue;
+				if (colorsToIgnore.Contains(currentColor) || name.ToString().Trim().Equals(string.Empty)) 
+					continue;
 
-					if (!teammates.ContainsKey(currentColor))
-						teammates.Add(currentColor, new List<string>());
+				if (currentColor == TeamColors.Unknown)
+					continue;
 
-					teammates[currentColor].Add(name.ToString());
-				}
+				if (!teammates.ContainsKey(currentColor))
+					teammates.Add(currentColor, new List<string>());
+
+				teammates[currentColor].Add(name.ToString());
 			}
 
 			return (new List<string>(), teammates);
 		}
 
+		/// <summary>
+		/// Gets the current team color.
+		/// </summary>
+		/// <param name="color">The input color.</param>
+		/// <returns>The team color as an enum flag.</returns>
 		private TeamColors GetCurrentColor(Color color)
 		{
 			return BlueTeamColor.IsRgbEqualTo(color)
@@ -99,11 +106,7 @@ namespace Winstreak.Parser.V1
 							: TeamColors.Unknown;
 		}
 
-		/// <summary>
-		/// Determines if a color is a valid team color.
-		/// </summary>
-		/// <param name="color">The color.</param>
-		/// <returns>Whether the color is valid or not.</returns>
+		/// <inheritdoc />
 		public override bool IsValidColor(Color color)
 		{
 			return RedTeamColor.IsRgbEqualTo(color)

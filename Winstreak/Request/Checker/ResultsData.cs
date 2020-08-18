@@ -22,7 +22,7 @@ namespace Winstreak.Request.Checker
 	{
 		public readonly string Color;
 		public readonly IList<ResponseCheckerResults> AvailablePlayers;
-		public readonly IList<String> ErroredPlayers;
+		public readonly IList<string> ErroredPlayers;
 		public readonly int TotalFinalKills;
 		public readonly int TotalBrokenBeds;
 

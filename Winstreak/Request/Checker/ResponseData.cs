@@ -6,23 +6,28 @@ namespace Winstreak.Request.Checker
 	public class ResponseData
 	{
 		private string HtmlContent { get; }
-		public string Name { get; private set; }
+		public string Name { get; }
 		public BedwarsData? SoloDataInfo { get; private set; }
 		public BedwarsData? DoubleDataInfo { get; private set; }
 		public BedwarsData? ThreesDataInfo { get; private set; }
 		public BedwarsData? FoursDataInfo { get; private set; }
 		public BedwarsData? TotalDataInfo { get; private set; }
 
+		/// <summary>
+		/// Creates a new ResponseData class, which is designed to parse an individual person's raw data found on Plancke's website.
+		/// </summary>
+		/// <param name="name">The name.</param>
+		/// <param name="htmlContent">The HTML content found on Plancke's website.</param>
 		public ResponseData(string name, string htmlContent)
 		{
 			HtmlContent = htmlContent;
 			Name = name;
 		}
 
-		/**
-         * Parses the raw HTML data. After this method is executed, all getters will be available for use.
-         * @return This object.
-         */
+		/// <summary>
+		/// Parses the raw HTML data. After this method is executed, all getters will be available for use.
+		/// </summary>
+		/// <returns>This object.</returns>
 		public ResponseData Parse()
 		{
 			if (HtmlContent.Contains("Player does not exist!"))

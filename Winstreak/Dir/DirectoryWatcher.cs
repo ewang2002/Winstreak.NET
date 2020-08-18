@@ -4,9 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Winstreak.Extensions;
 using Winstreak.Imaging;
@@ -19,13 +17,29 @@ namespace Winstreak.Dir
 {
 	public class DirectoryWatcher
 	{
+		public static string HelpInfo = new StringBuilder()
+			.Append("[INFO] Current Command List.")
+			.AppendLine()
+			.Append("> -c: Clears the console.")
+			.AppendLine()
+			.Append("> -l: Checks the last screenshot provided, assuming it's a lobby screenshot.")
+			.AppendLine()
+			.Append("> -g: Checks the last screenshot provided, assuming it's an in-game screenshot.")
+			.AppendLine()
+			.Append(
+				"> -tc: Determines whether the console should be cleared when a screenshot is provided.")
+			.AppendLine()
+			.Append("> -h: Shows this menu.")
+			.ToString();
+
 		public static int FinalKills;
 		public static int BrokenBeds;
 		public static int MaxTryHards;
 		public static string McPath;
-		public static DirectoryInfo McScreenshotsPath; 
+		public static DirectoryInfo McScreenshotsPath;
 		public static int GuiScale;
 		public static string[] ExemptPlayers;
+		public static bool ShouldClearBeforeCheck = false;
 
 		public static async Task Run(string path, int finalKills, int brokenBeds, int maxTryhards)
 		{
@@ -36,11 +50,13 @@ namespace Winstreak.Dir
 			McScreenshotsPath = new DirectoryInfo(Path.Join(McPath, "screenshots"));
 
 			// get current directory
-			string assemblyDirectory = Environment.CurrentDirectory;
+			var assemblyDirectory = Environment.CurrentDirectory;
 			try
 			{
-				string realPath = Path.Join(assemblyDirectory, "Exempt.txt");
-				ExemptPlayers = File.Exists(realPath) ? File.ReadAllLines(realPath) : new string[0];
+				var realPath = Path.Join(assemblyDirectory, "Exempt.txt");
+				ExemptPlayers = File.Exists(realPath)
+					? await File.ReadAllLinesAsync(realPath)
+					: new string[0];
 			}
 			finally
 			{
@@ -53,7 +69,8 @@ namespace Winstreak.Dir
 			if (GuiScale == 0)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("[ERROR] Please set a non-automatic GUI scale and then restart the program.");
+				Console.WriteLine(
+					"[ERROR] Please set a non-automatic GUI scale in your Minecraft settings and then restart the program.");
 				Console.ResetColor();
 				return;
 			}
@@ -61,7 +78,7 @@ namespace Winstreak.Dir
 			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
 			Console.WriteLine("=========================");
 
-			using FileSystemWatcher watcher = new FileSystemWatcher
+			using var watcher = new FileSystemWatcher
 			{
 				Path = Path.Join(path, "screenshots"),
 				// Only watch image files
@@ -74,102 +91,117 @@ namespace Winstreak.Dir
 			};
 			watcher.Created += OnChanged;
 
-			// infinite loop
+			// infinite loop for command processing
 			while (true)
 			{
-				string input = Console.ReadLine() ?? string.Empty;
-				if (input == string.Empty) 
+				var input = Console.ReadLine() ?? string.Empty;
+				if (input == string.Empty)
 					continue;
-				
-				// quit program
-				if (input.ToLower() == "-q")
-					break;
 
-				if (input.ToLower() == "-c")
+				if (input.StartsWith('-'))
 				{
-					Console.Clear();
-					continue;
-				}
+					// quit program
+					if (input.ToLower() == "-q")
+						break;
 
-				// check last image again
-				if (input.ToLower() == "-l" || input.ToLower() == "-g")
-				{
-					if (McScreenshotsPath.GetFiles().Length == 0)
+					switch (input.ToLower().Trim())
 					{
-						Console.WriteLine("[INFO] No Screenshots Found.");
-						Console.WriteLine("=====================================");
-						continue;
-					}
-					var lastFile = McScreenshotsPath
-						.GetFiles()
-						.OrderByDescending(x => x.LastWriteTime)
-						.First();
-					if (lastFile == null) 
-						continue;
+						case "-h":
+							Console.WriteLine(HelpInfo);
+							Console.WriteLine("=====================================");
+							continue;
+						case "-c":
+							Console.Clear();
+							continue;
+						// check last image again
+						case "-l":
+						case "-g":
+							if (McScreenshotsPath.GetFiles().Length == 0)
+							{
+								Console.WriteLine("[INFO] No Screenshots Found.");
+								Console.WriteLine("=====================================");
+								continue;
+							}
 
-					if (input.ToLower() == "-l")
-						await LobbyChecker(lastFile.FullName);
-					else
-						await GameCheck(lastFile.FullName);
+							var lastFile = McScreenshotsPath
+								.GetFiles()
+								.OrderByDescending(x => x.LastWriteTime)
+								.First();
+							if (lastFile == null)
+								continue;
+
+							if (input.ToLower() == "-l")
+								await LobbyChecker(lastFile.FullName);
+							else
+								await GameCheck(lastFile.FullName);
+							continue;
+						case "-tc":
+							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
+							Console.WriteLine(ShouldClearBeforeCheck
+								? "[INFO] Console will be cleared once a screenshot is provided."
+								: "[INFO] Console will not be cleared once a screenshot is provided.");
+							Console.WriteLine("=====================================");
+							continue;
+					}
+
+					Console.WriteLine(HelpInfo);
+					Console.WriteLine("=====================================");
 					continue;
 				}
 
 				// check ign
-				Stopwatch checkTime = new Stopwatch();
+				var checkTime = new Stopwatch();
 				checkTime.Start();
-				HttpResponseMessage results = await PlanckeApiRequester.Client
+				var results = await PlanckeApiRequester.Client
 					.GetAsync($"https://plancke.io/hypixel/player/stats/{input}");
-				string responseHtml = await results.Content.ReadAsStringAsync();
-				ResponseData data = new ResponseData(input, responseHtml)
+				var responseHtml = await results.Content.ReadAsStringAsync();
+				var data = new ResponseData(input, responseHtml)
 					.Parse();
 				if (data.TotalDataInfo is { } playerInfo)
 				{
 					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($"[INFO] {input} Found!");
+					Console.WriteLine($@"[INFO] ""{input}"" Found!");
 					Console.ResetColor();
-					Console.WriteLine($"[INFO] Broken Beds: {playerInfo.BrokenBeds}");
-					Console.WriteLine($"[INFO] Final Kills: {playerInfo.FinalKills}");
-					Console.WriteLine($"[INFO] Total Wins: {playerInfo.Wins}");
-					Console.WriteLine($"[INFO] Total Losses: {playerInfo.Losses}");
+					Console.WriteLine($"> Broken Beds: {playerInfo.BrokenBeds}");
+					Console.WriteLine($"> Final Kills: {playerInfo.FinalKills}");
+					Console.WriteLine($"> Final Deaths: {playerInfo.FinalDeaths}");
+					Console.WriteLine($"> Final K/D: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
+					Console.WriteLine($"> Total Wins: {playerInfo.Wins}");
+					Console.WriteLine($"> Total Losses: {playerInfo.Losses}");
 				}
 				else
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine($"[INFO] {input} Not Found!");
+					Console.WriteLine($@"[INFO] ""{input}"" Not Found!");
 					Console.ResetColor();
 				}
+
 				checkTime.Stop();
-				Console.WriteLine($"[INFO] Time Taken: {checkTime.Elapsed.TotalSeconds} Seconds.");
+				Console.WriteLine($"> Time Taken: {checkTime.Elapsed.TotalSeconds} Seconds.");
 				Console.WriteLine("=====================================");
 			}
 		}
 
-		private static void OnChanged(object source, FileSystemEventArgs e)
+		private static async void OnChanged(object source, FileSystemEventArgs e)
 		{
 			// wait for image to fully load
-			Thread.Sleep(350);
-			Bitmap bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
+			await Task.Delay(350);
+			var bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			if (AbstractNameParser.IsInLobby(bitmap))
-			{
-#pragma warning disable 4014
-				LobbyChecker(e.FullPath);
-#pragma warning restore 4014
-			}
+				await LobbyChecker(e.FullPath);
 			else
-			{
-#pragma warning disable 4014
-				GameCheck(e.FullPath);
-#pragma warning restore 4014
-			}
+				await GameCheck(e.FullPath);
 		}
 
 		private static async Task LobbyChecker(string bitmap)
 		{
+			if (ShouldClearBeforeCheck)
+				Console.Clear();
 			Console.WriteLine($"[INFO] Checking Lobby: {bitmap}");
-			Stopwatch processingTime = new Stopwatch();
+			var processingTime = new Stopwatch();
 			processingTime.Start();
 
-			LobbyNameParser parser = new LobbyNameParser(bitmap);
+			var parser = new LobbyNameParser(bitmap);
 			try
 			{
 				parser.SetGuiScale(GuiScale);
@@ -178,50 +210,49 @@ namespace Winstreak.Dir
 			}
 			catch (Exception)
 			{
+				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
+				Console.ResetColor();
 				Console.WriteLine("=====================================");
 				return;
 			}
 
-			IList<string> allNames = parser.GetPlayerName(ExemptPlayers).lobby;
+			var allNames = parser.GetPlayerName(ExemptPlayers).lobby;
 			parser.Dispose();
 			processingTime.Stop();
-			TimeSpan imageProcessingTime = processingTime.Elapsed;
+			var imageProcessingTime = processingTime.Elapsed;
 			processingTime.Reset();
 
 			processingTime.Start();
 			// get data
-			PlanckeApiRequester planckeApiRequester = new PlanckeApiRequester(allNames);
+			var planckeApiRequester = new PlanckeApiRequester(allNames);
 			// parse data
-			IDictionary<string, string> nameData = await planckeApiRequester.SendRequests();
-			ResponseParser checker = new ResponseParser(nameData)
+			var nameData = await planckeApiRequester.SendRequests();
+			var checker = new ResponseParser(nameData)
 				.SetMinimumBrokenBedsNeeded(BrokenBeds)
 				.SetMinimumFinalKillsNeeded(FinalKills);
 
-			IList<ResponseCheckerResults> namesToWorryAbout = checker.GetNamesToWorryAbout();
+			var namesToWorryAbout = checker.GetNamesToWorryAbout();
 
 			processingTime.Stop();
-			TimeSpan apiRequestTime = processingTime.Elapsed;
+			var apiRequestTime = processingTime.Elapsed;
 			processingTime.Reset();
 
 			// start parsing the data
-			int tryhardBedsBroken = 0;
-			int tryhardFinalKills = 0;
+			var tryhardBedsBroken = 0;
+			var tryhardFinalKills = 0;
 			if (namesToWorryAbout.Count != 0)
-			{
-				foreach (ResponseCheckerResults result in namesToWorryAbout)
+				foreach (var result in namesToWorryAbout)
 				{
 					tryhardBedsBroken += result.BedsBroken;
 					tryhardFinalKills += result.FinalKills;
 					Console.WriteLine(
 						$"[PLAYER] Name: {result.Name} (K = {result.FinalKills} & B = {result.BedsBroken})");
 				}
-			}
 
 			Console.WriteLine(
 				$"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
-			Console.WriteLine($"[INFO] Tryhards: {namesToWorryAbout.Count}");
-			Console.WriteLine($"[INFO] Total: {allNames.Count}");
+			Console.WriteLine($"[INFO] Tryhards/Total: {namesToWorryAbout.Count}/{allNames.Count}");
 			Console.WriteLine($"[INFO] Tryhard Final Kills: {tryhardFinalKills}");
 			Console.WriteLine($"[INFO] Tryhard Broken Beds: {tryhardBedsBroken}");
 			Console.WriteLine($"[INFO] Total Final Kills: {checker.TotalFinalKills}");
@@ -229,37 +260,31 @@ namespace Winstreak.Dir
 			Console.WriteLine($"[INFO] Image Processing Time: {imageProcessingTime.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 
-			int points = 0;
+			var points = 0;
 			if (namesToWorryAbout.Count >= MaxTryHards)
-			{
 				points += 20;
-			}
 			else
-			{
 				points += namesToWorryAbout.Count * 2;
-			}
 
 			points += checker.ErroredPlayers.Count;
 
 			if (namesToWorryAbout.Count != 0)
 			{
-				int bedsThousands = tryhardBedsBroken / 1050;
+				var bedsThousands = tryhardBedsBroken / 1050;
 				points += bedsThousands;
 
-				int finalKillsThousands = tryhardFinalKills / 1350;
+				var finalKillsThousands = tryhardFinalKills / 1350;
 				points += finalKillsThousands;
 
-				double percentBedsBrokenByTryhards = (double) tryhardBedsBroken / checker.TotalBedsBroken;
-				int bedsBrokenMultiplier = tryhardBedsBroken >= BrokenBeds * namesToWorryAbout.Count
+				var percentBedsBrokenByTryhards = (double) tryhardBedsBroken / checker.TotalBedsBroken;
+				var bedsBrokenMultiplier = tryhardBedsBroken >= BrokenBeds * namesToWorryAbout.Count
 					? 1
 					: 0;
 				if (percentBedsBrokenByTryhards > 0.4)
-				{
 					points += (int) ((percentBedsBrokenByTryhards * 8) * bedsBrokenMultiplier);
-				}
 
-				double percentFinalKillsByTryhards = (double) tryhardFinalKills / checker.TotalFinalKills;
-				double finalKillsMultiplier = tryhardFinalKills >= MaxTryHards * namesToWorryAbout.Count
+				var percentFinalKillsByTryhards = (double) tryhardFinalKills / checker.TotalFinalKills;
+				var finalKillsMultiplier = tryhardFinalKills >= MaxTryHards * namesToWorryAbout.Count
 					? 1
 					: 0;
 				if (percentFinalKillsByTryhards > 0.5)
@@ -267,10 +292,10 @@ namespace Winstreak.Dir
 			}
 			else
 			{
-				int bedsThousands = checker.TotalBedsBroken / 1050;
+				var bedsThousands = checker.TotalBedsBroken / 1050;
 				points += bedsThousands;
 
-				int finalKillsThousands = checker.TotalFinalKills / 1500;
+				var finalKillsThousands = checker.TotalFinalKills / 1500;
 				points += finalKillsThousands;
 			}
 
@@ -318,11 +343,13 @@ namespace Winstreak.Dir
 
 		public static async Task GameCheck(string bitmap)
 		{
+			if (ShouldClearBeforeCheck)
+				Console.Clear();
 			Console.WriteLine($"[INFO] Checking Game: {bitmap}");
-			Stopwatch processingTime = new Stopwatch();
+			var processingTime = new Stopwatch();
 			processingTime.Start();
 
-			InGameNameParser parser = new InGameNameParser(bitmap);
+			var parser = new InGameNameParser(bitmap);
 			try
 			{
 				parser.SetGuiScale(GuiScale);
@@ -337,22 +364,21 @@ namespace Winstreak.Dir
 				return;
 			}
 
-			IDictionary<TeamColors, IList<string>> teams = parser.GetPlayerName().team;
+			var teams = parser.GetPlayerName().team;
 			parser.Dispose();
 			processingTime.Stop();
-			TimeSpan imageProcessingTime = processingTime.Elapsed;
+			var imageProcessingTime = processingTime.Elapsed;
 			processingTime.Reset();
-
 
 			processingTime.Start();
 			// get data
-			IList<TeamInfoResults> teamInfo = new List<TeamInfoResults>();
-			foreach (KeyValuePair<TeamColors, IList<string>> entry in teams)
+			var teamInfo = new List<TeamInfoResults>();
+			foreach (var (key, value) in teams)
 			{
-				PlanckeApiRequester planckeApiRequester = new PlanckeApiRequester(entry.Value);
-				IDictionary<string, string> teamData = await planckeApiRequester.SendRequests();
-				ResponseParser p = new ResponseParser(teamData);
-				teamInfo.Add(new TeamInfoResults(entry.Key, p.GetPlayerDataFromMap(), p.ErroredPlayers,
+				var planckeApiRequester = new PlanckeApiRequester(value);
+				var teamData = await planckeApiRequester.SendRequests();
+				var p = new ResponseParser(teamData);
+				teamInfo.Add(new TeamInfoResults(key, p.GetPlayerDataFromMap(), p.ErroredPlayers,
 					p.TotalFinalKills, p.TotalBedsBroken));
 			}
 
@@ -361,32 +387,32 @@ namespace Winstreak.Dir
 				.ToList();
 
 			processingTime.Stop();
-			TimeSpan apiRequestTime = processingTime.Elapsed;
+			var apiRequestTime = processingTime.Elapsed;
 			processingTime.Reset();
 
 			// start parsing results for data
 			processingTime.Start();
 			// start parsing the data
-			int rank = 1;
+			var rank = 1;
 
-			foreach (TeamInfoResults result in teamInfo)
+			foreach (var result in teamInfo)
 			{
-				string allAvailablePlayers = result.AvailablePlayers
+				var allAvailablePlayers = result.AvailablePlayers
 					.OrderByDescending(x => x.BedsBroken)
 					.Select(x => $"{x.Name} ({x.BedsBroken})")
 					.ToList()
 					.ToReadableString();
 
-				StringBuilder b = new StringBuilder()
+				var b = new StringBuilder()
 					.Append($"[{rank}] {result.Color} ({result.AvailablePlayers.Count + result.ErroredPlayers.Count})")
 					.AppendLine()
-					.Append($"{"", 4}Total Final Kills: {result.TotalFinalKills}")
+					.Append($"{"",4}Total Final Kills: {result.TotalFinalKills}")
 					.AppendLine()
-					.Append($"{"", 4}Total Broken Beds: {result.TotalBrokenBeds}")
+					.Append($"{"",4}Total Broken Beds: {result.TotalBrokenBeds}")
 					.AppendLine()
-					.Append($"{"", 4}Players: {allAvailablePlayers}")
+					.Append($"{"",4}Players: {allAvailablePlayers}")
 					.AppendLine()
-					.Append($"{"", 4}Errored: {result.ErroredPlayers.ToReadableString()}")
+					.Append($"{"",4}Errored: {result.ErroredPlayers.ToReadableString()}")
 					.AppendLine();
 
 				Console.WriteLine(b.ToString());
@@ -396,7 +422,7 @@ namespace Winstreak.Dir
 			Console.WriteLine($"[INFO] {string.Join(" ← ", teamInfo.Select(x => x.Color))}");
 
 			processingTime.Stop();
-			TimeSpan processedTime = processingTime.Elapsed;
+			var processedTime = processingTime.Elapsed;
 
 			Console.WriteLine($"[INFO] Image Processing Time: {imageProcessingTime.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");

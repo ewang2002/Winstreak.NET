@@ -37,7 +37,7 @@ namespace Winstreak.Parser.V1
 		}
 
 		/// <summary>
-		/// 
+		/// The class destructor. 
 		/// </summary>
 		~AbstractNameParser()
 		{
@@ -50,7 +50,7 @@ namespace Winstreak.Parser.V1
 		/// <param name="guiScale">The Gui scale.</param>
 		public void SetGuiScale(int guiScale)
 		{
-			this.GuiWidth = guiScale;
+			GuiWidth = guiScale;
 		}
 
 		/// <summary>
@@ -69,18 +69,18 @@ namespace Winstreak.Parser.V1
 		/// </summary>
 		public void FindStartOfName()
 		{
-			int y = StartingPoint.Y;
-			int realX = -1;
+			var y = StartingPoint.Y;
+			var realX = -1;
 
-			int startX = StartingPoint.X;
-			int endX = Img.Width - startX;
+			var startX = StartingPoint.X;
+			var endX = Img.Width - startX;
 
 			for (; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
-				for (int x = startX; x < endX; x++)
+				for (var x = startX; x < endX; x++)
 				{
-					bool foundValidColor = false;
-					for (int dy = 0; dy < 8 * GuiWidth; dy += GuiWidth)
+					var foundValidColor = false;
+					for (var dy = 0; dy < 8 * GuiWidth; dy += GuiWidth)
 					{
 						// checking for white because
 						// sometimes, when you enter lobby
@@ -96,15 +96,15 @@ namespace Winstreak.Parser.V1
 
 					if (foundValidColor)
 					{
-						StringBuilder ttlBytes = new StringBuilder();
+						var ttlBytes = new StringBuilder();
 
-						int tempX = x;
+						var tempX = x;
 						while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 						{
-							StringBuilder columnBytes = new StringBuilder();
-							for (int dy = 0; dy < 8 * GuiWidth && tempX < EndingPoint.X; dy += GuiWidth)
+							var columnBytes = new StringBuilder();
+							for (var dy = 0; dy < 8 * GuiWidth && tempX < EndingPoint.X; dy += GuiWidth)
 							{
-								Color pixel = Img[tempX, y + dy];
+								var pixel = Img[tempX, y + dy];
 								columnBytes.Append(IsValidColor(pixel) || Color.White.IsRgbEqualTo(pixel) ? "1" : "0");
 							}
 
@@ -114,11 +114,10 @@ namespace Winstreak.Parser.V1
 
 						ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 
-						if (BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
-						{
-							realX = x;
-							break;
-						}
+						if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString())) 
+							continue;
+						realX = x;
+						break;
 					}
 				}
 				// end for
@@ -134,19 +133,34 @@ namespace Winstreak.Parser.V1
 			StartingPoint = new Point(realX, y);
 		}
 
+		/// <summary>
+		/// Determines if a color is a valid color. This method needs to be implemented in any subclasses.
+		/// </summary>
+		/// <param name="color">The color.</param>
+		/// <returns>Whether the color is a valid color in the context of the subclass.</returns>
 		public abstract bool IsValidColor(Color color);
 
+		/// <summary>
+		/// Parses the player's name from a screenshot. 
+		/// </summary>
+		/// <param name="exempt">Any names that shouldn't be included in the parsing results.</param>
+		/// <returns>A tuple containing a list or a dictionary. Depending on the needs of the subclass, one of the two tuple elements will actually have the parsed names.</returns>
 		public abstract (IList<string> lobby, IDictionary<TeamColors, IList<string>> team) GetPlayerName(
 			IList<string> exempt = null);
 
+		/// <summary>
+		/// Determines if a screenshot was taken in the lobby or in-game.
+		/// </summary>
+		/// <param name="image">The image.</param>
+		/// <returns>Whether the screenshot was taken in the lobby.</returns>
 		public static bool IsInLobby(Bitmap image)
 		{
-			using UnmanagedImage img = UnmanagedImage.FromManagedImage(image);
-			for (int y = 0; y < img.Height; y++)
+			using var img = UnmanagedImage.FromManagedImage(image);
+			for (var y = 0; y < img.Height; y++)
 			{
-				for (int x = 0; x < img.Width; x++)
+				for (var x = 0; x < img.Width; x++)
 				{
-					Color color = img.GetPixel(x, y);
+					var color = img.GetPixel(x, y);
 					if (BossBarColor.IsRgbEqualTo(color))
 					{
 						return true;
@@ -158,16 +172,12 @@ namespace Winstreak.Parser.V1
 			return false;
 		}
 
+		/// <summary>
+		/// Disposes the image.
+		/// </summary>
 		public void Dispose()
 		{
 			Img?.Dispose();
-		}
-
-		public void SaveCroppedImage(string name, int x, int y, int width, int height)
-		{
-			using Bitmap origImage = Img.ToManagedImage();
-			using Bitmap croppedImage = origImage.Clone(new Rectangle(x, y, width, height), Img.PixelFormat);
-			croppedImage.Save(name, ImageFormat.Png);
 		}
 	}
 }

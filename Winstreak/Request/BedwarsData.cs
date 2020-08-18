@@ -1,6 +1,6 @@
 ﻿namespace Winstreak.Request
 {
-	public struct BedwarsData
+	public readonly struct BedwarsData
 	{
 		public readonly int Kills;
 		public readonly int Deaths;
