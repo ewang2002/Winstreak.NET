@@ -8,7 +8,7 @@ namespace Winstreak.Request
 {
 	public class PlanckeApiRequester
 	{
-		private static readonly HttpClient Client;
+		public static readonly HttpClient Client;
 		public IList<string> Names { get; }
 
 		static PlanckeApiRequester()

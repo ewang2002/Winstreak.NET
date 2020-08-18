@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,16 +22,18 @@ namespace Winstreak.Dir
 		public static int FinalKills;
 		public static int BrokenBeds;
 		public static int MaxTryHards;
-		public static string MCPath;
+		public static string McPath;
+		public static DirectoryInfo McScreenshotsPath; 
 		public static int GuiScale;
 		public static string[] ExemptPlayers;
 
-		public static void Run(string path, int finalKills, int brokenBeds, int maxTryhards)
+		public static async Task Run(string path, int finalKills, int brokenBeds, int maxTryhards)
 		{
 			FinalKills = finalKills;
 			BrokenBeds = brokenBeds;
 			MaxTryHards = maxTryhards;
-			MCPath = path;
+			McPath = path;
+			McScreenshotsPath = new DirectoryInfo(Path.Join(McPath, "screenshots"));
 
 			// get current directory
 			string assemblyDirectory = Environment.CurrentDirectory;
@@ -72,8 +75,72 @@ namespace Winstreak.Dir
 			watcher.Created += OnChanged;
 
 			// infinite loop
-			while (Console.ReadLine() != "q")
+			while (true)
 			{
+				string input = Console.ReadLine() ?? string.Empty;
+				if (input == string.Empty) 
+					continue;
+				
+				// quit program
+				if (input.ToLower() == "-q")
+					break;
+
+				if (input.ToLower() == "-c")
+				{
+					Console.Clear();
+					continue;
+				}
+
+				// check last image again
+				if (input.ToLower() == "-l" || input.ToLower() == "-g")
+				{
+					if (McScreenshotsPath.GetFiles().Length == 0)
+					{
+						Console.WriteLine("[INFO] No Screenshots Found.");
+						Console.WriteLine("=====================================");
+						continue;
+					}
+					var lastFile = McScreenshotsPath
+						.GetFiles()
+						.OrderByDescending(x => x.LastWriteTime)
+						.First();
+					if (lastFile == null) 
+						continue;
+
+					if (input.ToLower() == "-l")
+						await LobbyChecker(lastFile.FullName);
+					else
+						await GameCheck(lastFile.FullName);
+					continue;
+				}
+
+				// check ign
+				Stopwatch checkTime = new Stopwatch();
+				checkTime.Start();
+				HttpResponseMessage results = await PlanckeApiRequester.Client
+					.GetAsync($"https://plancke.io/hypixel/player/stats/{input}");
+				string responseHtml = await results.Content.ReadAsStringAsync();
+				ResponseData data = new ResponseData(input, responseHtml)
+					.Parse();
+				if (data.TotalDataInfo is { } playerInfo)
+				{
+					Console.ForegroundColor = ConsoleColor.Green;
+					Console.WriteLine($"[INFO] {input} Found!");
+					Console.ResetColor();
+					Console.WriteLine($"[INFO] Broken Beds: {playerInfo.BrokenBeds}");
+					Console.WriteLine($"[INFO] Final Kills: {playerInfo.FinalKills}");
+					Console.WriteLine($"[INFO] Total Wins: {playerInfo.Wins}");
+					Console.WriteLine($"[INFO] Total Losses: {playerInfo.Losses}");
+				}
+				else
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine($"[INFO] {input} Not Found!");
+					Console.ResetColor();
+				}
+				checkTime.Stop();
+				Console.WriteLine($"[INFO] Time Taken: {checkTime.Elapsed.TotalSeconds} Seconds.");
+				Console.WriteLine("=====================================");
 			}
 		}
 
@@ -155,7 +222,6 @@ namespace Winstreak.Dir
 				$"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
 			Console.WriteLine($"[INFO] Tryhards: {namesToWorryAbout.Count}");
 			Console.WriteLine($"[INFO] Total: {allNames.Count}");
-			Console.WriteLine($"[INFO] All Names: {allNames.Count}");
 			Console.WriteLine($"[INFO] Tryhard Final Kills: {tryhardFinalKills}");
 			Console.WriteLine($"[INFO] Tryhard Broken Beds: {tryhardBedsBroken}");
 			Console.WriteLine($"[INFO] Total Final Kills: {checker.TotalFinalKills}");

@@ -4,7 +4,7 @@ using Winstreak.Parser;
 
 namespace Winstreak.Request.Checker
 {
-	public struct ResponseCheckerResults
+	public readonly struct ResponseCheckerResults
 	{
 		public readonly string Name;
 		public readonly int BedsBroken;
@@ -18,7 +18,7 @@ namespace Winstreak.Request.Checker
 		}
     }
 
-	public struct TeamInfoResults
+	public readonly struct TeamInfoResults
 	{
 		public readonly string Color;
 		public readonly IList<ResponseCheckerResults> AvailablePlayers;

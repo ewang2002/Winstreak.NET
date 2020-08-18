@@ -1,13 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Winstreak.Dir;
 
 namespace Winstreak
 {
 	public class Program
 	{
-		public static void Main()
+		public static async Task Main()
 		{
 			int brokenBeds;
 			int finalKills;
@@ -72,7 +73,7 @@ namespace Winstreak
 
 			Console.WriteLine("[INFO] Starting Service.");
 			Console.WriteLine($"[INFO] Checking: {Path.Join(path, "screenshots")}");
-			DirectoryWatcher.Run(path, finalKills, brokenBeds, amtTryHards);
+			await DirectoryWatcher.Run(path, finalKills, brokenBeds, amtTryHards);
 		}
 	}
 }
