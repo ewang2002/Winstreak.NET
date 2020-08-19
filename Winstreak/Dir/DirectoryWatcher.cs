@@ -165,9 +165,12 @@ namespace Winstreak.Dir
 					Console.WriteLine($"> Broken Beds: {playerInfo.BrokenBeds}");
 					Console.WriteLine($"> Final Kills: {playerInfo.FinalKills}");
 					Console.WriteLine($"> Final Deaths: {playerInfo.FinalDeaths}");
-					Console.WriteLine($"> Final K/D: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
 					Console.WriteLine($"> Total Wins: {playerInfo.Wins}");
 					Console.WriteLine($"> Total Losses: {playerInfo.Losses}");
+					Console.WriteLine();
+					Console.WriteLine($"> Regular K/D Ratio: {(double) playerInfo.Kills / playerInfo.Deaths}");
+					Console.WriteLine($"> Final K/D Ratio: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
+					Console.WriteLine($"> W/L Ratio: {(double) playerInfo.Wins / playerInfo.Losses}");
 				}
 				else
 				{
