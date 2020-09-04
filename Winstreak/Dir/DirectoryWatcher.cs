@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Winstreak.Extensions;
 using Winstreak.External.Imaging;
 using Winstreak.Parser;
-using Winstreak.Parser.V1;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
 using Winstreak.Request.Definition;

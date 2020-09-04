@@ -29,7 +29,7 @@ namespace Winstreak.Request
 		/// </summary>
 		/// <param name="allNames">The names of players to get stats for.</param>
 		public PlanckeApiRequester(IList<string> allNames) => Names = allNames;
-		
+
 		/// <summary>
 		/// Sends requests to Plancke for the stats of each name (of players) specified in the list passed in the constructor.
 		/// </summary>

@@ -7,7 +7,7 @@ using Winstreak.External.Imaging;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
-namespace Winstreak.Parser.V1
+namespace Winstreak.Parser
 {
 	public abstract class AbstractNameParser : IDisposable
 	{

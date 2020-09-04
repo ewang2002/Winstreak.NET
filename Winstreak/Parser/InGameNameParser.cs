@@ -4,7 +4,7 @@ using System.Text;
 using Winstreak.Extensions;
 using static Winstreak.Parser.Constants;
 
-namespace Winstreak.Parser.V1
+namespace Winstreak.Parser
 {
 	public class InGameNameParser : AbstractNameParser
 	{
