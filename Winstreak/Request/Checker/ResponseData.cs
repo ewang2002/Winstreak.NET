@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Winstreak.Request.Definition;
 
 namespace Winstreak.Request.Checker
 {
@@ -14,7 +15,7 @@ namespace Winstreak.Request.Checker
 		public BedwarsData? TotalDataInfo { get; private set; }
 
 		/// <summary>
-		/// Creates a new ResponseData class, which is designed to parse an individual person's raw data found on Plancke's website.
+		/// Creates a new ResponseData object, which is designed to parse an individual person's raw data found on Plancke's website.
 		/// </summary>
 		/// <param name="name">The name.</param>
 		/// <param name="htmlContent">The HTML content found on Plancke's website.</param>
@@ -41,8 +42,8 @@ namespace Winstreak.Request.Checker
 			}
 
 			// only get bedwars data
-			string bedwarsData = HtmlContent
-				.Split(new string[] { "Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
+			var bedwarsData = HtmlContent
+				.Split(new[] { "Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
 				.Split("Build Battle")[0]
 				.Split("</thead>")[1]
 				.Split("</div>")[0];
@@ -52,12 +53,12 @@ namespace Winstreak.Request.Checker
 				.Replace("<td style=\"border-right: 1px solid #f3f3f3\">", "")
 				.Replace("<th scope=\"row\" style=\"border-right: 1px solid #f3f3f3\">", "");
 			// get data for solos
-			string soloData = bedwarsData
+			var soloData = bedwarsData
 				.Split("Solo")[1]
 				.Split("Doubles")[0]
 				.Replace("</th><td>", "")
 				.Replace("</td></tr><tr>", "");
-			string[] soloDataArr = soloData
+			var soloDataArr = soloData
 				.Replace(",", "")
 				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			soloDataArr = soloDataArr
@@ -81,12 +82,12 @@ namespace Winstreak.Request.Checker
 			}
 
 			// get data for doubles
-			string doubleData = bedwarsData
+			var doubleData = bedwarsData
 				.Split("Doubles")[1]
 				.Split("3v3v3v3")[0]
 				.Replace("</th><td>", "")
 				.Replace("</td></tr><tr>", "");
-			string[] doubleDataArr = doubleData
+			var doubleDataArr = doubleData
 				.Replace(",", "")
 				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			doubleDataArr = doubleDataArr
@@ -111,12 +112,12 @@ namespace Winstreak.Request.Checker
 			}
 
 			// get data for 3v3v3v3
-			string threeData = bedwarsData
+			var threeData = bedwarsData
 				.Split("3v3v3v3")[1]
 				.Split("4v4v4v4")[0]
 				.Replace("</th><td>", "")
 				.Replace("</td></tr><tr>", "");
-			string[] threeDataArr = threeData
+			var threeDataArr = threeData
 				.Replace(",", "")
 				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			threeDataArr = threeDataArr
@@ -140,12 +141,12 @@ namespace Winstreak.Request.Checker
 			}
 
 			// get data for 4v4v4v4
-			string fourData = bedwarsData
+			var fourData = bedwarsData
 				.Split("4v4v4v4")[1]
 				.Split("4v4")[0]
 				.Replace("</th><td>", "")
 				.Replace("</td></tr><tr>", "");
-			string[] fourDataArr = fourData
+			var fourDataArr = fourData
 				.Replace(",", "")
 				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			fourDataArr = fourDataArr

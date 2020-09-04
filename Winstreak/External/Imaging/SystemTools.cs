@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Winstreak.Imaging
+namespace Winstreak.External.Imaging
 {
 	/// <summary>
     /// Set of systems tools.

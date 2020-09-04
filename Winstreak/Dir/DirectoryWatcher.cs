@@ -7,11 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Extensions;
-using Winstreak.Imaging;
+using Winstreak.External.Imaging;
 using Winstreak.Parser;
 using Winstreak.Parser.V1;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
+using Winstreak.Request.Definition;
 
 namespace Winstreak.Dir
 {
@@ -39,7 +40,7 @@ namespace Winstreak.Dir
 		public static DirectoryInfo McScreenshotsPath;
 		public static int GuiScale;
 		public static string[] ExemptPlayers;
-		public static bool ShouldClearBeforeCheck = false;
+		public static bool ShouldClearBeforeCheck;
 
 		public static async Task Run(string path, int finalKills, int brokenBeds, int maxTryhards)
 		{
@@ -235,111 +236,35 @@ namespace Winstreak.Dir
 				.SetMinimumBrokenBedsNeeded(BrokenBeds)
 				.SetMinimumFinalKillsNeeded(FinalKills);
 
-			var namesToWorryAbout = checker.GetNamesToWorryAbout();
+			var nameResults = checker.GetPlayerDataFromMap();
 
 			processingTime.Stop();
 			var apiRequestTime = processingTime.Elapsed;
 			processingTime.Reset();
 
 			// start parsing the data
-			var tryhardBedsBroken = 0;
-			var tryhardFinalKills = 0;
-			if (namesToWorryAbout.Count != 0)
-				foreach (var result in namesToWorryAbout)
-				{
-					tryhardBedsBroken += result.BedsBroken;
-					tryhardFinalKills += result.FinalKills;
-					Console.WriteLine(
-						$"[PLAYER] Name: {result.Name} (K = {result.FinalKills} & B = {result.BedsBroken})");
-				}
-
+			// TODO maybe better way to format table? 
+			var tableBuilder = new StringBuilder("┌────────────────────┬────────┬────────┬────────┬──────────┐")
+				.AppendLine()
+				.Append($"│{"Player Name",-20}│{"F. Kills",-8}│{"Beds",-8}│{"Score",-8}│{"Meaning",-10}│")
+				.AppendLine()
+				.Append("├────────────────────┼────────┼────────┼────────┼──────────┤")
+				.AppendLine();
+			foreach (var playerInfo in nameResults)
+				tableBuilder
+					.Append(
+						$"│{playerInfo.Name,-20}│{playerInfo.FinalKills,-8}│{playerInfo.BedsBroken,-8}│{Math.Round(playerInfo.Score, 3),-8}│{DetermineScoreMeaning(playerInfo.Score), -10}│")
+					.AppendLine();
+			tableBuilder
+				.Append("└────────────────────┴────────┴────────┴────────┴──────────┘");
+			Console.WriteLine(tableBuilder.ToString());
 			Console.WriteLine(
 				$"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
-			Console.WriteLine($"[INFO] Tryhards/Total: {namesToWorryAbout.Count}/{allNames.Count}");
-			Console.WriteLine($"[INFO] Tryhard Final Kills: {tryhardFinalKills}");
-			Console.WriteLine($"[INFO] Tryhard Broken Beds: {tryhardBedsBroken}");
+
 			Console.WriteLine($"[INFO] Total Final Kills: {checker.TotalFinalKills}");
 			Console.WriteLine($"[INFO] Total Broken Beds: {checker.TotalBedsBroken}");
 			Console.WriteLine($"[INFO] Image Processing Time: {imageProcessingTime.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
-
-			var points = 0;
-			if (namesToWorryAbout.Count >= MaxTryHards)
-				points += 20;
-			else
-				points += namesToWorryAbout.Count * 2;
-
-			points += checker.ErroredPlayers.Count;
-
-			if (namesToWorryAbout.Count != 0)
-			{
-				var bedsThousands = tryhardBedsBroken / 1050;
-				points += bedsThousands;
-
-				var finalKillsThousands = tryhardFinalKills / 1350;
-				points += finalKillsThousands;
-
-				var percentBedsBrokenByTryhards = (double) tryhardBedsBroken / checker.TotalBedsBroken;
-				var bedsBrokenMultiplier = tryhardBedsBroken >= BrokenBeds * namesToWorryAbout.Count
-					? 1
-					: 0;
-				if (percentBedsBrokenByTryhards > 0.4)
-					points += (int) ((percentBedsBrokenByTryhards * 8) * bedsBrokenMultiplier);
-
-				var percentFinalKillsByTryhards = (double) tryhardFinalKills / checker.TotalFinalKills;
-				var finalKillsMultiplier = tryhardFinalKills >= MaxTryHards * namesToWorryAbout.Count
-					? 1
-					: 0;
-				if (percentFinalKillsByTryhards > 0.5)
-					points += (int) (percentFinalKillsByTryhards * 6 * finalKillsMultiplier);
-			}
-			else
-			{
-				var bedsThousands = checker.TotalBedsBroken / 1050;
-				points += bedsThousands;
-
-				var finalKillsThousands = checker.TotalFinalKills / 1500;
-				points += finalKillsThousands;
-			}
-
-			Console.WriteLine("[INFO] Points: " + points);
-			// 16 to inf
-			if (points >= 17)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("[INFO] Suggested Action: LEAVE");
-				Console.ResetColor();
-			}
-			else if (points >= 14)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("[INFO] Suggested Action: SERIOUSLY CONSIDER LEAVING");
-				Console.ResetColor();
-			}
-			else if (points >= 10)
-			{
-				Console.ForegroundColor = ConsoleColor.DarkYellow;
-				Console.WriteLine("[INFO] Suggested Action: CONSIDER LEAVING");
-				Console.ResetColor();
-			}
-			else if (points >= 7)
-			{
-				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine("[INFO] Suggested Action: HARD GAME, CONSIDER STAYING");
-				Console.ResetColor();
-			}
-			else if (points >= 4)
-			{
-				Console.ForegroundColor = ConsoleColor.Cyan;
-				Console.WriteLine("[INFO] Suggested Action: NORMAL GAME, CONSIDER STAYING");
-				Console.ResetColor();
-			}
-			else
-			{
-				Console.ForegroundColor = ConsoleColor.Green;
-				Console.WriteLine("[INFO] Suggested Action: SAFE TO STAY!");
-				Console.ResetColor();
-			}
 
 			Console.WriteLine("=====================================");
 		}
@@ -381,8 +306,10 @@ namespace Winstreak.Dir
 				var planckeApiRequester = new PlanckeApiRequester(value);
 				var teamData = await planckeApiRequester.SendRequests();
 				var p = new ResponseParser(teamData);
-				teamInfo.Add(new TeamInfoResults(key, p.GetPlayerDataFromMap(), p.ErroredPlayers,
-					p.TotalFinalKills, p.TotalBedsBroken));
+				teamInfo.Add(
+					new TeamInfoResults(key, p.GetPlayerDataFromMap(), p.ErroredPlayers,
+						p.TotalFinalKills, p.TotalBedsBroken)
+				);
 			}
 
 			teamInfo = teamInfo
@@ -401,8 +328,8 @@ namespace Winstreak.Dir
 			foreach (var result in teamInfo)
 			{
 				var allAvailablePlayers = result.AvailablePlayers
-					.OrderByDescending(x => x.BedsBroken)
-					.Select(x => $"{x.Name} ({x.BedsBroken})")
+					.OrderByDescending(x => x.Score)
+					.Select(x => $"{x.Name} ({Math.Round(x.Score, 1)})")
 					.ToList()
 					.ToReadableString();
 
@@ -431,6 +358,15 @@ namespace Winstreak.Dir
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] Processing Reqeusts Time: {processedTime.TotalSeconds} Sec.");
 			Console.WriteLine("=====================================");
+		}
+
+		private static string DetermineScoreMeaning(double score)
+		{
+			if (score <= 20) return "Bad";
+			if (score > 20 && score <= 40) return "Decent";
+			if (score > 40 && score <= 60) return "Good";
+			if (score > 60 && score <= 80) return "Pro";
+			return "Tryhard";
 		}
 	}
 }

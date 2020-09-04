@@ -1,4 +1,4 @@
-﻿namespace Winstreak.Request
+﻿namespace Winstreak.Request.Definition
 {
 	public readonly struct BedwarsData
 	{

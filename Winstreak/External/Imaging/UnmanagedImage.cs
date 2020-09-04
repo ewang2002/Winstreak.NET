@@ -35,7 +35,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Winstreak.Parser.ImgExcept;
 
-namespace Winstreak.Imaging
+namespace Winstreak.External.Imaging
 {
 	/// <summary>
 	/// Image in unmanaged memory.

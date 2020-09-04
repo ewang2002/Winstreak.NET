@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Text;
 using Winstreak.Extensions;
-using Winstreak.Imaging;
+using Winstreak.External.Imaging;
 using Winstreak.Parser.ImgExcept;
 using static Winstreak.Parser.Constants;
 
@@ -13,7 +12,7 @@ namespace Winstreak.Parser.V1
 	public abstract class AbstractNameParser : IDisposable
 	{
 		// private general variables
-		protected UnmanagedImage Img { get; private set; }
+		protected UnmanagedImage Img { get; }
 		public int GuiWidth { get; private set; }
 		protected Point StartingPoint { get; set; }
 		protected Point EndingPoint { get; set; }
@@ -48,10 +47,9 @@ namespace Winstreak.Parser.V1
 		/// Establishes the Gui scale that will be used to calculate pixels.
 		/// </summary>
 		/// <param name="guiScale">The Gui scale.</param>
-		public void SetGuiScale(int guiScale)
-		{
+		public void SetGuiScale(int guiScale) => 
 			GuiWidth = guiScale;
-		}
+
 
 		/// <summary>
 		/// Finds the starting and ending point of the image. 
@@ -114,12 +112,13 @@ namespace Winstreak.Parser.V1
 
 						ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 
-						if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString())) 
+						if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 							continue;
 						realX = x;
 						break;
 					}
 				}
+
 				// end for
 				if (realX != -1)
 					break;

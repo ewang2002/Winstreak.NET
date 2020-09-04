@@ -1,9 +1,9 @@
-﻿using System.IO;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using Winstreak.Parser.ImgExcept;
 
-namespace Winstreak.Imaging
+namespace Winstreak.External.Imaging
 {
 	/// <summary>
 	/// Core image relatad methods.

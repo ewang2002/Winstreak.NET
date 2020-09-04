@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Winstreak.Calculations;
+using Winstreak.Request.Definition;
 
 namespace Winstreak.Request.Checker
 {
@@ -10,7 +12,7 @@ namespace Winstreak.Request.Checker
 		public int MinimumFinalKills { get; private set; }
 		public int TotalBedsBroken { get; private set; }
 		public int TotalFinalKills { get; private set; }
-		public IList<string> ErroredPlayers { get; private set;  }
+		public IList<string> ErroredPlayers { get;  }
 
 		/// <summary>
 		/// Creates a new ResponseParser object, which should be used after going through the PlanckeApiRequester class.
@@ -57,56 +59,12 @@ namespace Winstreak.Request.Checker
 		}
 
 		/// <summary>
-		/// Parses the raw HTML data for each name. This will only return a list of people to worry about.
-		/// </summary>
-		/// <returns>Stats of tryhard players in an easy-to-use format.</returns>
-		public IList<ResponseCheckerResults> GetNamesToWorryAbout()
-		{
-			var namesToWorryAbout = new List<ResponseCheckerResults>();
-
-			var totalBrokenBeds = 0;
-			var totalFinalKills = 0;
-
-			foreach (var (key, value) in Names)
-			{
-				var data = new ResponseData(key, value)
-					.Parse()
-					.TotalDataInfo;
-
-				if (data is { } nonNullData)
-				{
-					totalBrokenBeds += nonNullData.BrokenBeds;
-					totalFinalKills += nonNullData.FinalKills;
-
-					if (nonNullData.BrokenBeds < MinimumBrokenBeds &&
-					    nonNullData.FinalKills < MinimumFinalKills) 
-						continue;
-					var results = new ResponseCheckerResults(key, nonNullData.BrokenBeds, nonNullData.FinalKills);
-					namesToWorryAbout.Add(results);
-				}
-				else
-				{
-					ErroredPlayers.Add(key);
-				}
-			}
-
-			TotalFinalKills = totalFinalKills;
-			TotalBedsBroken = totalBrokenBeds;
-
-			namesToWorryAbout = namesToWorryAbout
-				.OrderByDescending(x => x.BedsBroken)
-				.ToList();
-
-			return namesToWorryAbout;
-		}
-
-		/// <summary>
 		/// Parses the raw HTML data for each name.
 		/// </summary>
 		/// <returns>Stats of each player in an easy-to-use format.</returns>
-		public IList<ResponseCheckerResults> GetPlayerDataFromMap()
+		public IList<ResponseCheckerResult> GetPlayerDataFromMap()
 		{
-			var namesToWorryAbout = new List<ResponseCheckerResults>();
+			var namesToWorryAbout = new List<ResponseCheckerResult>();
 
 			var totalBrokenBeds = 0;
 			var totalFinalKills = 0;
@@ -122,8 +80,11 @@ namespace Winstreak.Request.Checker
 					totalBrokenBeds += nonNullData.BrokenBeds;
 					totalFinalKills += nonNullData.FinalKills;
 
-					var results = new ResponseCheckerResults(key, nonNullData.BrokenBeds, nonNullData.FinalKills);
-					namesToWorryAbout.Add(results);
+					var score = PlayerCalculator.CalculatePlayerThreatLevel(nonNullData.Wins, nonNullData.Losses,
+						nonNullData.FinalKills, nonNullData.FinalDeaths, nonNullData.BrokenBeds);
+					var result = new ResponseCheckerResult(key, nonNullData.BrokenBeds, nonNullData.FinalKills, score);
+
+					namesToWorryAbout.Add(result);
 				}
 				else
 					ErroredPlayers.Add(key);
@@ -133,7 +94,7 @@ namespace Winstreak.Request.Checker
 			TotalBedsBroken = totalBrokenBeds;
 
 			namesToWorryAbout = namesToWorryAbout
-				.OrderByDescending(x => x.BedsBroken)
+				.OrderByDescending(x => x.Score)
 				.ToList();
 
 			return namesToWorryAbout;
