@@ -10,49 +10,6 @@ namespace Winstreak
 	{
 		public static async Task Main()
 		{
-			int brokenBeds;
-			int finalKills;
-			int amtTryHards;
-
-			do
-			{
-				Console.WriteLine("How many broken beds does a tryhard have? ");
-				try
-				{
-					brokenBeds = int.Parse(Console.ReadLine() ?? "250");
-				}
-				catch (Exception)
-				{
-					brokenBeds = 300; 
-				}
-			} while (brokenBeds <= 0);
-
-			do
-			{
-				Console.WriteLine("How many final kills does a tryhard have? ");
-				try
-				{
-					finalKills = int.Parse(Console.ReadLine() ?? "750");
-				}
-				catch (Exception)
-				{
-					finalKills = 850; 
-				}
-			} while (finalKills <= 0);
-
-			do
-			{
-				Console.WriteLine("How many tryhards in lobby before we recommend you leave? ");
-				try
-				{
-					amtTryHards = int.Parse(Console.ReadLine() ?? "250");
-				}
-				catch (Exception)
-				{
-					amtTryHards = 4;
-				}
-			} while (amtTryHards <= 0);
-
 			Console.Clear();
 			string path;
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -73,7 +30,7 @@ namespace Winstreak
 
 			Console.WriteLine("[INFO] Starting Service.");
 			Console.WriteLine($"[INFO] Checking: {Path.Join(path, "screenshots")}");
-			await DirectoryWatcher.Run(path, finalKills, brokenBeds, amtTryHards);
+			await DirectoryWatcher.Run(path);
 		}
 	}
 }

@@ -35,18 +35,14 @@ namespace Winstreak.Dir
 
 		public static int FinalKills;
 		public static int BrokenBeds;
-		public static int MaxTryHards;
 		public static string McPath;
 		public static DirectoryInfo McScreenshotsPath;
 		public static int GuiScale;
 		public static string[] ExemptPlayers;
 		public static bool ShouldClearBeforeCheck;
 
-		public static async Task Run(string path, int finalKills, int brokenBeds, int maxTryhards)
+		public static async Task Run(string path)
 		{
-			FinalKills = finalKills;
-			BrokenBeds = brokenBeds;
-			MaxTryHards = maxTryhards;
 			McPath = path;
 			McScreenshotsPath = new DirectoryInfo(Path.Join(McPath, "screenshots"));
 
