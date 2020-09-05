@@ -13,9 +13,7 @@ namespace Winstreak
 			Console.Clear();
 			string path;
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
 				path = Path.Join("C:", "Users", Environment.UserName, "AppData", "Roaming", ".minecraft");
-			}
 			else
 			{
 				Console.WriteLine("Please copy and paste the Minecraft folder here. The folder should end with \".minecraft.\"");

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -57,7 +58,25 @@ namespace Winstreak.Request
 
 			var returnVal = new Dictionary<string, string>();
 			for (var i = 0; i < Names.Count; i++)
-				returnVal.Add(Names[i], await responses[i].Content.ReadAsStringAsync());
+			{
+				if (responses[i].StatusCode != HttpStatusCode.OK)
+				{
+					// 2 attempts to get data again
+					// in case not found.
+					for (var attempts = 0; attempts < 2; attempts++)
+					{
+						await Task.Delay(TimeSpan.FromMilliseconds(500));
+						// get it again
+						responses[i] = await Client
+							.GetAsync($"https://plancke.io/hypixel/player/stats/{Names[i]}");
+						if (responses[i].StatusCode == HttpStatusCode.OK)
+							break;
+					}
+				}
+
+				var msg = await responses[i].Content.ReadAsStringAsync();
+				returnVal.Add(Names[i], msg);
+			}
 
 			return returnVal;
 		}
