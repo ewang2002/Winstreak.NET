@@ -67,6 +67,7 @@ namespace Winstreak.Request.Checker
 			try
 			{
 				SoloDataInfo = new BedwarsData(
+					Name,
 					int.Parse(soloDataArr[0]),
 					int.Parse(soloDataArr[1]),
 					int.Parse(soloDataArr[3]),
@@ -97,6 +98,7 @@ namespace Winstreak.Request.Checker
 			try
 			{
 				DoubleDataInfo = new BedwarsData(
+					Name,
 					int.Parse(doubleDataArr[0]),
 					int.Parse(doubleDataArr[1]),
 					int.Parse(doubleDataArr[3]),
@@ -126,6 +128,7 @@ namespace Winstreak.Request.Checker
 			try
 			{
 				ThreesDataInfo = new BedwarsData(
+					Name,
 					int.Parse(threeDataArr[0]),
 					int.Parse(threeDataArr[1]),
 					int.Parse(threeDataArr[3]),
@@ -155,6 +158,7 @@ namespace Winstreak.Request.Checker
 			try
 			{
 				FoursDataInfo = new BedwarsData(
+					Name,
 					int.Parse(fourDataArr[0]),
 					int.Parse(fourDataArr[1]),
 					int.Parse(fourDataArr[3]),
@@ -174,6 +178,7 @@ namespace Winstreak.Request.Checker
 			    FoursDataInfo is { } foursData)
 			{
 				TotalDataInfo = new BedwarsData(
+					Name,
 					oneData.Kills + twoData.Kills + threesData.Kills + foursData.Kills,
 					oneData.Deaths + twoData.Deaths + threesData.Deaths + foursData.Deaths,
 					oneData.FinalKills + twoData.FinalKills + threesData.FinalKills + foursData.FinalKills,

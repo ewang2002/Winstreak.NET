@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
+using Winstreak.Calculations;
 using Winstreak.Extensions;
 using Winstreak.External.Imaging;
 using Winstreak.Parser;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
 using Winstreak.Request.Definition;
+using Winstreak.Table;
 
 namespace Winstreak.Dir
 {
@@ -32,13 +36,21 @@ namespace Winstreak.Dir
 			.Append("> -h: Shows this menu.")
 			.ToString();
 
-		public static int FinalKills;
-		public static int BrokenBeds;
 		public static string McPath;
 		public static DirectoryInfo McScreenshotsPath;
 		public static int GuiScale;
 		public static string[] ExemptPlayers;
 		public static bool ShouldClearBeforeCheck;
+
+		public static string BlackAnsi = "\u001b[30m";
+		public static string RedAnsi = "\u001b[31m";
+		public static string GreenAnsi = "\u001b[32m";
+		public static string YellowAnsi = "\u001b[33m";
+		public static string BlueAnsi = "\u001b[34m";
+		public static string MagentaAnsi = "\u001b[35m";
+		public static string CyanAnsi = "\u001b[36m";
+		public static string WhiteAnsi = "\u001b[37m";
+		public static string ResetAnsi = "\u001b[0m";
 
 		public static async Task Run(string path)
 		{
@@ -227,10 +239,7 @@ namespace Winstreak.Dir
 			var planckeApiRequester = new PlanckeApiRequester(allNames);
 			// parse data
 			var nameData = await planckeApiRequester.SendRequests();
-			var checker = new ResponseParser(nameData)
-				.SetMinimumBrokenBedsNeeded(BrokenBeds)
-				.SetMinimumFinalKillsNeeded(FinalKills);
-
+			var checker = new ResponseParser(nameData);
 			var nameResults = checker.GetPlayerDataFromMap();
 
 			processingTime.Stop();
@@ -238,26 +247,47 @@ namespace Winstreak.Dir
 			processingTime.Reset();
 
 			// start parsing the data
-			// TODO maybe better way to format table? 
-			var tableBuilder = new StringBuilder("┌────────────────────┬────────┬────────┬────────┬──────────┐")
-				.AppendLine()
-				.Append($"│{"Player Name",-20}│{"F. Kills",-8}│{"Beds",-8}│{"Score",-8}│{"Meaning",-10}│")
-				.AppendLine()
-				.Append("├────────────────────┼────────┼────────┼────────┼──────────┤")
-				.AppendLine();
+			var tableBuilder = new ConsoleTable(6)
+				.AddRow("Username", "Final Kills", "Broken Beds", "FKDR", "Score", "Assessment")
+				.AddSeparator();
 			foreach (var playerInfo in nameResults)
-				tableBuilder
-					.Append(
-						$"│{playerInfo.Name,-20}│{playerInfo.FinalKills,-8}│{playerInfo.BedsBroken,-8}│{Math.Round(playerInfo.Score, 3),-8}│{DetermineScoreMeaning(playerInfo.Score), -10}│")
-					.AppendLine();
-			tableBuilder
-				.Append("└────────────────────┴────────┴────────┴────────┴──────────┘");
-			Console.WriteLine(tableBuilder.ToString());
-			Console.WriteLine(
-				$"[INFO] Errored: {checker.ErroredPlayers.Count} {checker.ErroredPlayers.ToReadableString()}");
+				tableBuilder.AddRow(
+					playerInfo.Name,
+					playerInfo.FinalKills,
+					playerInfo.BrokenBeds,
+					playerInfo.Losses == 0
+						? "N/A"
+						: Math.Round((double) playerInfo.Wins / playerInfo.Losses, 2)
+							.ToString(CultureInfo.InvariantCulture), Math.Round(playerInfo.Score, 2),
+					DetermineScoreMeaning(playerInfo.Score, true)
+				);
 
-			Console.WriteLine($"[INFO] Total Final Kills: {checker.TotalFinalKills}");
-			Console.WriteLine($"[INFO] Total Broken Beds: {checker.TotalBedsBroken}");
+			foreach (var erroredPlayer in checker.ErroredPlayers)
+				tableBuilder.AddRow(
+					erroredPlayer,
+					string.Empty,
+					string.Empty,
+					string.Empty,
+					string.Empty,
+					"Nicked!"
+				);
+
+			tableBuilder.AddSeparator();
+			var ttlScore = PlayerCalculator.CalculatePlayerThreatLevel(checker.TotalWins, checker.TotalLosses,
+				checker.TotalFinalKills, checker.TotalFinalDeaths, checker.TotalBedsBroken);
+			tableBuilder.AddRow(
+				"Total",
+				checker.TotalFinalKills,
+				checker.TotalBedsBroken,
+				checker.TotalLosses == 0
+					? "N/A"
+					: Math.Round((double) checker.TotalWins / checker.TotalLosses, 2)
+						.ToString(CultureInfo.InvariantCulture),
+				Math.Round(ttlScore, 2),
+				DetermineScoreMeaning(ttlScore, false)
+			);
+			Console.WriteLine(tableBuilder.ToString());
+
 			Console.WriteLine($"[INFO] Image Processing Time: {imageProcessingTime.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 
@@ -302,13 +332,12 @@ namespace Winstreak.Dir
 				var teamData = await planckeApiRequester.SendRequests();
 				var p = new ResponseParser(teamData);
 				teamInfo.Add(
-					new TeamInfoResults(key, p.GetPlayerDataFromMap(), p.ErroredPlayers,
-						p.TotalFinalKills, p.TotalBedsBroken)
+					new TeamInfoResults(key, p.GetPlayerDataFromMap(), p.ErroredPlayers)
 				);
 			}
 
 			teamInfo = teamInfo
-				.OrderByDescending(x => x.TotalBrokenBeds)
+				.OrderByDescending(x => x.Score)
 				.ToList();
 
 			processingTime.Stop();
@@ -320,29 +349,64 @@ namespace Winstreak.Dir
 			// start parsing the data
 			var rank = 1;
 
-			foreach (var result in teamInfo)
+			var table = new ConsoleTable(7);
+			table.AddRow("Rank", "Username", "Finals", "Beds", "FKDR", "Score", "Assessment")
+				.AddSeparator();
+			for (var i = 0; i < teamInfo.Count; i++)
 			{
+				var result = teamInfo[i];
 				var allAvailablePlayers = result.AvailablePlayers
 					.OrderByDescending(x => x.Score)
-					.Select(x => $"{x.Name} ({Math.Round(x.Score, 1)})")
-					.ToList()
-					.ToReadableString();
+					.ToArray();
+				foreach (var teammate in allAvailablePlayers)
+				{
+					table.AddRow(
+						string.Empty,
+						teammate.Name,
+						teammate.FinalKills,
+						teammate.BrokenBeds,
+						teammate.FinalDeaths == 0
+							? "N/A"
+							: Math.Round((double) teammate.FinalKills / teammate.FinalDeaths, 2)
+								.ToString(CultureInfo.InvariantCulture),
+						Math.Round(teammate.Score, 2),
+						DetermineScoreMeaning(teammate.Score, true)
+					);
+				}
 
-				var b = new StringBuilder()
-					.Append($"[{rank}] {result.Color} ({result.AvailablePlayers.Count + result.ErroredPlayers.Count})")
-					.AppendLine()
-					.Append($"{"",4}Total Final Kills: {result.TotalFinalKills}")
-					.AppendLine()
-					.Append($"{"",4}Total Broken Beds: {result.TotalBrokenBeds}")
-					.AppendLine()
-					.Append($"{"",4}Players: {allAvailablePlayers}")
-					.AppendLine()
-					.Append($"{"",4}Errored: {result.ErroredPlayers.ToReadableString()}")
-					.AppendLine();
+				foreach (var erroredPlayers in result.ErroredPlayers)
+				{
+					table.AddRow(
+						string.Empty,
+						erroredPlayers,
+						string.Empty,
+						string.Empty,
+						string.Empty,
+						string.Empty,
+						"Nicked!"
+					);
+				}
 
-				Console.WriteLine(b.ToString());
+				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
+				var totalDeaths = result.AvailablePlayers.Sum(x => x.FinalDeaths);
+				table.AddSeparator();
+				table.AddRow(
+					rank,
+					$"[{result.Color} Team]",
+					result.AvailablePlayers.Sum(x => x.FinalKills),
+					result.AvailablePlayers.Sum(x => x.BrokenBeds),
+					totalDeaths == 0
+						? "N/A"
+						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
+					Math.Round(result.Score, 2),
+					DetermineScoreMeaning(result.Score, false)
+				);
+				if (i + 1 != teamInfo.Count)
+					table.AddSeparator();
 				++rank;
 			}
+
+			Console.WriteLine(table.ToString());
 
 			Console.WriteLine($"[INFO] {string.Join(" ← ", teamInfo.Select(x => x.Color))}");
 
@@ -355,13 +419,13 @@ namespace Winstreak.Dir
 			Console.WriteLine("=====================================");
 		}
 
-		private static string DetermineScoreMeaning(double score)
+		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
-			if (score <= 20) return "Bad";
-			if (score > 20 && score <= 40) return "Decent";
-			if (score > 40 && score <= 60) return "Good";
-			if (score > 60 && score <= 80) return "Pro";
-			return "Tryhard";
+			if (score <= 20) return isPlayer ? "Bad" : "Safe";
+			if (score > 20 && score <= 40) return isPlayer ? "Decent" : "Pretty Safe";
+			if (score > 40 && score <= 60) return isPlayer ? "Good" : "Somewhat Safe";
+			if (score > 60 && score <= 80) return isPlayer ? "Professional" : "Not Safe";
+			return isPlayer ? "Tryhard" : "Leave Now";
 		}
 	}
 }
