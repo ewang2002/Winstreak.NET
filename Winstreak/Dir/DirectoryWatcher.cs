@@ -5,17 +5,17 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Calculations;
+using Winstreak.ConsoleTable;
 using Winstreak.Extensions;
 using Winstreak.External.Imaging;
 using Winstreak.Parser;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
+using static Winstreak.ConsoleTable.AnsiConstants;
 using Winstreak.Request.Definition;
-using Winstreak.Table;
 
 namespace Winstreak.Dir
 {
@@ -41,16 +41,6 @@ namespace Winstreak.Dir
 		public static int GuiScale;
 		public static string[] ExemptPlayers;
 		public static bool ShouldClearBeforeCheck;
-
-		public static string BlackAnsi = "\u001b[30m";
-		public static string RedAnsi = "\u001b[31m";
-		public static string GreenAnsi = "\u001b[32m";
-		public static string YellowAnsi = "\u001b[33m";
-		public static string BlueAnsi = "\u001b[34m";
-		public static string MagentaAnsi = "\u001b[35m";
-		public static string CyanAnsi = "\u001b[36m";
-		public static string WhiteAnsi = "\u001b[37m";
-		public static string ResetAnsi = "\u001b[0m";
 
 		public static async Task Run(string path)
 		{
@@ -176,9 +166,9 @@ namespace Winstreak.Dir
 					Console.WriteLine($"> Total Wins: {playerInfo.Wins}");
 					Console.WriteLine($"> Total Losses: {playerInfo.Losses}");
 					Console.WriteLine();
-					Console.WriteLine($"> Regular K/D Ratio: {(double) playerInfo.Kills / playerInfo.Deaths}");
-					Console.WriteLine($"> Final K/D Ratio: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
-					Console.WriteLine($"> W/L Ratio: {(double) playerInfo.Wins / playerInfo.Losses}");
+					Console.WriteLine($"> Regular K/D Ratio: {(double)playerInfo.Kills / playerInfo.Deaths}");
+					Console.WriteLine($"> Final K/D Ratio: {(double)playerInfo.FinalKills / playerInfo.FinalDeaths}");
+					Console.WriteLine($"> W/L Ratio: {(double)playerInfo.Wins / playerInfo.Losses}");
 				}
 				else
 				{
@@ -247,7 +237,7 @@ namespace Winstreak.Dir
 			processingTime.Reset();
 
 			// start parsing the data
-			var tableBuilder = new ConsoleTable(6)
+			var tableBuilder = new Table(6)
 				.AddRow("Username", "Final Kills", "Broken Beds", "FKDR", "Score", "Assessment")
 				.AddSeparator();
 			foreach (var playerInfo in nameResults)
@@ -255,21 +245,21 @@ namespace Winstreak.Dir
 					playerInfo.Name,
 					playerInfo.FinalKills,
 					playerInfo.BrokenBeds,
-					playerInfo.Losses == 0
+					playerInfo.FinalDeaths == 0
 						? "N/A"
-						: Math.Round((double) playerInfo.Wins / playerInfo.Losses, 2)
+						: Math.Round((double)playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
 							.ToString(CultureInfo.InvariantCulture), Math.Round(playerInfo.Score, 2),
 					DetermineScoreMeaning(playerInfo.Score, true)
 				);
 
 			foreach (var erroredPlayer in checker.ErroredPlayers)
 				tableBuilder.AddRow(
-					erroredPlayer,
-					string.Empty,
-					string.Empty,
-					string.Empty,
-					string.Empty,
-					"Nicked!"
+					BackgroundRedAnsi + erroredPlayer + ResetAnsi,
+					BackgroundRedAnsi + "N/A" + ResetAnsi,
+					BackgroundRedAnsi + "N/A" + ResetAnsi,
+					BackgroundRedAnsi + "N/A" + ResetAnsi,
+					BackgroundRedAnsi + "N/A" + ResetAnsi,
+					BackgroundRedAnsi + "Nicked!" + ResetAnsi
 				);
 
 			tableBuilder.AddSeparator();
@@ -281,7 +271,7 @@ namespace Winstreak.Dir
 				checker.TotalBedsBroken,
 				checker.TotalLosses == 0
 					? "N/A"
-					: Math.Round((double) checker.TotalWins / checker.TotalLosses, 2)
+					: Math.Round((double)checker.TotalWins / checker.TotalLosses, 2)
 						.ToString(CultureInfo.InvariantCulture),
 				Math.Round(ttlScore, 2),
 				DetermineScoreMeaning(ttlScore, false)
@@ -349,25 +339,49 @@ namespace Winstreak.Dir
 			// start parsing the data
 			var rank = 1;
 
-			var table = new ConsoleTable(7);
+			var table = new Table(7);
 			table.AddRow("Rank", "Username", "Finals", "Beds", "FKDR", "Score", "Assessment")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
 				var result = teamInfo[i];
+				var ansiColorToUse = result.Color == "Blue"
+					? TextCyanAnsi
+					: result.Color == "Yellow"
+						? TextYellowAnsi
+						: result.Color == "Green"
+							? TextGreenAnsi
+							: TextRedAnsi;
+
 				var allAvailablePlayers = result.AvailablePlayers
 					.OrderByDescending(x => x.Score)
 					.ToArray();
+
+				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
+				var totalDeaths = result.AvailablePlayers.Sum(x => x.FinalDeaths);
+				table.AddRow(
+					rank,
+					$"{ansiColorToUse}[{result.Color} Team]{ResetAnsi}",
+					result.AvailablePlayers.Sum(x => x.FinalKills),
+					result.AvailablePlayers.Sum(x => x.BrokenBeds),
+					totalDeaths == 0
+						? "N/A"
+						: Math.Round((double)totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
+					Math.Round(result.Score, 2),
+					DetermineScoreMeaning(result.Score, true)
+				);
+				table.AddSeparator();
+
 				foreach (var teammate in allAvailablePlayers)
 				{
 					table.AddRow(
 						string.Empty,
-						teammate.Name,
+						ansiColorToUse + teammate.Name + ResetAnsi,
 						teammate.FinalKills,
 						teammate.BrokenBeds,
 						teammate.FinalDeaths == 0
 							? "N/A"
-							: Math.Round((double) teammate.FinalKills / teammate.FinalDeaths, 2)
+							: Math.Round((double)teammate.FinalKills / teammate.FinalDeaths, 2)
 								.ToString(CultureInfo.InvariantCulture),
 						Math.Round(teammate.Score, 2),
 						DetermineScoreMeaning(teammate.Score, true)
@@ -378,29 +392,15 @@ namespace Winstreak.Dir
 				{
 					table.AddRow(
 						string.Empty,
-						erroredPlayers,
+						ansiColorToUse + erroredPlayers + ResetAnsi,
 						string.Empty,
 						string.Empty,
 						string.Empty,
 						string.Empty,
-						"Nicked!"
+						BackgroundRedAnsi + "Nicked!" + ResetAnsi
 					);
 				}
 
-				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
-				var totalDeaths = result.AvailablePlayers.Sum(x => x.FinalDeaths);
-				table.AddSeparator();
-				table.AddRow(
-					rank,
-					$"[{result.Color} Team]",
-					result.AvailablePlayers.Sum(x => x.FinalKills),
-					result.AvailablePlayers.Sum(x => x.BrokenBeds),
-					totalDeaths == 0
-						? "N/A"
-						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
-					Math.Round(result.Score, 2),
-					DetermineScoreMeaning(result.Score, false)
-				);
 				if (i + 1 != teamInfo.Count)
 					table.AddSeparator();
 				++rank;
@@ -421,11 +421,11 @@ namespace Winstreak.Dir
 
 		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
-			if (score <= 20) return isPlayer ? "Bad" : "Safe";
-			if (score > 20 && score <= 40) return isPlayer ? "Decent" : "Pretty Safe";
-			if (score > 40 && score <= 60) return isPlayer ? "Good" : "Somewhat Safe";
-			if (score > 60 && score <= 80) return isPlayer ? "Professional" : "Not Safe";
-			return isPlayer ? "Tryhard" : "Leave Now";
+			if (score <= 20) return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
+			if (score > 20 && score <= 40) return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
+			if (score > 40 && score <= 60) return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
+			if (score > 60 && score <= 80) return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
+			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
 		}
 	}
 }

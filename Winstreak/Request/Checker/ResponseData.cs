@@ -60,7 +60,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			var soloDataArr = soloData
 				.Replace(",", "")
-				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			soloDataArr = soloDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -90,7 +90,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			var doubleDataArr = doubleData
 				.Replace(",", "")
-				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			doubleDataArr = doubleDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -121,7 +121,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			var threeDataArr = threeData
 				.Replace(",", "")
-				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			threeDataArr = threeDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();
@@ -151,7 +151,7 @@ namespace Winstreak.Request.Checker
 				.Replace("</td></tr><tr>", "");
 			var fourDataArr = fourData
 				.Replace(",", "")
-				.Split(new string[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 			fourDataArr = fourDataArr
 				.Where(x => x != string.Empty)
 				.ToArray();

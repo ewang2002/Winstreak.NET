@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
-namespace Winstreak.Table
+namespace Winstreak.ConsoleTable
 {
-	public class ConsoleTable
+	public class Table
 	{
 		private const string TopLeftJoint = "┌";
 		private const string TopRightJoint = "┐";
@@ -19,6 +20,8 @@ namespace Winstreak.Table
 		private const string HorizontalLine = "─";
 		private const string VerticalLine = "│";
 
+		private static readonly Regex AnsiRegex = new Regex(@"\x1B\[[^@-~]*[@-~]");
+
 		/// <summary>
 		/// The rows in this table.
 		/// </summary>
@@ -30,22 +33,37 @@ namespace Winstreak.Table
 		public int[] MaxTextLengthPerColumn { get; }
 
 		/// <summary>
+		/// The new line string to use for this instance.
+		/// </summary>
+		public string NewLine { get; }
+
+		/// <summary>
 		/// Creates a new Table object. 
 		/// </summary>
 		/// <param name="columnPerRow">The number of columns per row.</param>
-		public ConsoleTable(int columnPerRow)
+		public Table(int columnPerRow) : this(columnPerRow, "\n")
+		{
+		}
+
+		/// <summary>
+		/// Creates a new Table object.
+		/// </summary>
+		/// <param name="columnPerRow">The number of columns per row.</param>
+		/// <param name="newLine">The new line definition to use.</param>
+		public Table(int columnPerRow, string newLine)
 		{
 			if (columnPerRow <= 0)
 				throw new ArgumentException("You cannot have a row with 0 or less columns.", nameof(columnPerRow));
 			Rows = new List<Row>();
 			MaxTextLengthPerColumn = new int[columnPerRow];
+			NewLine = newLine;
 		}
 
 		/// <summary>
 		/// Adds a separator to the table.
 		/// </summary>
 		/// <returns>This object.</returns>
-		public ConsoleTable AddSeparator()
+		public Table AddSeparator()
 		{
 			Rows.Add(new Row { RowValues = new object[0], SeparateHere = true });
 			return this;
@@ -56,7 +74,7 @@ namespace Winstreak.Table
 		/// </summary>
 		/// <param name="row">The row to add. The number of elements per row must be equal to the defined columns per row (found in the constructor).</param>
 		/// <returns>This object.</returns>
-		public ConsoleTable AddRow(params object[] row)
+		public Table AddRow(params object[] row)
 		{
 			if (row.Length != MaxTextLengthPerColumn.Length)
 				throw new ArgumentException("Incorrect rows given.");
@@ -64,8 +82,9 @@ namespace Winstreak.Table
 			for (var c = 0; c < row.Length; ++c)
 			{
 				var str = row[c].ToString() ?? string.Empty;
-				if (str.Length > MaxTextLengthPerColumn[c])
-					MaxTextLengthPerColumn[c] = str.Length;
+				var removedAnsiStr = AnsiRegex.Replace(str, string.Empty);
+				if (removedAnsiStr.Length > MaxTextLengthPerColumn[c])
+					MaxTextLengthPerColumn[c] = removedAnsiStr.Length;
 			}
 
 			Rows.Add(new Row { RowValues = row, SeparateHere = false });
@@ -77,14 +96,14 @@ namespace Winstreak.Table
 		/// </summary>
 		/// <param name="row">The row to add. The number of elements per row must be equal to the defined columns per row (found in the constructor).</param>
 		/// <returns>This object.</returns>
-		public ConsoleTable AddRowContainingNewLine(params object[] row)
+		public Table AddRowContainingNewLine(params object[] row)
 		{
 			if (row.Length != MaxTextLengthPerColumn.Length)
 				throw new ArgumentException("Incorrect rows given.");
 
 			var strArr = row.Select(x => x.ToString() ?? string.Empty).ToArray();
 			var strArr2d = strArr
-				.Select(x => x.Split("\n"))
+				.Select(x => x.Split(NewLine))
 				.ToArray();
 			var maxLength = strArr2d
 				.Select(x => x.Length)
@@ -134,7 +153,7 @@ namespace Winstreak.Table
 						sb.Append(VerticalLine);
 						var objStr = Rows[r].RowValues[c].ToString() ?? string.Empty;
 						sb.Append(objStr);
-						sb.Append(Repeat(" ", MaxTextLengthPerColumn[c] - objStr.Length));
+						sb.Append(Repeat(" ", MaxTextLengthPerColumn[c] - AnsiRegex.Replace(objStr, string.Empty).Length));
 					}
 
 					sb.Append(VerticalLine)
@@ -204,36 +223,5 @@ namespace Winstreak.Table
 
 		private static string Repeat(string str, int count)
 			=> string.Join("", Enumerable.Repeat(str, count));
-	}
-
-	public struct Row
-	{
-		/// <summary>
-		/// The elements in this row.
-		/// </summary>
-		public object[] RowValues;
-
-		/// <summary>
-		/// Whether this row happens to be a separator. 
-		/// </summary>
-		public bool SeparateHere;
-	}
-
-	public enum Position
-	{
-		/// <summary>
-		/// The top part of the table.
-		/// </summary>
-		Top,
-
-		/// <summary>
-		/// Any area of the table that isn't the top or bottom.
-		/// </summary>
-		Between,
-
-		/// <summary>
-		/// The bottom part of the table.
-		/// </summary>
-		Bottom
 	}
 }

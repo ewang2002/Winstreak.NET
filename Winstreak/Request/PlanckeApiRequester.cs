@@ -58,7 +58,7 @@ namespace Winstreak.Request
 			var returnVal = new Dictionary<string, string>();
 			for (var i = 0; i < Names.Count; i++)
 				returnVal.Add(Names[i], await responses[i].Content.ReadAsStringAsync());
-			
+
 			return returnVal;
 		}
 
