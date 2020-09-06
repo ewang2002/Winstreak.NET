@@ -38,13 +38,7 @@ namespace Winstreak
 				RetryDelay = 250,
 				RetryMax = 2,
 				ScreenshotDelay = 450,
-				PathToMinecraftFolder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-					? Path.Join("C:", "Users", Environment.UserName, "AppData", "Roaming", ".minecraft")
-					: RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-						? Path.Join("home", Environment.UserName, ".minecraft")
-						: RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-							? Path.Join("Library", "Application Support", "minecraft")
-							: throw new PlatformNotSupportedException("Winstreak isn't supported by the current platform.")
+				PathToMinecraftFolder = GetDefaultMinecraftFolderPath()
 			};
 
 			if (configFileInfo != null)
@@ -72,6 +66,8 @@ namespace Winstreak
 				}
 			}
 
+			configurationFile.PathToMinecraftFolder ??= GetDefaultMinecraftFolderPath();
+
 			// check once more
 			if (!Directory.Exists(configurationFile.PathToMinecraftFolder))
 			{
@@ -83,5 +79,13 @@ namespace Winstreak
 
 			await DirectoryWatcher.Run(configurationFile);
 		}
+
+		public static string GetDefaultMinecraftFolderPath() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+			? Path.Join("C:", "Users", Environment.UserName, "AppData", "Roaming", ".minecraft")
+			: RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+				? Path.Join("home", Environment.UserName, ".minecraft")
+				: RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+					? Path.Join("Library", "Application Support", "minecraft")
+					: throw new PlatformNotSupportedException("Winstreak isn't supported by the current platform.");
 	}
 }

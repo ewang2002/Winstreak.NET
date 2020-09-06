@@ -6,7 +6,7 @@ namespace Winstreak.ConfigParser
 {
 	public static class ConfigManager
 	{
-		public async static Task<ConfigFile> ParseConfigFile(FileInfo info)
+		public static async Task<ConfigFile> ParseConfigFile(FileInfo info)
 		{
 			var configFile = new ConfigFile();
 
