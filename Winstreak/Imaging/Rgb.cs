@@ -32,7 +32,7 @@
 using System;
 using System.Drawing;
 
-namespace Winstreak.External.Imaging
+namespace Winstreak.Imaging
 {
     /// <summary>
     ///   RGB components.
@@ -46,14 +46,6 @@ namespace Winstreak.External.Imaging
     ///   <note>The <see cref="System.Drawing.Imaging.PixelFormat">PixelFormat.Format24bppRgb</see>
     ///   actually refers to a BGR pixel format.</note></para>
     /// </remarks>
-    /// 
-    /// <example>
-    /// <para>
-    ///   The following examples show how to convert to and from various pixel representations:</para>
-    /// <code source="Unit Tests\Accord.Tests.Imaging\Colors\ColorsTest.cs" region="doc_rgb" />
-    /// <code source="Unit Tests\Accord.Tests.Imaging\Colors\ColorsTest.cs" region="doc_hsl" />
-    /// <code source="Unit Tests\Accord.Tests.Imaging\Colors\ColorsTest.cs" region="doc_ycbcr" />
-    /// </example>
     [Serializable]
     public struct Rgb
     {
@@ -122,10 +114,10 @@ namespace Winstreak.External.Imaging
 		/// 
 		public Rgb(byte red, byte green, byte blue)
         {
-            this.Red = red;
-            this.Green = green;
-            this.Blue = blue;
-            this.Alpha = 255;
+            Red = red;
+            Green = green;
+            Blue = blue;
+            Alpha = 255;
         }
 
         /// <summary>
@@ -139,10 +131,10 @@ namespace Winstreak.External.Imaging
         /// 
         public Rgb(byte red, byte green, byte blue, byte alpha)
         {
-            this.Red = red;
-            this.Green = green;
-            this.Blue = blue;
-            this.Alpha = alpha;
+            Red = red;
+            Green = green;
+            Blue = blue;
+            Alpha = alpha;
         }
 
         /// <summary>
@@ -153,10 +145,10 @@ namespace Winstreak.External.Imaging
         /// 
         public Rgb(Color color)
         {
-	        this.Red = color.R;
-	        this.Green = color.G;
-	        this.Blue = color.B;
-	        this.Alpha = color.A;
+	        Red = color.R;
+	        Green = color.G;
+	        Blue = color.B;
+	        Alpha = color.A;
         }
     }
 }

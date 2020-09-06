@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,7 +20,7 @@ namespace Winstreak
 				Environment.CurrentDirectory,
 				Path.GetDirectoryName((Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).Location),
 			};
-			
+
 			var envPath = new DirectoryInfo(Environment.CurrentDirectory);
 			var configFileInfo = (from path in possiblePaths
 				where Directory.Exists(path)
@@ -87,5 +88,6 @@ namespace Winstreak
 				: RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
 					? Path.Join("Library", "Application Support", "minecraft")
 					: throw new PlatformNotSupportedException("Winstreak isn't supported by the current platform.");
+	
 	}
 }

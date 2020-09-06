@@ -13,7 +13,7 @@ namespace Winstreak.Request.Definition
 		public readonly double Score;
 
 		public TeamInfoResults(
-			TeamColors color,
+			TeamColor color,
 			IList<BedwarsData> availablePlayers,
 			IList<string> errored
 		)

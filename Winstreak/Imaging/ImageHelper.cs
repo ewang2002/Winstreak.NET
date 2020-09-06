@@ -3,7 +3,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using Winstreak.Parser.ImgExcept;
 
-namespace Winstreak.External.Imaging
+namespace Winstreak.Imaging
 {
 	/// <summary>
 	/// Core image relatad methods.

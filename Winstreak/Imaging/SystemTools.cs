@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Winstreak.External.Imaging
+namespace Winstreak.Imaging
 {
 	/// <summary>
     /// Set of systems tools.
@@ -54,25 +54,18 @@ namespace Winstreak.External.Imaging
         /// 
         public static unsafe byte* CopyUnmanagedMemory(byte* dst, byte* src, int count)
         {
-#if NETSTANDARD
-            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return memcpy(dst, src, count);
-            }
-            else
-            {
-                // for other platforms: copy bytewise
-                byte* d = dst;
-                byte* s = src;
-                for (int i = 0; i < count; ++i, ++d, ++s)
-                {
-                    *d = *s;
-                }
-                return dst;
-            }
-#else
-            return memcpy(dst, src, count);
-#endif
+	        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+		        return memcpy(dst, src, count);
+            
+
+	        // for other platforms: copy bytewise
+	        var d = dst;
+	        var s = src;
+	        for (var i = 0; i < count; ++i, ++d, ++s)
+	        {
+		        *d = *s;
+	        }
+	        return dst;
         }
 
         /// <summary>
@@ -84,7 +77,6 @@ namespace Winstreak.External.Imaging
         /// <param name="count">Memory block's length to fill.</param>
         /// 
         /// <returns>Return's value of <paramref name="dst"/> - pointer to destination.</returns>
-        /// 
         public static IntPtr SetUnmanagedMemory(IntPtr dst, int filler, int count)
         {
             unsafe
@@ -103,27 +95,20 @@ namespace Winstreak.External.Imaging
         /// <param name="count">Memory block's length to fill.</param>
         /// 
         /// <returns>Return's value of <paramref name="dst"/> - pointer to destination.</returns>
-        /// 
         public static unsafe byte* SetUnmanagedMemory(byte* dst, int filler, int count)
         {
-#if NETSTANDARD
-            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+	        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return memset(dst, filler, count);
             }
-            else
-            {
-                byte* d = dst;
-                byte f = (byte)filler;
-                for (int i = 0; i < count; ++i, ++d)
-                {
-                    *d = f;
-                }
-                return dst;
-            }
-#else
-            return memset(dst, filler, count);
-#endif
+
+	        var d = dst;
+	        var f = (byte)filler;
+	        for (var i = 0; i < count; ++i, ++d)
+	        {
+		        *d = f;
+	        }
+	        return dst;
         }
 
 
@@ -136,6 +121,5 @@ namespace Winstreak.External.Imaging
         [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl)]
         [SuppressMessage("Microsoft.Design", "IDE1006", Justification = "DLL method.")]
         private static extern unsafe byte* memset(byte* dst, int filler, int count);
-
     }
 }

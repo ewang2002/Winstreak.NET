@@ -11,15 +11,13 @@ namespace Winstreak.Parser
 		/// <returns>The Gui scale.</returns>
 		public static int GetGuiScale(string pathToMcFolder)
 		{
-			string realPath = Path.Join(pathToMcFolder, "options.txt");
-			string[] options = File.ReadAllLines(realPath);
+			var realPath = Path.Join(pathToMcFolder, "options.txt");
+			var options = File.ReadAllLines(realPath);
 
-			for (int i = 0; i < options.Length; i++)
+			foreach (var option in options)
 			{
-				if (options[i].StartsWith("guiScale"))
-				{
-					return int.Parse(options[i].Split(":")[1]);
-				}
+				if (option.StartsWith("guiScale"))
+					return int.Parse(option.Split(":")[1]);
 			}
 
 			return -1; 

@@ -11,7 +11,7 @@ using Winstreak.Calculations;
 using Winstreak.ConfigParser;
 using Winstreak.ConsoleTable;
 using Winstreak.Extensions;
-using Winstreak.External.Imaging;
+using Winstreak.Imaging;
 using Winstreak.Parser;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
@@ -26,10 +26,6 @@ namespace Winstreak
 			.Append("[INFO] Current Command List.")
 			.AppendLine()
 			.Append("> -c: Clears the console.")
-			.AppendLine()
-			.Append("> -l: Checks the last screenshot provided, assuming it's a lobby screenshot.")
-			.AppendLine()
-			.Append("> -g: Checks the last screenshot provided, assuming it's an in-game screenshot.")
 			.AppendLine()
 			.Append(
 				"> -tc: Determines whether the console should be cleared when a screenshot is provided.")
@@ -103,28 +99,6 @@ namespace Winstreak
 						case "-c":
 							Console.Clear();
 							continue;
-						// check last image again
-						case "-l":
-						case "-g":
-							if (McScreenshotsPath.GetFiles().Length == 0)
-							{
-								Console.WriteLine("[INFO] No Screenshots Found.");
-								Console.WriteLine("=====================================");
-								continue;
-							}
-
-							var lastFile = McScreenshotsPath
-								.GetFiles()
-								.OrderByDescending(x => x.LastWriteTime)
-								.First();
-							if (lastFile == null)
-								continue;
-
-							if (input.ToLower() == "-l")
-								await LobbyChecker(lastFile.FullName);
-							else
-								await GameCheck(lastFile.FullName);
-							continue;
 						case "-tc":
 							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
 							Console.WriteLine(ShouldClearBeforeCheck
@@ -180,53 +154,62 @@ namespace Winstreak
 			// wait for image to fully load
 			await Task.Delay(Config.ScreenshotDelay);
 			var bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
-			if (AbstractNameParser.IsInLobby(bitmap))
-				await LobbyChecker(e.FullPath);
-			else
-				await GameCheck(e.FullPath);
+			await ProcessScreenshot(bitmap, e.FullPath);
 		}
 
-		private static async Task LobbyChecker(string bitmap)
+		private static async Task ProcessScreenshot(Bitmap bitmap, string path)
 		{
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
-			Console.WriteLine($"[INFO] Checking Lobby: {bitmap}");
+
+			Console.WriteLine($"[INFO] Checking Screenshot: {path}");
 			var processingTime = new Stopwatch();
 			processingTime.Start();
-
-			var parser = new LobbyNameParser(bitmap);
+			// parse time
+			var parser = new NameParser(bitmap);
 			try
 			{
 				parser.SetGuiScale(GuiScale);
 				parser.InitPoints();
 				parser.FindStartOfName();
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
+				Console.WriteLine($"[ERROR] An error occurred when trying to parse the image. Exception Info Below.\n{e}");
 				Console.ResetColor();
 				Console.WriteLine("=====================================");
+				processingTime.Stop();
 				return;
 			}
+			var allNames = parser.ParseNames(Config.ExemptPlayers);
 
-			var allNames = parser.GetPlayerName(Config.ExemptPlayers).lobby;
-			parser.Dispose();
+			// end parse
 			processingTime.Stop();
-			var imageProcessingTime = processingTime.Elapsed;
-			processingTime.Reset();
+			var timeTaken = processingTime.Elapsed;
 
-			processingTime.Start();
-			// get data
-			var planckeApiRequester = new PlanckeApiRequester(allNames);
+			Console.WriteLine($"[INFO] Determined Screenshot Type: {(parser.IsLobby ? "Lobby" : "Game")}");
+
+			if (parser.IsLobby)
+				await LobbyChecker(allNames[TeamColor.Unknown], timeTaken);
+			else
+				await GameCheck(allNames, timeTaken);
+		}
+
+		private static async Task LobbyChecker(IList<string> names, TimeSpan timeTaken)
+		{
+			var reqTime = new Stopwatch();
+			reqTime.Start();
+			// request data from plancke
+			var planckeApiRequester = new PlanckeApiRequester(names);
 			// parse data
 			var nameData = await planckeApiRequester.SendRequests();
 			var checker = new ResponseParser(nameData);
 			var nameResults = checker.GetPlayerDataFromMap();
 
-			processingTime.Stop();
-			var apiRequestTime = processingTime.Elapsed;
-			processingTime.Reset();
+			reqTime.Stop();
+			var apiRequestTime = reqTime.Elapsed;
+			reqTime.Reset();
 
 			// start parsing the data
 			var tableBuilder = new Table(6)
@@ -270,43 +253,17 @@ namespace Winstreak
 			);
 			Console.WriteLine(tableBuilder.ToString());
 
-			Console.WriteLine($"[INFO] Image Processing Time: {imageProcessingTime.TotalSeconds} Sec.");
+			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 
 			Console.WriteLine("=====================================");
 		}
 
-		public static async Task GameCheck(string bitmap)
+		public static async Task GameCheck(IDictionary<TeamColor, IList<string>> teams, TimeSpan timeTaken)
 		{
-			if (ShouldClearBeforeCheck)
-				Console.Clear();
-			Console.WriteLine($"[INFO] Checking Game: {bitmap}");
-			var processingTime = new Stopwatch();
-			processingTime.Start();
-
-			var parser = new InGameNameParser(bitmap);
-			try
-			{
-				parser.SetGuiScale(GuiScale);
-				parser.InitPoints();
-				parser.FindStartOfName();
-				parser.AccountForTeamLetters();
-			}
-			catch (Exception)
-			{
-				Console.WriteLine("[ERROR] An error occurred when trying to parse the image.");
-				Console.WriteLine("=====================================");
-				return;
-			}
-
-			var teams = parser.GetPlayerName().team;
-			parser.Dispose();
-			processingTime.Stop();
-			var imageProcessingTime = processingTime.Elapsed;
-			processingTime.Reset();
-
-			processingTime.Start();
-			// get data
+			var reqTime = new Stopwatch();
+			reqTime.Start();
+			// req data from plancke 
 			var teamInfo = new List<TeamInfoResults>();
 			foreach (var (key, value) in teams)
 			{
@@ -322,12 +279,9 @@ namespace Winstreak
 				.OrderByDescending(x => x.Score)
 				.ToList();
 
-			processingTime.Stop();
-			var apiRequestTime = processingTime.Elapsed;
-			processingTime.Reset();
+			reqTime.Stop();
+			var apiRequestTime = reqTime.Elapsed;
 
-			// start parsing results for data
-			processingTime.Start();
 			// start parsing the data
 			var rank = 1;
 
@@ -338,12 +292,22 @@ namespace Winstreak
 			{
 				var result = teamInfo[i];
 				var ansiColorToUse = result.Color == "Blue"
-					? TextCyanAnsi
+					? TextBrightBlueAnsi
 					: result.Color == "Yellow"
 						? TextYellowAnsi
 						: result.Color == "Green"
 							? TextGreenAnsi
-							: TextRedAnsi;
+							: result.Color == "Red"
+								? TextRedAnsi
+								: result.Color == "Aqua"
+									? TextCyanAnsi
+									: result.Color == "Grey"
+										? TextBrightBlackAnsi
+										: result.Color == "Pink"
+											? TextBrightRedAnsi
+											: result.Color == "White"
+												? TextWhiteAnsi
+												: ResetAnsi;
 
 				var allAvailablePlayers = result.AvailablePlayers
 					.OrderByDescending(x => x.Score)
@@ -400,14 +364,8 @@ namespace Winstreak
 
 			Console.WriteLine(table.ToString());
 
-			Console.WriteLine($"[INFO] {string.Join(" ← ", teamInfo.Select(x => x.Color))}");
-
-			processingTime.Stop();
-			var processedTime = processingTime.Elapsed;
-
-			Console.WriteLine($"[INFO] Image Processing Time: {imageProcessingTime.TotalSeconds} Sec.");
+			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
-			Console.WriteLine($"[INFO] Processing Reqeusts Time: {processedTime.TotalSeconds} Sec.");
 			Console.WriteLine("=====================================");
 		}
 

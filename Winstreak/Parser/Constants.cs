@@ -16,12 +16,10 @@ namespace Winstreak.Parser
 		public static readonly Color GreenTeamColor = Color.FromArgb(0x55FF55);
 		public static readonly Color RedTeamColor = Color.FromArgb(0xFF5555);
 		public static readonly Color YellowTeamColor = Color.FromArgb(0xFFFF55);
-
-		public static readonly Color YouArePlayingOnColor = Color.FromArgb(85, 255, 255);
-		public static readonly Color StoreHypixelNetDarkColor = Color.FromArgb(0x3F1515);
-		public static readonly Color BossBarColor = Color.FromArgb(0x76005C);
-
-		public static readonly int ListedNumsOffset = 60;
+		public static readonly Color AquaTeamColor = Color.FromArgb(0x55FFFF);
+		public static readonly Color GreyTeamColor = Color.FromArgb(0x555555);
+		public static readonly Color WhiteTeamColor = Color.FromArgb(0xFFFFFF);
+		public static readonly Color PinkTeamColor = Color.FromArgb(0xFF55FF);
 
 		public static readonly IDictionary<string, string> BinaryToCharactersMap;
 
@@ -33,6 +31,7 @@ namespace Winstreak.Parser
 				{"111111101111111010100000101000001111111001011110", ""},
 				{"100000001100000001111110011111101100000010000000", ""},
 				{"111111101111111010100010101000101111111001011100", ""},
+				{"011111101111111010100000101000001111111001111110", ""},
 				{"0111110010001010100100101010001001111100", "0"},
 				{"0000001001000010111111100000001000000010", "1"},
 				{"0100011010001010100100101001001001100110", "2"},
@@ -100,12 +99,16 @@ namespace Winstreak.Parser
 		}
 	}
 
-	public enum TeamColors
+	public enum TeamColor
 	{
 		Blue,
 		Green,
 		Red,
 		Yellow,
+		Aqua,
+		Grey,
+		Pink,
+		White,
 		Unknown
 	}
 }
