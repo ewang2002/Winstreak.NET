@@ -67,14 +67,11 @@ namespace Winstreak.Parser
 		}
 
 		/// <inheritdoc />
-		public override bool IsValidColor(Color c)
-		{
-			return MvpPlusPlus.IsRgbEqualTo(c)
-			       || MvpPlus.IsRgbEqualTo(c)
-			       || Mvp.IsRgbEqualTo(c)
-			       || VipPlus.IsRgbEqualTo(c)
-			       || Vip.IsRgbEqualTo(c)
-			       || None.IsRgbEqualTo(c);
-		}
+		public override bool IsValidColor(Color c) => MvpPlusPlus.IsRgbEqualTo(c)
+		                                              || MvpPlus.IsRgbEqualTo(c)
+		                                              || Mvp.IsRgbEqualTo(c)
+		                                              || VipPlus.IsRgbEqualTo(c)
+		                                              || Vip.IsRgbEqualTo(c)
+		                                              || None.IsRgbEqualTo(c);
 	}
 }

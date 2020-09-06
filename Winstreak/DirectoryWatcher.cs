@@ -8,16 +8,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Calculations;
+using Winstreak.ConfigParser;
 using Winstreak.ConsoleTable;
 using Winstreak.Extensions;
 using Winstreak.External.Imaging;
 using Winstreak.Parser;
 using Winstreak.Request;
 using Winstreak.Request.Checker;
-using static Winstreak.ConsoleTable.AnsiConstants;
 using Winstreak.Request.Definition;
+using static Winstreak.ConsoleTable.AnsiConstants;
 
-namespace Winstreak.Dir
+namespace Winstreak
 {
 	public class DirectoryWatcher
 	{
@@ -36,33 +37,19 @@ namespace Winstreak.Dir
 			.Append("> -h: Shows this menu.")
 			.ToString();
 
-		public static string McPath;
 		public static DirectoryInfo McScreenshotsPath;
 		public static int GuiScale;
-		public static string[] ExemptPlayers;
 		public static bool ShouldClearBeforeCheck;
+		public static ConfigFile Config;
 
-		public static async Task Run(string path)
+		public static async Task Run(ConfigFile file)
 		{
-			McPath = path;
-			McScreenshotsPath = new DirectoryInfo(Path.Join(McPath, "screenshots"));
-
-			// get current directory
-			var assemblyDirectory = Environment.CurrentDirectory;
-			try
-			{
-				var realPath = Path.Join(assemblyDirectory, "Exempt.txt");
-				ExemptPlayers = File.Exists(realPath)
-					? await File.ReadAllLinesAsync(realPath)
-					: new string[0];
-			}
-			finally
-			{
-				Console.WriteLine($"[INFO] Exempt Players Set: {ExemptPlayers.ToReadableString()}");
-			}
+			Config = file;
+			McScreenshotsPath = new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"));
+			ShouldClearBeforeCheck = file.ClearConsole;
 
 			// Get gui scale
-			GuiScale = ParserHelper.GetGuiScale(path);
+			GuiScale = ParserHelper.GetGuiScale(Config.PathToMinecraftFolder);
 
 			if (GuiScale == 0)
 			{
@@ -73,12 +60,17 @@ namespace Winstreak.Dir
 				return;
 			}
 
+			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+			Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
+			Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
+			Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
+			Console.WriteLine($"[INFO] Retry Request Max Set: {Config.RetryMax}");
 			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
 			Console.WriteLine("=========================");
 
 			using var watcher = new FileSystemWatcher
 			{
-				Path = Path.Join(path, "screenshots"),
+				Path = McScreenshotsPath.FullName,
 				// Only watch image files
 				Filter = "*.png",
 				// Filters
@@ -186,7 +178,7 @@ namespace Winstreak.Dir
 		private static async void OnChanged(object source, FileSystemEventArgs e)
 		{
 			// wait for image to fully load
-			await Task.Delay(350);
+			await Task.Delay(Config.ScreenshotDelay);
 			var bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			if (AbstractNameParser.IsInLobby(bitmap))
 				await LobbyChecker(e.FullPath);
@@ -218,7 +210,7 @@ namespace Winstreak.Dir
 				return;
 			}
 
-			var allNames = parser.GetPlayerName(ExemptPlayers).lobby;
+			var allNames = parser.GetPlayerName(Config.ExemptPlayers).lobby;
 			parser.Dispose();
 			processingTime.Stop();
 			var imageProcessingTime = processingTime.Elapsed;

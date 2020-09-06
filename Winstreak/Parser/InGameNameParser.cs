@@ -17,7 +17,7 @@ namespace Winstreak.Parser
 		public InGameNameParser(string file) : base(file)
 		{
 		}
-		
+
 		/// <summary>
 		/// Accounts for the team letters (R, G, Y, B) by skipping the team letters altogether and going to the first name. 
 		/// </summary>
@@ -73,7 +73,7 @@ namespace Winstreak.Parser
 				if (exempt.Contains(name.ToString()))
 					colorsToIgnore.Add(currentColor);
 
-				if (colorsToIgnore.Contains(currentColor) || name.ToString().Trim().Equals(string.Empty)) 
+				if (colorsToIgnore.Contains(currentColor) || name.ToString().Trim().Equals(string.Empty))
 					continue;
 
 				if (currentColor == TeamColors.Unknown)
@@ -107,12 +107,9 @@ namespace Winstreak.Parser
 		}
 
 		/// <inheritdoc />
-		public override bool IsValidColor(Color color)
-		{
-			return RedTeamColor.IsRgbEqualTo(color)
-			       || BlueTeamColor.IsRgbEqualTo(color)
-			       || YellowTeamColor.IsRgbEqualTo(color)
-			       || GreenTeamColor.IsRgbEqualTo(color);
-		}
+		public override bool IsValidColor(Color color) => RedTeamColor.IsRgbEqualTo(color)
+		                                                  || BlueTeamColor.IsRgbEqualTo(color)
+		                                                  || YellowTeamColor.IsRgbEqualTo(color)
+		                                                  || GreenTeamColor.IsRgbEqualTo(color);
 	}
 }

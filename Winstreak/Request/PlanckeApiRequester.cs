@@ -63,9 +63,9 @@ namespace Winstreak.Request
 				{
 					// 2 attempts to get data again
 					// in case not found.
-					for (var attempts = 0; attempts < 2; attempts++)
+					for (var attempts = 0; attempts < DirectoryWatcher.Config.RetryMax; attempts++)
 					{
-						await Task.Delay(TimeSpan.FromMilliseconds(500));
+						await Task.Delay(TimeSpan.FromMilliseconds(DirectoryWatcher.Config.RetryDelay));
 						// get it again
 						responses[i] = await Client
 							.GetAsync($"https://plancke.io/hypixel/player/stats/{Names[i]}");
