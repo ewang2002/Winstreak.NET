@@ -38,7 +38,7 @@ namespace Winstreak
 				ExemptPlayers = new string[0],
 				RetryDelay = 250,
 				RetryMax = 2,
-				ScreenshotDelay = 450,
+				ScreenshotDelay = 250,
 				PathToMinecraftFolder = GetDefaultMinecraftFolderPath()
 			};
 

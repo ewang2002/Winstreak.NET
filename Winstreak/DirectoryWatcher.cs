@@ -62,6 +62,7 @@ namespace Winstreak
 			Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
 			Console.WriteLine($"[INFO] Retry Request Max Set: {Config.RetryMax}");
 			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
+			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("=========================");
 
 			using var watcher = new FileSystemWatcher
@@ -166,7 +167,7 @@ namespace Winstreak
 			var processingTime = new Stopwatch();
 			processingTime.Start();
 			// parse time
-			var parser = new NameParser(bitmap);
+			using var parser = new NameParser(bitmap);
 			try
 			{
 				parser.SetGuiScale(GuiScale);

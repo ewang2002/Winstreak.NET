@@ -1,42 +1,41 @@
 # Configuration file for Winstreak.NET
-# Please fill out before use. 
-# Once the program is in use, you will
-# have to restart the program in order
-# to make changes to this file.
+# Please fill out before use. Once the program is in use, you will have to restart the program in order to make changes to this file.
 
 # Path to the Minecraft screenshots folder.
-# Fill this out to override the default folder
-# of .minecraft/screenshots.
+# Fill this out to override the default folder of .minecraft.
+# Default Value=
+# Example=C:\Path\To\Minecraft\Folder
 PATH_TO_MC_FOLDER=
 
 
 # List of players to not check.
-# Separate multiple entries with ","
-# Capitalization matters.
+# Separate multiple entries with a comma. Capitalization matters.
+# Default Value= 
+# Example=Epic,Test,EpicGamer123
 EXEMPT_PLAYERS=
 
 
-# Delay between checking someone's profile again
-# in case of non-200 status code (usually due to
-# profile not being found or rate limit).
-# In milliseconds (MS)
+# Delay between checking someone's profile again in case of non-200 status code (usually due to profile not being found or rate limit).
+# In milliseconds (MS).
+# Default Value=250
+# Minimum=100
 RETRY_DELAY=
 
 
-# Number of times to check someone's profile before
-# he or she is consider to be a nicked user.
+# Number of times to check someone's profile before he or she is consider to be a nicked user.
+# Default Value=2
+# Minimum=0
 RETRY_MAX=
 
 
-# Automatically clear console when a screenshot
-# is provided. 1 = true, 2 = false 
+# Automatically clear console when a screenshot is provided. 1 = true, 0 = false 
+# Default Value=0
 CLEAR_CONSOLE=
 
 
 # Delay between screenshot taken + check time.
-# When a screenshot is taken, the program recognizes
-# that a screenshot was taken but your computer
-# usually needs to wait a bit before fully writing
-# it to disk.
-# In milliseconds (MS); min 250
+# When a screenshot is taken, the program recognizes that a screenshot was taken but your computer usually needs to wait a bit before fully writing it to disk.
+# In milliseconds (MS).
+# Default Value=250
+# Minimum=250
 SCREENSHOT_DELAY=
