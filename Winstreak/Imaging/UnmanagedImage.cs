@@ -411,7 +411,7 @@ namespace Winstreak.Imaging
 		/// </remarks>
 		public void SetPixel(int x, int y, Color color)
 			=> SetPixel(x, y, color.R, color.G, color.B, color.A);
-		
+
 
 		private void SetPixel(int x, int y, byte r, byte g, byte b, byte a)
 		{
@@ -491,12 +491,12 @@ namespace Winstreak.Imaging
 			if (x < 0 || y < 0)
 				throw new ArgumentOutOfRangeException(nameof(x),
 					"The specified pixel coordinate is out of image's bounds.");
-			
+
 
 			if (x >= Width || y >= Height)
 				throw new ArgumentOutOfRangeException(nameof(y),
 					"The specified pixel coordinate is out of image's bounds.");
-			
+
 
 			Color color;
 

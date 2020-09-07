@@ -133,9 +133,9 @@ namespace Winstreak
 					Console.WriteLine($"> Total Wins: {playerInfo.Wins}");
 					Console.WriteLine($"> Total Losses: {playerInfo.Losses}");
 					Console.WriteLine();
-					Console.WriteLine($"> Regular K/D Ratio: {(double)playerInfo.Kills / playerInfo.Deaths}");
-					Console.WriteLine($"> Final K/D Ratio: {(double)playerInfo.FinalKills / playerInfo.FinalDeaths}");
-					Console.WriteLine($"> W/L Ratio: {(double)playerInfo.Wins / playerInfo.Losses}");
+					Console.WriteLine($"> Regular K/D Ratio: {(double) playerInfo.Kills / playerInfo.Deaths}");
+					Console.WriteLine($"> Final K/D Ratio: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
+					Console.WriteLine($"> W/L Ratio: {(double) playerInfo.Wins / playerInfo.Losses}");
 				}
 				else
 				{
@@ -177,12 +177,14 @@ namespace Winstreak
 			catch (Exception e)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"[ERROR] An error occurred when trying to parse the image. Exception Info Below.\n{e}");
+				Console.WriteLine(
+					$"[ERROR] An error occurred when trying to parse the image. Exception Info Below.\n{e}");
 				Console.ResetColor();
 				Console.WriteLine("=====================================");
 				processingTime.Stop();
 				return;
 			}
+
 			var allNames = parser.ParseNames(Config.ExemptPlayers);
 
 			// end parse
@@ -223,7 +225,7 @@ namespace Winstreak
 					playerInfo.BrokenBeds,
 					playerInfo.FinalDeaths == 0
 						? "N/A"
-						: Math.Round((double)playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
+						: Math.Round((double) playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
 							.ToString(CultureInfo.InvariantCulture), Math.Round(playerInfo.Score, 2),
 					DetermineScoreMeaning(playerInfo.Score, true)
 				);
@@ -247,7 +249,7 @@ namespace Winstreak
 				checker.TotalBedsBroken,
 				checker.TotalLosses == 0
 					? "N/A"
-					: Math.Round((double)checker.TotalWins / checker.TotalLosses, 2)
+					: Math.Round((double) checker.TotalWins / checker.TotalLosses, 2)
 						.ToString(CultureInfo.InvariantCulture),
 				Math.Round(ttlScore, 2),
 				DetermineScoreMeaning(ttlScore, false)
@@ -323,7 +325,7 @@ namespace Winstreak
 					result.AvailablePlayers.Sum(x => x.BrokenBeds),
 					totalDeaths == 0
 						? "N/A"
-						: Math.Round((double)totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
+						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
 					Math.Round(result.Score, 2),
 					DetermineScoreMeaning(result.Score, true)
 				);
@@ -338,7 +340,7 @@ namespace Winstreak
 						teammate.BrokenBeds,
 						teammate.FinalDeaths == 0
 							? "N/A"
-							: Math.Round((double)teammate.FinalKills / teammate.FinalDeaths, 2)
+							: Math.Round((double) teammate.FinalKills / teammate.FinalDeaths, 2)
 								.ToString(CultureInfo.InvariantCulture),
 						Math.Round(teammate.Score, 2),
 						DetermineScoreMeaning(teammate.Score, true)
@@ -373,8 +375,10 @@ namespace Winstreak
 		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
 			if (score <= 20) return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
-			if (score > 20 && score <= 40) return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
-			if (score > 40 && score <= 60) return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
+			if (score > 20 && score <= 40)
+				return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
+			if (score > 40 && score <= 60)
+				return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
 			if (score > 60 && score <= 80) return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
 			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
 		}

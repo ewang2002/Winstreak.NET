@@ -138,7 +138,7 @@ namespace Winstreak.Parser
 
 					// found first character, search for future characters
 					// starting from this x val
-					startX = x; 
+					startX = x;
 
 					// empty character comes from
 					// the character directly following the 

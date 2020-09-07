@@ -20,7 +20,7 @@ namespace Winstreak.Parser
 					return int.Parse(option.Split(":")[1]);
 			}
 
-			return -1; 
+			return -1;
 		}
 	}
 }

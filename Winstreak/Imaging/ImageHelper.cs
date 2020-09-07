@@ -83,7 +83,6 @@ namespace Winstreak.Imaging
 		/// <param name="format">The pixel format.</param>
 		public static int GetPixelFormatSize(this PixelFormat format)
 			=> Image.GetPixelFormatSize(format);
-		
 
 
 		/// <summary>

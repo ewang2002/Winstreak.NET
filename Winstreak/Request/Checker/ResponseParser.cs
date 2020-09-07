@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Winstreak.Calculations;
 using Winstreak.Request.Definition;
 
 namespace Winstreak.Request.Checker
@@ -13,7 +12,7 @@ namespace Winstreak.Request.Checker
 		public int TotalFinalDeaths { get; private set; }
 		public int TotalWins { get; private set; }
 		public int TotalLosses { get; private set; }
-		public IList<string> ErroredPlayers { get;  }
+		public IList<string> ErroredPlayers { get; }
 
 		/// <summary>
 		/// Creates a new ResponseParser object, which should be used after going through the PlanckeApiRequester class.

@@ -27,6 +27,8 @@ namespace Winstreak.Calculations
 		/// <returns>The win/loss threat level, from a scale of 0 to 1.</returns>
 		public static double GetWinLossLevel(int wins, int losses)
 		{
+			if (losses == 0)
+				return 0;
 			var winLossRatio = (double) wins / losses;
 			return 1 - 1 / ((double) 3 / 4 * Math.Pow(winLossRatio, 5) + 1);
 		}
@@ -39,6 +41,8 @@ namespace Winstreak.Calculations
 		/// <returns>The final kill/death threat level, from a scale of 0 to 1.</returns>
 		public static double GetFinalKillDeathLevel(int fk, int fd)
 		{
+			if (fd == 0)
+				return 0;
 			var fkdr = (double) fk / fd;
 			return 1 - 1 / (2 * Math.Pow(fkdr, 2) + 1);
 		}

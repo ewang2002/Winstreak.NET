@@ -43,7 +43,7 @@ namespace Winstreak.Request.Checker
 
 			// only get bedwars data
 			var bedwarsData = HtmlContent
-				.Split(new[] { "Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
+				.Split(new[] {"Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
 				.Split("Build Battle")[0]
 				.Split("</thead>")[1]
 				.Split("</div>")[0];

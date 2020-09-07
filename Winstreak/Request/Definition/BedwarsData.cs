@@ -4,7 +4,7 @@ namespace Winstreak.Request.Definition
 {
 	public readonly struct BedwarsData
 	{
-		public readonly string Name; 
+		public readonly string Name;
 		public readonly int Kills;
 		public readonly int Deaths;
 		public readonly int FinalKills;
@@ -12,7 +12,7 @@ namespace Winstreak.Request.Definition
 		public readonly int Wins;
 		public readonly int Losses;
 		public readonly int BrokenBeds;
-		public readonly double Score; 
+		public readonly double Score;
 
 		public BedwarsData(
 			string name,

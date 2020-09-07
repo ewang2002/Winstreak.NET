@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -46,7 +45,8 @@ namespace Winstreak
 				configurationFile = await ConfigManager.ParseConfigFile(configFileInfo);
 			else
 			{
-				Console.WriteLine("[INFO] A WSConfig file couldn't be found. Please type the path to the folder containing this file. If you would like to use the default settings, simply skip.");
+				Console.WriteLine(
+					"[INFO] A WSConfig file couldn't be found. Please type the path to the folder containing this file. If you would like to use the default settings, simply skip.");
 				var pathToCheck = Console.ReadLine() ?? string.Empty;
 				if (pathToCheck == string.Empty)
 					Console.WriteLine("[INFO] No path specified. Using default settings.");
@@ -73,7 +73,8 @@ namespace Winstreak
 			if (!Directory.Exists(configurationFile.PathToMinecraftFolder))
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"[ERROR] Couldn't find your Minecraft folder. Given parameter: {configurationFile.PathToMinecraftFolder}");
+				Console.WriteLine(
+					$"[ERROR] Couldn't find your Minecraft folder. Given parameter: {configurationFile.PathToMinecraftFolder}");
 				Console.ResetColor();
 				return;
 			}
@@ -88,6 +89,5 @@ namespace Winstreak
 				: RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
 					? Path.Join("Library", "Application Support", "minecraft")
 					: throw new PlatformNotSupportedException("Winstreak isn't supported by the current platform.");
-	
 	}
 }
