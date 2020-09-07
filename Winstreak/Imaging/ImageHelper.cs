@@ -31,7 +31,7 @@ namespace Winstreak.Imaging
 		public static Bitmap CreateGrayscaleImage(int width, int height)
 		{
 			// create new image
-			Bitmap image = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
+			var image = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
 
 			// set palette to grayscale
 			SetGrayscalePalette(image);
@@ -50,7 +50,7 @@ namespace Winstreak.Imaging
 		/// <see cref="System.Drawing.Imaging.PixelFormat">Format8bppIndexed</see>
 		/// image with 256 gradients of gray color.</remarks>
 		/// 
-		/// <exception cref="UnsupportedImageFormatException">Provided image is not 8 bpp indexed image.</exception>
+		/// <exception cref="InvalidImageException">Provided image is not 8 bpp indexed image.</exception>
 		/// 
 		public static void SetGrayscalePalette(this Bitmap image)
 		{
@@ -59,10 +59,10 @@ namespace Winstreak.Imaging
 				throw new InvalidImageException("Source image is not 8 bpp image.");
 
 			// get palette
-			ColorPalette cp = image.Palette;
+			var cp = image.Palette;
 
 			// init palette
-			for (int i = 0; i < 256; i++)
+			for (var i = 0; i < 256; i++)
 				cp.Entries[i] = Color.FromArgb(i, i, i);
 
 			// set palette back
@@ -74,18 +74,16 @@ namespace Winstreak.Imaging
 		/// </summary>
 		/// <param name="format">The pixel format.</param>
 		public static int GetPixelFormatSizeInBytes(this PixelFormat format)
-		{
-			return System.Drawing.Image.GetPixelFormatSize(format) / 8;
-		}
+			=> Image.GetPixelFormatSize(format) / 8;
+
 
 		/// <summary>
 		/// Gets the color depth used in a pixel format, in number of bits per pixel.
 		/// </summary>
 		/// <param name="format">The pixel format.</param>
 		public static int GetPixelFormatSize(this PixelFormat format)
-		{
-			return System.Drawing.Image.GetPixelFormatSize(format);
-		}
+			=> Image.GetPixelFormatSize(format);
+		
 
 
 		/// <summary>
@@ -116,12 +114,12 @@ namespace Winstreak.Imaging
 			{
 				// read image to temporary memory stream
 				stream = File.OpenRead(fileName);
-				MemoryStream memoryStream = new MemoryStream();
+				var memoryStream = new MemoryStream();
 
-				byte[] buffer = new byte[10000];
+				var buffer = new byte[10000];
 				while (true)
 				{
-					int read = stream.Read(buffer, 0, 10000);
+					var read = stream.Read(buffer, 0, 10000);
 
 					if (read == 0)
 						break;
@@ -129,7 +127,7 @@ namespace Winstreak.Imaging
 					memoryStream.Write(buffer, 0, read);
 				}
 
-				loadedImage = (Bitmap)System.Drawing.Image.FromStream(memoryStream);
+				loadedImage = (Bitmap) Image.FromStream(memoryStream);
 			}
 			finally
 			{

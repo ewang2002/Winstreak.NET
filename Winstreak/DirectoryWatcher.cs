@@ -154,7 +154,7 @@ namespace Winstreak
 		{
 			// wait for image to fully load
 			await Task.Delay(Config.ScreenshotDelay);
-			var bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
+			using var bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			await ProcessScreenshot(bitmap, e.FullPath);
 		}
 

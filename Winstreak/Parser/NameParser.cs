@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using Winstreak.Extensions;
 using Winstreak.Imaging;
 using Winstreak.Parser.ImgExcept;
@@ -107,6 +106,7 @@ namespace Winstreak.Parser
 					var tempX = x;
 					var whiteParticleFound = false;
 					var redParticleFound = false;
+					// gets one character 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						var columnBytes = new StringBuilder();
@@ -116,9 +116,10 @@ namespace Winstreak.Parser
 							if (Color.White.IsRgbEqualTo(pixel))
 								whiteParticleFound = true;
 							// RedTeamColor is the same as the red color
-							// (youtuber or admin)
+							// (youtuber or admin or watchdog)
 							else if (RedTeamColor.IsRgbEqualTo(pixel))
 								redParticleFound = true;
+
 							columnBytes.Append(IsValidRankColor(pixel)
 							                   || IsTeamColor(pixel)
 							                   || Color.White.IsRgbEqualTo(pixel)
@@ -135,6 +136,10 @@ namespace Winstreak.Parser
 					if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 						continue;
 
+					// found first character, search for future characters
+					// starting from this x val
+					startX = x; 
+
 					// empty character comes from
 					// the character directly following the 
 					// team letter
@@ -145,7 +150,7 @@ namespace Winstreak.Parser
 					}
 
 					// basically, if we're in a game
-					// the white names will ALWAYS be at top of the list
+					// the white names will ALWAYS b e at top of the list
 					// if we're in a lobby
 					// white names are NEVER possible
 					// but red names are. 
@@ -164,6 +169,7 @@ namespace Winstreak.Parser
 
 			if (realX == -1)
 				throw new InvalidImageException("Couldn't find any Minecraft characters.");
+
 			IsLobby = !inGame;
 			StartingPoint = new Point(realX, y);
 		}
