@@ -153,9 +153,38 @@ namespace Winstreak
 		private static async void OnChanged(object source, FileSystemEventArgs e)
 		{
 			// wait for image to fully load
+			await OnChangeFile(e);
+		}
+
+		private static async Task OnChangeFile(FileSystemEventArgs e, bool init = true)
+		{
 			await Task.Delay(Config.ScreenshotDelay);
-			using var bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
+			Bitmap bitmap;
+			try
+			{
+				bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
+			}
+			catch (IOException ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine($"[ERROR] An IOException occurred. Error Information:\n{ex}");
+				if (init)
+					Console.WriteLine("\tTrying Again.");
+				Console.ResetColor();
+				if (init)
+					await OnChangeFile(e, false);
+				return;
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine($"[ERROR] An unknown error occurred. Error Information:\n{ex}");
+				Console.ResetColor();
+				return;
+			}
+
 			await ProcessScreenshot(bitmap, e.FullPath);
+			bitmap.Dispose();
 		}
 
 		private static async Task ProcessScreenshot(Bitmap bitmap, string path)
