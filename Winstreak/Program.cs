@@ -33,6 +33,8 @@ namespace Winstreak
 			// default values
 			var configurationFile = new ConfigFile
 			{
+				HypixelApiKey = string.Empty,
+				GamemodeType = 34,
 				ClearConsole = false,
 				ExemptPlayers = new string[0],
 				RetryDelay = 250,

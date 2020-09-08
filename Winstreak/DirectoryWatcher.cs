@@ -13,9 +13,10 @@ using Winstreak.ConsoleTable;
 using Winstreak.Extensions;
 using Winstreak.Imaging;
 using Winstreak.Parser;
-using Winstreak.Request;
-using Winstreak.Request.Checker;
-using Winstreak.Request.Definition;
+using Winstreak.WebApi;
+using Winstreak.WebApi.Plancke;
+using Winstreak.WebApi.Plancke.Checker;
+using Winstreak.WebApi.Plancke.Definition;
 using static Winstreak.ConsoleTable.AnsiConstants;
 
 namespace Winstreak
@@ -30,6 +31,7 @@ namespace Winstreak
 			.Append(
 				"> -tc: Determines whether the console should be cleared when a screenshot is provided.")
 			.AppendLine()
+			.Append("> -s: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
 			.Append("> -h: Shows this menu.")
 			.ToString();
 
@@ -37,12 +39,14 @@ namespace Winstreak
 		public static int GuiScale;
 		public static bool ShouldClearBeforeCheck;
 		public static ConfigFile Config;
+		public static int Mode = 4;
 
 		public static async Task Run(ConfigFile file)
 		{
 			Config = file;
 			McScreenshotsPath = new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"));
 			ShouldClearBeforeCheck = file.ClearConsole;
+			Mode = file.GamemodeType;
 
 			// Get gui scale
 			GuiScale = ParserHelper.GetGuiScale(Config.PathToMinecraftFolder);
@@ -62,7 +66,9 @@ namespace Winstreak
 			Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
 			Console.WriteLine($"[INFO] Retry Request Max Set: {Config.RetryMax}");
 			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
+			Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
+			Console.WriteLine("[INFO] Need help? Type -h in here!");
 			Console.WriteLine("=========================");
 
 			using var watcher = new FileSystemWatcher
@@ -100,6 +106,13 @@ namespace Winstreak
 						case "-c":
 							Console.Clear();
 							continue;
+						case "-s":
+							if (Mode == 34)
+								Mode = 12;
+							else
+								Mode = 34;
+							Console.WriteLine($"[INFO] Set parser gamemode to: {GamemodeIntToStr()}");
+							continue;
 						case "-tc":
 							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
 							Console.WriteLine(ShouldClearBeforeCheck
@@ -117,7 +130,7 @@ namespace Winstreak
 				// check ign
 				var checkTime = new Stopwatch();
 				checkTime.Start();
-				var results = await PlanckeApiRequester.Client
+				var results = await ApiConstants.ApiClient
 					.GetAsync($"https://plancke.io/hypixel/player/stats/{input}");
 				var responseHtml = await results.Content.ReadAsStringAsync();
 				var data = new ResponseData(input, responseHtml)
@@ -199,6 +212,7 @@ namespace Winstreak
 			using var parser = new NameParser(bitmap);
 			try
 			{
+				parser.SetGameMode(Mode);
 				parser.SetGuiScale(GuiScale);
 				parser.InitPoints();
 				parser.FindStartOfName();
@@ -411,5 +425,13 @@ namespace Winstreak
 			if (score > 60 && score <= 80) return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
 			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
 		}
+
+		public static string GamemodeIntToStr()
+			=> Mode switch
+			{
+				12 => "Solos/Doubles",
+				34 => "3v3v3v3s/4v4v4v4s/4v4s",
+				_ => throw new ArgumentOutOfRangeException(nameof(Mode), "Gamemode must either be 34 or 12.")
+			};
 	}
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using Winstreak.Request.Definition;
+using Winstreak.WebApi.Plancke.Definition;
 
-namespace Winstreak.Request.Checker
+namespace Winstreak.WebApi.Plancke.Checker
 {
 	public class ResponseData
 	{

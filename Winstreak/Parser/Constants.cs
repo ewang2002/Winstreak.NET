@@ -12,14 +12,14 @@ namespace Winstreak.Parser
 		public static readonly Color Vip = Color.FromArgb(85, 255, 85);
 		public static readonly Color None = Color.FromArgb(170, 170, 170);
 
-		public static readonly Color BlueTeamColor = Color.FromArgb(0x5555FF);
-		public static readonly Color GreenTeamColor = Color.FromArgb(0x55FF55);
-		public static readonly Color RedTeamColor = Color.FromArgb(0xFF5555);
-		public static readonly Color YellowTeamColor = Color.FromArgb(0xFFFF55);
-		public static readonly Color AquaTeamColor = Color.FromArgb(0x55FFFF);
-		public static readonly Color GreyTeamColor = Color.FromArgb(0x555555);
-		public static readonly Color WhiteTeamColor = Color.FromArgb(0xFFFFFF);
-		public static readonly Color PinkTeamColor = Color.FromArgb(0xFF55FF);
+		public static readonly Color BlueTeamColor = Color.FromArgb(85, 85, 255);
+		public static readonly Color GreenTeamColor = Color.FromArgb(85, 255, 85);
+		public static readonly Color RedTeamColor = Color.FromArgb(255, 85, 85);
+		public static readonly Color YellowTeamColor = Color.FromArgb(255, 255, 85);
+		public static readonly Color AquaTeamColor = Color.FromArgb(85, 255, 255);
+		public static readonly Color GreyTeamColor = Color.FromArgb(85, 85, 85);
+		public static readonly Color WhiteTeamColor = Color.FromArgb(255, 255, 255);
+		public static readonly Color PinkTeamColor = Color.FromArgb(255, 85, 255);
 
 		public static readonly IDictionary<string, string> BinaryToCharactersMap;
 
@@ -27,11 +27,7 @@ namespace Winstreak.Parser
 		{
 			BinaryToCharactersMap = new Dictionary<string, string>
 			{
-				{"011111001111111010000010101000101011111010111100", ""},
-				{"111111101111111010100000101000001111111001011110", ""},
-				{"100000001100000001111110011111101100000010000000", ""},
-				{"111111101111111010100010101000101111111001011100", ""},
-				{"011111101111111010100000101000001111111001111110", ""},
+				// numbers
 				{"0111110010001010100100101010001001111100", "0"},
 				{"0000001001000010111111100000001000000010", "1"},
 				{"0100011010001010100100101001001001100110", "2"},
@@ -42,7 +38,9 @@ namespace Winstreak.Parser
 				{"1100000010000000100011101001000011100000", "7"},
 				{"0110110010010010100100101001001001101100", "8"},
 				{"0110000010010010100100101001010001111000", "9"},
+				// symbols
 				{"0000000100000001000000010000000100000001", "_"},
+				// letters
 				{"0111111010100000101000001010000001111110", "A"},
 				{"0000010000101010001010100010101000011110", "a"},
 				{"1111111010100010101000101010001001011100", "B"},
@@ -94,7 +92,17 @@ namespace Winstreak.Parser
 				{"1000000001000000001111100100000010000000", "Y"},
 				{"0011100100000101000001010000010100111110", "y"},
 				{"1000011010001010100100101010001011000010", "Z"},
-				{"0010001000100110001010100011001000100010", "z"}
+				{"0010001000100110001010100011001000100010", "z"},
+				// team letters
+				{"011111001111111010000010101000101011111010111100", " G "},
+				{"111111101111111010100000101000001111111001011110", " R "},
+				{"100000001100000001111110011111101100000010000000", " Y "},
+				{"111111101111111010100010101000101111111001011100", " B "},
+				{"011111101111111010100000101000001111111001111110", " A "},
+				{"111111101111111000001100000011001111111011111110", " W "},
+				{"111111101111111010100000101000001110000001000000", " P "},
+				// S = grey
+				{"010001001110011010100010101000101011111010011100", " S "}
 			};
 		}
 	}

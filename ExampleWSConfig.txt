@@ -39,3 +39,15 @@ CLEAR_CONSOLE=
 # Default Value=250
 # Minimum=250
 SCREENSHOT_DELAY=
+
+# Gamemode for parser.
+# Pick the gamemode that you will most likely be playing for a while. 
+# 12 - Solos/Doubles
+# 34 - 3v3v3v3s/4v4v4v4s/4v4s
+# Default Value=34
+GAMEMODE_TYPE=
+
+# Hypixel API Key
+# If specified and valid, the program will send requests to Hypixel
+# Instead of using Plancke.
+HYPIXEL_API_KEY=

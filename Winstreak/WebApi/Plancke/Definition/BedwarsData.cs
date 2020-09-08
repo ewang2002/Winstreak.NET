@@ -1,6 +1,6 @@
 ﻿using Winstreak.Calculations;
 
-namespace Winstreak.Request.Definition
+namespace Winstreak.WebApi.Plancke.Definition
 {
 	public readonly struct BedwarsData
 	{

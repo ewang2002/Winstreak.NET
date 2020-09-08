@@ -2,29 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
+using static Winstreak.WebApi.ApiConstants;
 
-namespace Winstreak.Request
+namespace Winstreak.WebApi.Plancke
 {
 	public class PlanckeApiRequester
 	{
-		public static readonly HttpClient Client;
-
 		/// <summary>
 		/// The list of names that were passed in from the constructor.
 		/// </summary>
 		public IList<string> Names { get; }
-
-		/// <summary>
-		/// Static constructor that instantiates the HttpClient.
-		/// </summary>
-		static PlanckeApiRequester()
-		{
-			Client = new HttpClient();
-			Client.DefaultRequestHeaders.Add("User-Agent",
-				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
-		}
 
 		/// <summary>
 		/// Creates a new PlanckeApiRequester object. Use this class to get raw stats for all names in the list (passed as parameter).
@@ -38,17 +26,17 @@ namespace Winstreak.Request
 		/// <returns>A dictionary, with the key being the player's name and the value being the raw HTML data.</returns>
 		public async Task<IDictionary<string, string>> SendRequests()
 		{
-			if (Client.DefaultRequestHeaders.Contains("X-Forwarded-For"))
-				Client.DefaultRequestHeaders.Remove("X-Forwarded-For");
+			if (ApiClient.DefaultRequestHeaders.Contains("X-Forwarded-For"))
+				ApiClient.DefaultRequestHeaders.Remove("X-Forwarded-For");
 
-			Client.DefaultRequestHeaders.Add("X-Forwarded-For", GenerateRandomIpAddress());
+			ApiClient.DefaultRequestHeaders.Add("X-Forwarded-For", GenerateRandomIpAddress());
 
 			var urls = Names
 				.Select(x => $"https://plancke.io/hypixel/player/stats/{x}")
 				.ToArray();
 
 			var requests = urls
-				.Select(url => Client.GetAsync(url))
+				.Select(url => ApiClient.GetAsync(url))
 				.ToArray();
 
 			await Task.WhenAll(requests);
@@ -62,13 +50,12 @@ namespace Winstreak.Request
 			{
 				if (responses[i].StatusCode != HttpStatusCode.OK)
 				{
-					// 2 attempts to get data again
 					// in case not found.
 					for (var attempts = 0; attempts < DirectoryWatcher.Config.RetryMax; attempts++)
 					{
 						await Task.Delay(TimeSpan.FromMilliseconds(DirectoryWatcher.Config.RetryDelay));
 						// get it again
-						responses[i] = await Client
+						responses[i] = await ApiClient
 							.GetAsync($"https://plancke.io/hypixel/player/stats/{Names[i]}");
 						if (responses[i].StatusCode == HttpStatusCode.OK)
 							break;

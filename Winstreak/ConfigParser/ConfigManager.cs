@@ -62,6 +62,16 @@ namespace Winstreak.ConfigParser
 								: v4
 							: 250;
 						break;
+					case "GAMEMODE_TYPE":
+						configFile.GamemodeType = int.TryParse(val, out var v5)
+							? v5 == 34 || v5 == 12
+								? v5
+								: 34
+							: 34;
+						break;
+					case "HYPIXEL_API_KEY":
+						configFile.HypixelApiKey = val;
+						break;
 				}
 			}
 

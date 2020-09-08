@@ -3,7 +3,7 @@ using System.Linq;
 using Winstreak.Calculations;
 using Winstreak.Parser;
 
-namespace Winstreak.Request.Definition
+namespace Winstreak.WebApi.Plancke.Definition
 {
 	public readonly struct TeamInfoResults
 	{
