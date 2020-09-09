@@ -10,6 +10,8 @@ namespace Winstreak.WebApi
 	/// </summary>
 	public class CacheDictionary<TK, TV>
 	{
+		private const int DefaultRemoveTimeout = 30; 
+
 		private readonly ConcurrentDictionary<TK, (TV val, Timer timer)> _dict;
 
 		/// <summary>
@@ -53,7 +55,7 @@ namespace Winstreak.WebApi
 		/// <param name="key">The key.</param>
 		/// <param name="val">The value.</param>
 		/// <returns>Whether the key was added.</returns>
-		public bool TryAdd(TK key, TV val) => TryAdd(key, val, TimeSpan.FromMinutes(5));
+		public bool TryAdd(TK key, TV val) => TryAdd(key, val, TimeSpan.FromMinutes(DefaultRemoveTimeout));
 
 		/// <summary>
 		/// For a key/value pair, resets the cache removal time to a specified time.
@@ -77,7 +79,7 @@ namespace Winstreak.WebApi
 		/// </summary>
 		/// <param name="key">The key,</param>
 		/// <returns>Whether the key/value pair existed.</returns>
-		public bool ResetCacheTime(TK key) => ResetCacheTime(key, TimeSpan.FromMinutes(5));
+		public bool ResetCacheTime(TK key) => ResetCacheTime(key, TimeSpan.FromMinutes(DefaultRemoveTimeout));
 
 		/// <summary>
 		/// Removes a key and value pair from the CacheDictionary.

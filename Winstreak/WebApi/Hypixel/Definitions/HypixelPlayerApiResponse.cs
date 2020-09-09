@@ -40,23 +40,11 @@ namespace Winstreak.WebApi.Hypixel.Definitions
         [JsonProperty("knownAliasesLower")]
         public string[] KnownAliasesLower { get; set; }
 
-        [JsonProperty("achievementsOneTime")]
-        public string[] AchievementsOneTime { get; set; }
-
         [JsonProperty("stats")]
         public Stats Stats { get; set; }
 
-        [JsonProperty("achievementPoints")]
-        public long AchievementPoints { get; set; }
-
-        [JsonProperty("achievements")]
-        public Dictionary<string, long> Achievements { get; set; }
-
         [JsonProperty("lastLogout")]
         public long LastLogout { get; set; }
-
-        [JsonProperty("achievementTracking")]
-        public object[] AchievementTracking { get; set; }
 
         [JsonProperty("networkExp")]
         public long NetworkExp { get; set; }
