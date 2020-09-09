@@ -47,6 +47,8 @@ namespace Winstreak
 		public static HypixelApi HypixelApi;
 		public static bool ApiKeyValid;
 
+		public static CacheDictionary<string, BedwarsData> Cache = new CacheDictionary<string, BedwarsData>();
+
 		public static async Task Run(ConfigFile file)
 		{
 			Config = file;
@@ -267,28 +269,20 @@ namespace Winstreak
 			{
 				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(names);
 				nickedPlayers = nicked.ToList();
-		
+
 				foreach (var resp in responses)
 				{
 					if (resp.Player == null)
 						continue;
 
-					var kills = (int) (resp.Player.Stats.Bedwars.SolosKills
-					             + resp.Player.Stats.Bedwars.DoublesKills
-					             + resp.Player.Stats.Bedwars.ThreesKills
-					             + resp.Player.Stats.Bedwars.FoursKills);
-					var deaths = (int) (resp.Player.Stats.Bedwars.SolosDeaths
-					             + resp.Player.Stats.Bedwars.DoublesDeaths
-					             + resp.Player.Stats.Bedwars.ThreesDeaths
-					             + resp.Player.Stats.Bedwars.FoursDeaths);
 					var finalKills = (int) (resp.Player.Stats.Bedwars.SolosFinalKills
 					                        + resp.Player.Stats.Bedwars.DoublesFinalKills
 					                        + resp.Player.Stats.Bedwars.ThreesFinalKills
 					                        + resp.Player.Stats.Bedwars.FoursFinalKills);
 					var finalDeaths = (int) (resp.Player.Stats.Bedwars.SolosFinalDeaths
-					                   + resp.Player.Stats.Bedwars.DoublesFinalDeaths
-					                   + resp.Player.Stats.Bedwars.ThreesFinalDeaths
-					                   + resp.Player.Stats.Bedwars.FoursFinalDeaths);
+					                         + resp.Player.Stats.Bedwars.DoublesFinalDeaths
+					                         + resp.Player.Stats.Bedwars.ThreesFinalDeaths
+					                         + resp.Player.Stats.Bedwars.FoursFinalDeaths);
 					var wins = (int) (resp.Player.Stats.Bedwars.SolosWins
 					                  + resp.Player.Stats.Bedwars.DoublesWins
 					                  + resp.Player.Stats.Bedwars.ThreesWins
@@ -308,13 +302,35 @@ namespace Winstreak
 					totalFinalKills += finalKills;
 					totalFinalDeaths += finalDeaths;
 
-					nameResults.Add(new BedwarsData(resp.Player.PlayerName, kills, deaths, finalKills, finalDeaths, wins, losses, brokenBeds));
+					nameResults.Add(new BedwarsData(resp));
+				}
+
+				var actualNamesToCheck = new List<string>();
+				foreach (var n in unableToSearch)
+				{
+					if (!Cache.Contains(n))
+					{
+						actualNamesToCheck.Add(n);
+						continue;
+					}
+
+					var cacheData = Cache[n];
+
+					totalFinalDeaths += cacheData.FinalDeaths;
+					totalFinalKills += cacheData.FinalKills;
+					totalBrokenBeds += cacheData.BrokenBeds;
+					totalWins += cacheData.Wins;
+					totalLosses += cacheData.Losses;
+
+					Cache.ResetCacheTime(n);
+					nameResults.Add(cacheData);
 				}
 
 				// request leftover data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(unableToSearch);
+				var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
 				// parse data
-				var nameData = await planckeApiRequester.SendRequests();
+				var nameData = await planckeApiRequester
+					.SendRequests();
 				var checker = new ResponseParser(nameData);
 
 				foreach (var playerInfo in checker.GetPlayerDataFromMap())
@@ -325,6 +341,7 @@ namespace Winstreak
 					totalWins += playerInfo.Wins;
 					totalLosses += playerInfo.Losses;
 
+					Cache.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
@@ -336,10 +353,32 @@ namespace Winstreak
 			}
 			else
 			{
+				var actualNamesToCheck = new List<string>();
+				// check cache
+				foreach (var n in names)
+				{
+					if (!Cache.Contains(n))
+					{
+						actualNamesToCheck.Add(n);
+						continue;
+					}
+
+					var cacheData = Cache[n];
+					totalFinalDeaths += cacheData.FinalDeaths;
+					totalFinalKills += cacheData.FinalKills;
+					totalBrokenBeds += cacheData.BrokenBeds;
+					totalWins += cacheData.Wins;
+					totalLosses += cacheData.Losses;
+
+					Cache.ResetCacheTime(n);
+					nameResults.Add(cacheData);
+				}
+
 				// request data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(names);
+				var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
 				// parse data
-				var nameData = await planckeApiRequester.SendRequests();
+				var nameData = await planckeApiRequester
+					.SendRequests();
 				var checker = new ResponseParser(nameData);
 
 				foreach (var playerInfo in checker.GetPlayerDataFromMap())
@@ -350,6 +389,7 @@ namespace Winstreak
 					totalWins += playerInfo.Wins;
 					totalLosses += playerInfo.Losses;
 
+					Cache.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
@@ -392,7 +432,7 @@ namespace Winstreak
 			tableBuilder.AddRow(
 				"Total",
 				totalFinalKills,
-				totalFinalDeaths,
+				totalBrokenBeds,
 				totalLosses == 0
 					? "N/A"
 					: Math.Round((double) totalWins / totalLosses, 2)
@@ -416,11 +456,36 @@ namespace Winstreak
 			var teamInfo = new List<TeamInfoResults>();
 			foreach (var (key, value) in teams)
 			{
-				var planckeApiRequester = new PlanckeApiRequester(value);
-				var teamData = await planckeApiRequester.SendRequests();
-				var p = new ResponseParser(teamData);
+				var actualNamesToCheck = new List<string>();
+				var teamStats = new List<BedwarsData>();
+				foreach (var name in value)
+				{
+					if (!Cache.Contains(name))
+					{
+						actualNamesToCheck.Add(name);
+						continue;
+					}
+
+					teamStats.Add(Cache[name]);
+				}
+
+				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(actualNamesToCheck);
+				teamStats.AddRange(responses.Select(x => new BedwarsData(x)));
+				var nickedPlayers = nicked.ToList();
+
+				if (unableToSearch.Count != 0)
+				{
+					var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
+					var teamData = await planckeApiRequester
+						.SendRequests();
+					var p = new ResponseParser(teamData);
+					teamStats.AddRange(p.GetPlayerDataFromMap());
+					nickedPlayers.AddRange(p.ErroredPlayers);
+				}
+
+				
 				teamInfo.Add(
-					new TeamInfoResults(key, p.GetPlayerDataFromMap(), p.ErroredPlayers)
+					new TeamInfoResults(key, teamStats, nickedPlayers)
 				);
 			}
 

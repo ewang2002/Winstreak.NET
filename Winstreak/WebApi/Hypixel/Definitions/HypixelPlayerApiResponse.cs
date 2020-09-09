@@ -32,7 +32,7 @@ namespace Winstreak.WebApi.Hypixel.Definitions
         public long LastLogin { get; set; }
 
         [JsonProperty("displayname")]
-        public string Displayname { get; set; }
+        public string DisplayName { get; set; }
 
         [JsonProperty("knownAliases")]
         public string[] KnownAliases { get; set; }

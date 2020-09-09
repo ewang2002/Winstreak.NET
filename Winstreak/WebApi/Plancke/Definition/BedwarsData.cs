@@ -1,4 +1,6 @@
-﻿using Winstreak.Calculations;
+﻿using System;
+using Winstreak.Calculations;
+using Winstreak.WebApi.Hypixel.Definitions;
 
 namespace Winstreak.WebApi.Plancke.Definition
 {
@@ -34,6 +36,43 @@ namespace Winstreak.WebApi.Plancke.Definition
 			Losses = losses;
 			BrokenBeds = bedsBroken;
 			Score = PlayerCalculator.CalculatePlayerThreatLevel(wins, losses, finalKills, finalDeaths, bedsBroken);
+		}
+
+		public BedwarsData(HypixelPlayerApiResponse resp)
+		{
+			if (resp.Player == null)
+				throw new ArgumentNullException(nameof(resp));
+			Name = resp.Player.DisplayName;
+
+			Kills = (int) (resp.Player.Stats.Bedwars.SolosKills
+			               + resp.Player.Stats.Bedwars.DoublesKills
+			               + resp.Player.Stats.Bedwars.ThreesKills
+			               + resp.Player.Stats.Bedwars.FoursKills);
+			Deaths = (int) (resp.Player.Stats.Bedwars.SolosDeaths
+			                + resp.Player.Stats.Bedwars.DoublesDeaths
+			                + resp.Player.Stats.Bedwars.ThreesDeaths
+			                + resp.Player.Stats.Bedwars.FoursDeaths);
+			FinalKills = (int) (resp.Player.Stats.Bedwars.SolosFinalKills
+			                    + resp.Player.Stats.Bedwars.DoublesFinalKills
+			                    + resp.Player.Stats.Bedwars.ThreesFinalKills
+			                    + resp.Player.Stats.Bedwars.FoursFinalKills);
+			FinalDeaths = (int) (resp.Player.Stats.Bedwars.SolosFinalDeaths
+			                     + resp.Player.Stats.Bedwars.DoublesFinalDeaths
+			                     + resp.Player.Stats.Bedwars.ThreesFinalDeaths
+			                     + resp.Player.Stats.Bedwars.FoursFinalDeaths);
+			Wins = (int) (resp.Player.Stats.Bedwars.SolosWins
+			              + resp.Player.Stats.Bedwars.DoublesWins
+			              + resp.Player.Stats.Bedwars.ThreesWins
+			              + resp.Player.Stats.Bedwars.FoursWins);
+			Losses = (int) (resp.Player.Stats.Bedwars.SolosLosses
+			                + resp.Player.Stats.Bedwars.DoublesLosses
+			                + resp.Player.Stats.Bedwars.ThreesLosses
+			                + resp.Player.Stats.Bedwars.FoursLosses);
+			BrokenBeds = (int) (resp.Player.Stats.Bedwars.SolosBrokenBeds
+			                    + resp.Player.Stats.Bedwars.DoublesBrokenBeds
+			                    + resp.Player.Stats.Bedwars.ThreesBrokenBeds
+			                    + resp.Player.Stats.Bedwars.FoursBrokenBeds);
+			Score = PlayerCalculator.CalculatePlayerThreatLevel(Wins, Losses, FinalKills, FinalDeaths, BrokenBeds);
 		}
 	}
 }

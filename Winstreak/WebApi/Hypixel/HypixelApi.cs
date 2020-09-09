@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using Newtonsoft.Json;
-using Winstreak.Extensions;
 using Winstreak.WebApi.Hypixel.Definitions;
 using static Winstreak.WebApi.ApiConstants;
 
@@ -13,7 +12,7 @@ namespace Winstreak.WebApi.Hypixel
 {
 	public class HypixelApi
 	{
-		public int MaximumRequestsInRateLimit = 16;
+		public int MaximumRequestsInRateLimit = 120;
 		public static TimeSpan HypixelRateLimit = TimeSpan.FromMinutes(1);
 
 		private readonly CacheDictionary<string, HypixelPlayerApiResponse> _cache;
