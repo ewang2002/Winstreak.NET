@@ -98,7 +98,7 @@ namespace Winstreak.WebApi.Hypixel.Definitions
 	    public long DoublesKills;
 
 	    [JsonProperty("eight_two_deaths_bedwars")]
-	    public long SoloDeaths;
+	    public long DoublesDeaths;
 
 	    [JsonProperty("eight_two_final_kills_bedwars")]
 	    public long DoublesFinalKills;

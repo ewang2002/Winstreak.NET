@@ -28,12 +28,12 @@ namespace Winstreak.WebApi
 		public bool TryAdd(TK key, TV val, TimeSpan removeIn)
 		{
 			if (_dict.ContainsKey(key))
-				return false; 
+				return false;
 
 			var timer = new Timer
 			{
 				AutoReset = false,
-				Interval = removeIn.Milliseconds,
+				Interval = removeIn.TotalMilliseconds,
 				Enabled = true
 			};
 			_dict.TryAdd(key, (val, timer));
@@ -46,6 +46,38 @@ namespace Winstreak.WebApi
 
 			return true;
 		}
+
+		/// <summary>
+		/// Adds a key and a value to the CacheDictionary object, with a default removal time of 5 minutes.
+		/// </summary>
+		/// <param name="key">The key.</param>
+		/// <param name="val">The value.</param>
+		/// <returns>Whether the key was added.</returns>
+		public bool TryAdd(TK key, TV val) => TryAdd(key, val, TimeSpan.FromMinutes(5));
+
+		/// <summary>
+		/// For a key/value pair, resets the cache removal time to a specified time.
+		/// </summary>
+		/// <param name="key">The key,</param>
+		/// <param name="newTime">The new time. This will overwrite the previous time.</param>
+		/// <returns>Whether the key/value pair existed.</returns>
+		public bool ResetCacheTime(TK key, TimeSpan newTime)
+		{
+			if (!_dict.ContainsKey(key))
+				return false;
+
+			_dict[key].timer.Stop();
+			_dict[key].timer.Interval = newTime.TotalMilliseconds;
+			_dict[key].timer.Start();
+			return true;
+		}
+
+		/// <summary>
+		/// For a key/value pair, resets the cache removal time to the default time of 30 minutes.
+		/// </summary>
+		/// <param name="key">The key,</param>
+		/// <returns>Whether the key/value pair existed.</returns>
+		public bool ResetCacheTime(TK key) => ResetCacheTime(key, TimeSpan.FromMinutes(5));
 
 		/// <summary>
 		/// Removes a key and value pair from the CacheDictionary.
@@ -77,5 +109,19 @@ namespace Winstreak.WebApi
 
 			return b.ToString();
 		}
+
+		/// <summary>
+		/// Returns the value associated with the key.
+		/// </summary>
+		/// <param name="key">The key,</param>
+		/// <returns>The value.</returns>
+		public TV this[TK key] => _dict[key].val;
+
+		/// <summary>
+		/// Whether the CacheDictionary contains the specified key.
+		/// </summary>
+		/// <param name="key">The key to check.</param>
+		/// <returns>Whether the key exists.</returns>
+		public bool Contains(TK key) => _dict.ContainsKey(key);
 	}
 }

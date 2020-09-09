@@ -519,11 +519,11 @@ namespace Winstreak.Imaging
 		}
 
 		/// <summary>
-		/// 
+		/// Gets or sets a color.
 		/// </summary>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <returns></returns>
+		/// <param name="x">The x-coordinate.</param>
+		/// <param name="y">The y-coordinate.</param>
+		/// <returns>The color.</returns>
 		public Color this[int x, int y]
 		{
 			get => GetPixel(x, y);

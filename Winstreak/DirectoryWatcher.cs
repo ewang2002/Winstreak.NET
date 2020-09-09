@@ -14,6 +14,7 @@ using Winstreak.Extensions;
 using Winstreak.Imaging;
 using Winstreak.Parser;
 using Winstreak.WebApi;
+using Winstreak.WebApi.Hypixel;
 using Winstreak.WebApi.Plancke;
 using Winstreak.WebApi.Plancke.Checker;
 using Winstreak.WebApi.Plancke.Definition;
@@ -36,10 +37,15 @@ namespace Winstreak
 			.ToString();
 
 		public static DirectoryInfo McScreenshotsPath;
+
 		public static int GuiScale;
 		public static bool ShouldClearBeforeCheck;
+
 		public static ConfigFile Config;
-		public static int Mode = 4;
+		public static int Mode = 34;
+
+		public static HypixelApi HypixelApi;
+		public static bool ApiKeyValid;
 
 		public static async Task Run(ConfigFile file)
 		{
@@ -47,6 +53,12 @@ namespace Winstreak
 			McScreenshotsPath = new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"));
 			ShouldClearBeforeCheck = file.ClearConsole;
 			Mode = file.GamemodeType;
+
+			if (file.HypixelApiKey != string.Empty)
+			{
+				HypixelApi = new HypixelApi(file.HypixelApiKey);
+				ApiKeyValid = await HypixelApi.ValidateApiKeyAsync();
+			}
 
 			// Get gui scale
 			GuiScale = ParserHelper.GetGuiScale(Config.PathToMinecraftFolder);
@@ -107,10 +119,7 @@ namespace Winstreak
 							Console.Clear();
 							continue;
 						case "-s":
-							if (Mode == 34)
-								Mode = 12;
-							else
-								Mode = 34;
+							Mode = Mode == 34 ? 12 : 34;
 							Console.WriteLine($"[INFO] Set parser gamemode to: {GamemodeIntToStr()}");
 							continue;
 						case "-tc":
@@ -181,8 +190,7 @@ namespace Winstreak
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine($"[ERROR] An IOException occurred. Error Information:\n{ex}");
-				if (init)
-					Console.WriteLine("\tTrying Again.");
+				Console.WriteLine(init ? "\tTrying Again." : "\tNo Longer Trying Again.");
 				Console.ResetColor();
 				if (init)
 					await OnChangeFile(e, false);
@@ -246,12 +254,107 @@ namespace Winstreak
 		{
 			var reqTime = new Stopwatch();
 			reqTime.Start();
-			// request data from plancke
-			var planckeApiRequester = new PlanckeApiRequester(names);
-			// parse data
-			var nameData = await planckeApiRequester.SendRequests();
-			var checker = new ResponseParser(nameData);
-			var nameResults = checker.GetPlayerDataFromMap();
+			var nameResults = new List<BedwarsData>();
+			var nickedPlayers = new List<string>();
+			var totalWins = 0;
+			var totalLosses = 0;
+			var totalFinalKills = 0;
+			var totalFinalDeaths = 0;
+			var totalBrokenBeds = 0;
+
+			// check hypixel api
+			if (HypixelApi != null && ApiKeyValid)
+			{
+				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(names);
+				nickedPlayers = nicked.ToList();
+		
+				foreach (var resp in responses)
+				{
+					if (resp.Player == null)
+						continue;
+
+					var kills = (int) (resp.Player.Stats.Bedwars.SolosKills
+					             + resp.Player.Stats.Bedwars.DoublesKills
+					             + resp.Player.Stats.Bedwars.ThreesKills
+					             + resp.Player.Stats.Bedwars.FoursKills);
+					var deaths = (int) (resp.Player.Stats.Bedwars.SolosDeaths
+					             + resp.Player.Stats.Bedwars.DoublesDeaths
+					             + resp.Player.Stats.Bedwars.ThreesDeaths
+					             + resp.Player.Stats.Bedwars.FoursDeaths);
+					var finalKills = (int) (resp.Player.Stats.Bedwars.SolosFinalKills
+					                        + resp.Player.Stats.Bedwars.DoublesFinalKills
+					                        + resp.Player.Stats.Bedwars.ThreesFinalKills
+					                        + resp.Player.Stats.Bedwars.FoursFinalKills);
+					var finalDeaths = (int) (resp.Player.Stats.Bedwars.SolosFinalDeaths
+					                   + resp.Player.Stats.Bedwars.DoublesFinalDeaths
+					                   + resp.Player.Stats.Bedwars.ThreesFinalDeaths
+					                   + resp.Player.Stats.Bedwars.FoursFinalDeaths);
+					var wins = (int) (resp.Player.Stats.Bedwars.SolosWins
+					                  + resp.Player.Stats.Bedwars.DoublesWins
+					                  + resp.Player.Stats.Bedwars.ThreesWins
+					                  + resp.Player.Stats.Bedwars.FoursWins);
+					var losses = (int) (resp.Player.Stats.Bedwars.SolosLosses
+					                    + resp.Player.Stats.Bedwars.DoublesLosses
+					                    + resp.Player.Stats.Bedwars.ThreesLosses
+					                    + resp.Player.Stats.Bedwars.FoursLosses);
+					var brokenBeds = (int) (resp.Player.Stats.Bedwars.SolosBrokenBeds
+					                        + resp.Player.Stats.Bedwars.DoublesBrokenBeds
+					                        + resp.Player.Stats.Bedwars.ThreesBrokenBeds
+					                        + resp.Player.Stats.Bedwars.FoursBrokenBeds);
+
+					totalWins += wins;
+					totalLosses += losses;
+					totalBrokenBeds += brokenBeds;
+					totalFinalKills += finalKills;
+					totalFinalDeaths += finalDeaths;
+
+					nameResults.Add(new BedwarsData(resp.Player.PlayerName, kills, deaths, finalKills, finalDeaths, wins, losses, brokenBeds));
+				}
+
+				// request leftover data from plancke
+				var planckeApiRequester = new PlanckeApiRequester(unableToSearch);
+				// parse data
+				var nameData = await planckeApiRequester.SendRequests();
+				var checker = new ResponseParser(nameData);
+
+				foreach (var playerInfo in checker.GetPlayerDataFromMap())
+				{
+					totalFinalDeaths += playerInfo.FinalDeaths;
+					totalFinalKills += playerInfo.FinalKills;
+					totalBrokenBeds += playerInfo.BrokenBeds;
+					totalWins += playerInfo.Wins;
+					totalLosses += playerInfo.Losses;
+
+					nameResults.Add(playerInfo);
+				}
+
+				nickedPlayers.AddRange(checker.ErroredPlayers);
+
+				nameResults = nameResults
+					.OrderByDescending(x => x.Score)
+					.ToList();
+			}
+			else
+			{
+				// request data from plancke
+				var planckeApiRequester = new PlanckeApiRequester(names);
+				// parse data
+				var nameData = await planckeApiRequester.SendRequests();
+				var checker = new ResponseParser(nameData);
+
+				foreach (var playerInfo in checker.GetPlayerDataFromMap())
+				{
+					totalFinalDeaths += playerInfo.FinalDeaths;
+					totalFinalKills += playerInfo.FinalKills;
+					totalBrokenBeds += playerInfo.BrokenBeds;
+					totalWins += playerInfo.Wins;
+					totalLosses += playerInfo.Losses;
+
+					nameResults.Add(playerInfo);
+				}
+
+				nickedPlayers.AddRange(checker.ErroredPlayers.ToList());
+			}
 
 			reqTime.Stop();
 			var apiRequestTime = reqTime.Elapsed;
@@ -273,9 +376,9 @@ namespace Winstreak
 					DetermineScoreMeaning(playerInfo.Score, true)
 				);
 
-			foreach (var erroredPlayer in checker.ErroredPlayers)
+			foreach (var nickedPlayer in nickedPlayers)
 				tableBuilder.AddRow(
-					BackgroundRedAnsi + erroredPlayer + ResetAnsi,
+					BackgroundRedAnsi + nickedPlayer + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
@@ -284,21 +387,21 @@ namespace Winstreak
 				);
 
 			tableBuilder.AddSeparator();
-			var ttlScore = PlayerCalculator.CalculatePlayerThreatLevel(checker.TotalWins, checker.TotalLosses,
-				checker.TotalFinalKills, checker.TotalFinalDeaths, checker.TotalBedsBroken);
+			var ttlScore = PlayerCalculator.CalculatePlayerThreatLevel(totalWins, totalLosses,
+				totalFinalKills, totalFinalDeaths, totalBrokenBeds);
 			tableBuilder.AddRow(
 				"Total",
-				checker.TotalFinalKills,
-				checker.TotalBedsBroken,
-				checker.TotalLosses == 0
+				totalFinalKills,
+				totalFinalDeaths,
+				totalLosses == 0
 					? "N/A"
-					: Math.Round((double) checker.TotalWins / checker.TotalLosses, 2)
+					: Math.Round((double) totalWins / totalLosses, 2)
 						.ToString(CultureInfo.InvariantCulture),
 				Math.Round(ttlScore, 2),
 				DetermineScoreMeaning(ttlScore, false)
 			);
-			Console.WriteLine(tableBuilder.ToString());
 
+			Console.WriteLine(tableBuilder.ToString());
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 
@@ -409,7 +512,6 @@ namespace Winstreak
 			}
 
 			Console.WriteLine(table.ToString());
-
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 			Console.WriteLine("=====================================");
