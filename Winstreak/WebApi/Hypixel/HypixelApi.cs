@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Newtonsoft.Json;
 using Winstreak.WebApi.Hypixel.Definitions;
+using Winstreak.WebApi.Plancke.Definition;
 using static Winstreak.WebApi.ApiConstants;
 
 namespace Winstreak.WebApi.Hypixel
@@ -15,10 +16,17 @@ namespace Winstreak.WebApi.Hypixel
 		public int MaximumRequestsInRateLimit = 120;
 		public static TimeSpan HypixelRateLimit = TimeSpan.FromMinutes(1);
 
-		private readonly CacheDictionary<string, HypixelPlayerApiResponse> _cache;
 		private readonly string _apiKey;
-		private readonly Timer _rateLimitTimer;
-		private int _requestsMade;
+
+		/// <summary>
+		/// The timer.
+		/// </summary>
+		public Timer RateLimitTimer { get; set; }
+
+		/// <summary>
+		/// The number of requests made within the time period.
+		/// </summary>
+		public int RequestsMade { get; set; }
 
 		/// <summary>
 		/// Hypixel API constructor.
@@ -26,15 +34,14 @@ namespace Winstreak.WebApi.Hypixel
 		/// <param name="apiKey">The API key.</param>
 		public HypixelApi(string apiKey)
 		{
-			_requestsMade = 0;
+			RequestsMade = 0;
 			_apiKey = apiKey;
-			_rateLimitTimer = new Timer
+			RateLimitTimer = new Timer
 			{
 				Enabled = false,
 				AutoReset = false,
 				Interval = HypixelRateLimit.TotalMilliseconds
 			};
-			_cache = new CacheDictionary<string, HypixelPlayerApiResponse>();
 		}
 
 		/// <summary>
@@ -55,7 +62,7 @@ namespace Winstreak.WebApi.Hypixel
 		/// <returns>The .NET object corresponding to type "T".</returns>
 		public async Task<T> SendRequestAsync<T>(string urlInfo)
 		{
-			if (_requestsMade + 1 > MaximumRequestsInRateLimit)
+			if (RequestsMade + 1 > MaximumRequestsInRateLimit)
 				throw new Exception("You have hit the rate limit.");
 
 			using var reqMsgInfo = new HttpRequestMessage
@@ -66,19 +73,19 @@ namespace Winstreak.WebApi.Hypixel
 
 			using var resp = await ApiClient.SendAsync(reqMsgInfo);
 			// start timer
-			if (!_rateLimitTimer.Enabled)
+			if (!RateLimitTimer.Enabled)
 			{
-				_rateLimitTimer.Start();
-				_rateLimitTimer.Elapsed += (sender, args) =>
+				RateLimitTimer.Start();
+				RateLimitTimer.Elapsed += (sender, args) =>
 				{
-					_rateLimitTimer.Stop();
-					_requestsMade = 0;
+					RateLimitTimer.Stop();
+					RequestsMade = 0;
 				};
 
-				_requestsMade++;
+				RequestsMade++;
 			}
 			else
-				_requestsMade++;
+				RequestsMade++;
 
 			var str = await resp.Content.ReadAsStringAsync();
 			if (str == string.Empty)
@@ -92,48 +99,28 @@ namespace Winstreak.WebApi.Hypixel
 		/// </summary>
 		/// <param name="name">The name to look up.</param>
 		/// <returns>The results.</returns>
-		public async Task<HypixelPlayerApiResponse> GetPlayerInfoAsync(string name)
-		{
-			if (_cache.Contains(name) && _cache[name].Success && _cache[name].Player != null)
-			{
-				_cache.ResetCacheTime(name);
-				return _cache[name];
-			}
-
-			var data = await SendRequestAsync<HypixelPlayerApiResponse>($"player?name={name}&");
-			_cache.TryAdd(name, data);
-			return data;
-		}
+		public async Task<HypixelPlayerApiResponse> GetPlayerInfoAsync(string name) 
+			=> await SendRequestAsync<HypixelPlayerApiResponse>($"player?name={name}&");
 
 		/// <summary>
 		/// Processes a list of names. 
 		/// </summary>
 		/// <param name="names">The names to look up.</param>
 		/// <returns>A tuple containing three elements: one element consisting of all valid responses; another element consisting of all nicked players; a third element consisting of the names that couldn't be searched due to rate limit issues.</returns>
-		public async Task<(IList<HypixelPlayerApiResponse> responses,
+		public async Task<(IList<BedwarsData> responses,
 				IList<string> nicked,
 				IList<string> unableToSearch)>
 			ProcessListOfPlayers(IList<string> names)
 		{
 			var nicked = new List<string>();
 			var unableToSearch = new List<string>();
-			var responses = new List<HypixelPlayerApiResponse>();
+			var responses = new List<BedwarsData>();
 
 			// names that wont error due to rate limit
 			var actualNamesToLookUp = new List<string>();
-			var tempReqMade = _requestsMade;
+			var tempReqMade = RequestsMade;
 			foreach (var name in names)
 			{
-				// if in cache then
-				// just use cached data
-				if (_cache.Contains(name)
-				    && _cache[name].Success
-				    && _cache[name].Player != null)
-				{
-					responses.Add(_cache[name]);
-					continue;
-				}
-
 				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(name);
@@ -156,7 +143,7 @@ namespace Winstreak.WebApi.Hypixel
 			{
 				var finishedReq = completedRequests[i];
 				if (finishedReq.Success && finishedReq.Player != null)
-					responses.Add(finishedReq);
+					responses.Add(new BedwarsData(finishedReq));
 				else
 					nicked.Add(actualNamesToLookUp[i]);
 			}

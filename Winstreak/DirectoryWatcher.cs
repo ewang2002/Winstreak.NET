@@ -16,6 +16,7 @@ using Winstreak.Parser;
 using Winstreak.WebApi;
 using Winstreak.WebApi.Hypixel;
 using Winstreak.WebApi.Plancke;
+using static Winstreak.WebApi.ApiConstants;
 using Winstreak.WebApi.Plancke.Checker;
 using Winstreak.WebApi.Plancke.Definition;
 using static Winstreak.ConsoleTable.AnsiConstants;
@@ -32,7 +33,14 @@ namespace Winstreak
 			.Append(
 				"> -tc: Determines whether the console should be cleared when a screenshot is provided.")
 			.AppendLine()
+			.Append("> -cache: Checks how many entries are cached.")
+			.AppendLine()
+			.Append("> -empty OR -clear: Empties the cache.")
+			.AppendLine()
+			.Append("> -ratelimit OR -rate OR -r: Checks the current API rate limit.")
+			.AppendLine()
 			.Append("> -s: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
+			.AppendLine()
 			.Append("> -h: Shows this menu.")
 			.ToString();
 
@@ -46,8 +54,6 @@ namespace Winstreak
 
 		public static HypixelApi HypixelApi;
 		public static bool ApiKeyValid;
-
-		public static CacheDictionary<string, BedwarsData> Cache = new CacheDictionary<string, BedwarsData>();
 
 		public static async Task Run(ConfigFile file)
 		{
@@ -131,6 +137,22 @@ namespace Winstreak
 								: "[INFO] Console will not be cleared once a screenshot is provided.");
 							Console.WriteLine("=====================================");
 							continue;
+						case "-cache":
+							Console.WriteLine($"[INFO] Cache Length: {CachedData.Length}");
+							continue;
+						case "-clear":
+						case "-empty":
+							Console.WriteLine("[INFO] Cache has been cleared.");
+							CachedData.Empty();
+							continue;
+						case "-r":
+						case "-rate":
+						case "-ratelimit":
+							if (HypixelApi != null && ApiKeyValid)
+								Console.WriteLine($"[INFO] API Requests Made: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}.");
+							else 
+								Console.WriteLine($"[INFO] Hypixel API is not used.");
+							continue;
 					}
 
 					Console.WriteLine(HelpInfo);
@@ -175,10 +197,9 @@ namespace Winstreak
 		}
 
 		private static async void OnChanged(object source, FileSystemEventArgs e)
-		{
 			// wait for image to fully load
-			await OnChangeFile(e);
-		}
+			=> await OnChangeFile(e);
+
 
 		private static async Task OnChangeFile(FileSystemEventArgs e, bool init = true)
 		{
@@ -256,7 +277,6 @@ namespace Winstreak
 		{
 			var reqTime = new Stopwatch();
 			reqTime.Start();
-			var nameResults = new List<BedwarsData>();
 			var nickedPlayers = new List<string>();
 			var totalWins = 0;
 			var totalLosses = 0;
@@ -264,70 +284,50 @@ namespace Winstreak
 			var totalFinalDeaths = 0;
 			var totalBrokenBeds = 0;
 
+			// we assume this checks
+			// the entire cache
+			// so no need to check cache again
+			// except to add more people
+			var nameResults = new List<BedwarsData>();
+			var namesToCheck = new List<string>();
+			foreach (var name in names)
+			{
+				if (!CachedData.Contains(name))
+				{
+					namesToCheck.Add(name);
+					continue;
+				}
+
+				var data = CachedData[name];
+				nameResults.Add(data);
+
+				totalWins += data.Wins;
+				totalLosses += data.Losses;
+				totalFinalKills += data.FinalKills;
+				totalFinalDeaths += data.FinalDeaths;
+				totalBrokenBeds += data.BrokenBeds;
+			}
+
 			// check hypixel api
 			if (HypixelApi != null && ApiKeyValid)
 			{
-				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(names);
+				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(namesToCheck);
 				nickedPlayers = nicked.ToList();
 
 				foreach (var resp in responses)
 				{
-					if (resp.Player == null)
-						continue;
+					totalWins += resp.Wins;
+					totalLosses += resp.Losses;
+					totalBrokenBeds += resp.BrokenBeds;
+					totalFinalKills += resp.FinalKills;
+					totalFinalDeaths += resp.FinalDeaths;
 
-					var finalKills = (int) (resp.Player.Stats.Bedwars.SolosFinalKills
-					                        + resp.Player.Stats.Bedwars.DoublesFinalKills
-					                        + resp.Player.Stats.Bedwars.ThreesFinalKills
-					                        + resp.Player.Stats.Bedwars.FoursFinalKills);
-					var finalDeaths = (int) (resp.Player.Stats.Bedwars.SolosFinalDeaths
-					                         + resp.Player.Stats.Bedwars.DoublesFinalDeaths
-					                         + resp.Player.Stats.Bedwars.ThreesFinalDeaths
-					                         + resp.Player.Stats.Bedwars.FoursFinalDeaths);
-					var wins = (int) (resp.Player.Stats.Bedwars.SolosWins
-					                  + resp.Player.Stats.Bedwars.DoublesWins
-					                  + resp.Player.Stats.Bedwars.ThreesWins
-					                  + resp.Player.Stats.Bedwars.FoursWins);
-					var losses = (int) (resp.Player.Stats.Bedwars.SolosLosses
-					                    + resp.Player.Stats.Bedwars.DoublesLosses
-					                    + resp.Player.Stats.Bedwars.ThreesLosses
-					                    + resp.Player.Stats.Bedwars.FoursLosses);
-					var brokenBeds = (int) (resp.Player.Stats.Bedwars.SolosBrokenBeds
-					                        + resp.Player.Stats.Bedwars.DoublesBrokenBeds
-					                        + resp.Player.Stats.Bedwars.ThreesBrokenBeds
-					                        + resp.Player.Stats.Bedwars.FoursBrokenBeds);
-
-					totalWins += wins;
-					totalLosses += losses;
-					totalBrokenBeds += brokenBeds;
-					totalFinalKills += finalKills;
-					totalFinalDeaths += finalDeaths;
-
-					nameResults.Add(new BedwarsData(resp));
-				}
-
-				var actualNamesToCheck = new List<string>();
-				foreach (var n in unableToSearch)
-				{
-					if (!Cache.Contains(n))
-					{
-						actualNamesToCheck.Add(n);
-						continue;
-					}
-
-					var cacheData = Cache[n];
-
-					totalFinalDeaths += cacheData.FinalDeaths;
-					totalFinalKills += cacheData.FinalKills;
-					totalBrokenBeds += cacheData.BrokenBeds;
-					totalWins += cacheData.Wins;
-					totalLosses += cacheData.Losses;
-
-					Cache.ResetCacheTime(n);
-					nameResults.Add(cacheData);
+					CachedData.TryAdd(resp.Name, resp);
+					nameResults.Add(resp);
 				}
 
 				// request leftover data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
+				var planckeApiRequester = new PlanckeApiRequester(unableToSearch);
 				// parse data
 				var nameData = await planckeApiRequester
 					.SendRequests();
@@ -341,7 +341,7 @@ namespace Winstreak
 					totalWins += playerInfo.Wins;
 					totalLosses += playerInfo.Losses;
 
-					Cache.TryAdd(playerInfo.Name, playerInfo);
+					CachedData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
@@ -353,29 +353,8 @@ namespace Winstreak
 			}
 			else
 			{
-				var actualNamesToCheck = new List<string>();
-				// check cache
-				foreach (var n in names)
-				{
-					if (!Cache.Contains(n))
-					{
-						actualNamesToCheck.Add(n);
-						continue;
-					}
-
-					var cacheData = Cache[n];
-					totalFinalDeaths += cacheData.FinalDeaths;
-					totalFinalKills += cacheData.FinalKills;
-					totalBrokenBeds += cacheData.BrokenBeds;
-					totalWins += cacheData.Wins;
-					totalLosses += cacheData.Losses;
-
-					Cache.ResetCacheTime(n);
-					nameResults.Add(cacheData);
-				}
-
 				// request data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
+				var planckeApiRequester = new PlanckeApiRequester(namesToCheck);
 				// parse data
 				var nameData = await planckeApiRequester
 					.SendRequests();
@@ -389,7 +368,7 @@ namespace Winstreak
 					totalWins += playerInfo.Wins;
 					totalLosses += playerInfo.Losses;
 
-					Cache.TryAdd(playerInfo.Name, playerInfo);
+					CachedData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
@@ -444,7 +423,6 @@ namespace Winstreak
 			Console.WriteLine(tableBuilder.ToString());
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
-
 			Console.WriteLine("=====================================");
 		}
 
@@ -460,17 +438,23 @@ namespace Winstreak
 				var teamStats = new List<BedwarsData>();
 				foreach (var name in value)
 				{
-					if (!Cache.Contains(name))
+					if (!CachedData.Contains(name))
 					{
 						actualNamesToCheck.Add(name);
 						continue;
 					}
 
-					teamStats.Add(Cache[name]);
+					teamStats.Add(CachedData[name]);
 				}
 
 				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(actualNamesToCheck);
-				teamStats.AddRange(responses.Select(x => new BedwarsData(x)));
+
+				foreach (var data in responses)
+				{
+					if (!CachedData.Contains(data.Name))
+						CachedData.TryAdd(data.Name, data);
+					teamStats.Add(data);
+				}
 				var nickedPlayers = nicked.ToList();
 
 				if (unableToSearch.Count != 0)
@@ -479,11 +463,16 @@ namespace Winstreak
 					var teamData = await planckeApiRequester
 						.SendRequests();
 					var p = new ResponseParser(teamData);
-					teamStats.AddRange(p.GetPlayerDataFromMap());
+					foreach (var playerInfo in p.GetPlayerDataFromMap())
+					{
+						CachedData.TryAdd(playerInfo.Name, playerInfo);
+						teamStats.Add(playerInfo);
+					}
+
 					nickedPlayers.AddRange(p.ErroredPlayers);
 				}
 
-				
+
 				teamInfo.Add(
 					new TeamInfoResults(key, teamStats, nickedPlayers)
 				);

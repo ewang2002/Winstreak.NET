@@ -15,6 +15,11 @@ namespace Winstreak.WebApi
 		private readonly ConcurrentDictionary<TK, (TV val, Timer timer)> _dict;
 
 		/// <summary>
+		/// The length.
+		/// </summary>
+		public int Length => _dict.Count;
+
+		/// <summary>
 		/// Creates a new CacheDictionary
 		/// </summary>
 		public CacheDictionary()
@@ -96,6 +101,12 @@ namespace Winstreak.WebApi
 			return true;
 		}
 
+		/// <summary>
+		/// Empties the cache.
+		/// </summary>
+		public void Empty()
+			=> _dict.Clear();
+		
 		/// <summary>
 		/// Returns the string representation of this object.
 		/// </summary>
