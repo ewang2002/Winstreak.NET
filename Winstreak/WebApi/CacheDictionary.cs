@@ -105,7 +105,12 @@ namespace Winstreak.WebApi
 		/// Empties the cache.
 		/// </summary>
 		public void Empty()
-			=> _dict.Clear();
+		{
+			foreach (var (_, elem) in _dict)
+				elem.timer.Stop();
+			
+			_dict.Clear();
+		}
 		
 		/// <summary>
 		/// Returns the string representation of this object.
