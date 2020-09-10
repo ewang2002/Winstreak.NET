@@ -28,21 +28,25 @@ namespace Winstreak
 		public static string HelpInfo = new StringBuilder()
 			.Append("[INFO] Current Command List.")
 			.AppendLine()
-			.Append("> -c: Clears the console.")
+			.Append("> -clear OR -c: Clears the console.")
 			.AppendLine()
 			.Append(
 				"> -tc: Determines whether the console should be cleared when a screenshot is provided.")
 			.AppendLine()
 			.Append("> -cache: Checks how many entries are cached.")
 			.AppendLine()
-			.Append("> -empty OR -clear: Empties the cache.")
+			.Append("> -emptycache: Empties the cache.")
 			.AppendLine()
-			.Append("> -ratelimit OR -rate OR -r: Checks the current API rate limit.")
+			.Append("> -ratelimit OR -rate: Checks the current API rate limit.")
 			.AppendLine()
-			.Append("> -s: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
+			.Append("> -switch OR -s: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
 			.AppendLine()
-			.Append("> -h: Shows this menu.")
+			.Append("> -help OR -h: Shows this menu.")
+			.AppendLine()
+			.Append("> -quit OR -q: Quits the program.")
 			.ToString();
+
+		public static string Divider = "=====================================";
 
 		public static DirectoryInfo McScreenshotsPath;
 
@@ -114,49 +118,54 @@ namespace Winstreak
 				if (input.StartsWith('-'))
 				{
 					// quit program
-					if (input.ToLower() == "-q")
+					if (input.ToLower() == "-q" || input.ToLower() == "-quit")
 						break;
 
 					switch (input.ToLower().Trim())
 					{
+						case "-help":
 						case "-h":
 							Console.WriteLine(HelpInfo);
-							Console.WriteLine("=====================================");
+							Console.WriteLine(Divider);
 							continue;
+						case "-clear":
 						case "-c":
 							Console.Clear();
 							continue;
+						case "-switch":
 						case "-s":
 							Mode = Mode == 34 ? 12 : 34;
 							Console.WriteLine($"[INFO] Set parser gamemode to: {GamemodeIntToStr()}");
+							Console.WriteLine(Divider);
 							continue;
 						case "-tc":
 							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
 							Console.WriteLine(ShouldClearBeforeCheck
 								? "[INFO] Console will be cleared once a screenshot is provided."
 								: "[INFO] Console will not be cleared once a screenshot is provided.");
-							Console.WriteLine("=====================================");
+							Console.WriteLine(Divider);
 							continue;
 						case "-cache":
 							Console.WriteLine($"[INFO] Cache Length: {CachedData.Length}");
+							Console.WriteLine(Divider);
 							continue;
-						case "-clear":
-						case "-empty":
+						case "-emptycache":
 							Console.WriteLine("[INFO] Cache has been cleared.");
 							CachedData.Empty();
+							Console.WriteLine(Divider);
 							continue;
-						case "-r":
 						case "-rate":
 						case "-ratelimit":
 							if (HypixelApi != null && ApiKeyValid)
 								Console.WriteLine($"[INFO] API Requests Made: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}.");
 							else 
 								Console.WriteLine($"[INFO] Hypixel API is not used.");
+							Console.WriteLine(Divider);
 							continue;
 					}
 
 					Console.WriteLine(HelpInfo);
-					Console.WriteLine("=====================================");
+					Console.WriteLine(Divider);
 					continue;
 				}
 
@@ -195,7 +204,7 @@ namespace Winstreak
 
 				checkTime.Stop();
 				Console.WriteLine($"> Time Taken: {checkTime.Elapsed.TotalSeconds} Seconds.");
-				Console.WriteLine("=====================================");
+				Console.WriteLine(Divider);
 			}
 		}
 
@@ -217,8 +226,11 @@ namespace Winstreak
 				Console.WriteLine($"[ERROR] An IOException occurred. Error Information:\n{ex}");
 				Console.WriteLine(init ? "\tTrying Again." : "\tNo Longer Trying Again.");
 				Console.ResetColor();
-				if (init)
-					await OnChangeFile(e, false);
+				Console.WriteLine(Divider);
+				if (!init) 
+					return;
+				await Task.Delay(Config.ScreenshotDelay);
+				await OnChangeFile(e, false);
 				return;
 			}
 			catch (Exception ex)
@@ -226,6 +238,7 @@ namespace Winstreak
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine($"[ERROR] An unknown error occurred. Error Information:\n{ex}");
 				Console.ResetColor();
+				Console.WriteLine(Divider);
 				return;
 			}
 
@@ -256,7 +269,7 @@ namespace Winstreak
 				Console.WriteLine(
 					$"[ERROR] An error occurred when trying to parse the image. Exception Info Below.\n{e}");
 				Console.ResetColor();
-				Console.WriteLine("=====================================");
+				Console.WriteLine(Divider);
 				processingTime.Stop();
 				return;
 			}
@@ -425,7 +438,7 @@ namespace Winstreak
 			Console.WriteLine(tableBuilder.ToString());
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
-			Console.WriteLine("=====================================");
+			Console.WriteLine(Divider);
 		}
 
 		public static async Task GameCheck(IDictionary<TeamColor, IList<string>> teams, TimeSpan timeTaken)
@@ -590,7 +603,7 @@ namespace Winstreak
 			Console.WriteLine(table.ToString());
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
-			Console.WriteLine("=====================================");
+			Console.WriteLine(Divider);
 		}
 
 		private static string DetermineScoreMeaning(double score, bool isPlayer)

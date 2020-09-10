@@ -82,6 +82,8 @@ namespace Winstreak
 			}
 
 			await DirectoryWatcher.Run(configurationFile);
+			Console.WriteLine("[INFO] Program has been terminated. Press ENTER to close this program.");
+			Console.ReadLine();
 		}
 
 		public static string GetDefaultMinecraftFolderPath() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
