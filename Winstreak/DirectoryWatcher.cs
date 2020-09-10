@@ -203,7 +203,6 @@ namespace Winstreak
 			// wait for image to fully load
 			=> await OnChangeFile(e);
 
-
 		private static async Task OnChangeFile(FileSystemEventArgs e, bool init = true)
 		{
 			await Task.Delay(Config.ScreenshotDelay);
@@ -450,31 +449,51 @@ namespace Winstreak
 					teamStats.Add(CachedData[name]);
 				}
 
-				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(actualNamesToCheck);
+				var nickedPlayers = new List<string>();
 
-				foreach (var data in responses)
+				if (HypixelApi != null && ApiKeyValid)
 				{
-					if (!CachedData.Contains(data.Name))
-						CachedData.TryAdd(data.Name, data);
-					teamStats.Add(data);
-				}
-				var nickedPlayers = nicked.ToList();
+					var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(actualNamesToCheck);
 
-				if (unableToSearch.Count != 0)
+					foreach (var data in responses)
+					{
+						if (!CachedData.Contains(data.Name))
+							CachedData.TryAdd(data.Name, data);
+						teamStats.Add(data);
+					}
+					nickedPlayers.AddRange(nicked);
+
+					if (unableToSearch.Count != 0)
+					{
+						var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
+						var teamData = await planckeApiRequester
+							.SendRequests();
+						var p = new ResponseParser(teamData);
+						foreach (var playerInfo in p.GetPlayerDataFromMap())
+						{
+							CachedData.TryAdd(playerInfo.Name, playerInfo);
+							teamStats.Add(playerInfo);
+						}
+
+						nickedPlayers.AddRange(p.ErroredPlayers);
+					}
+				}
+				else
 				{
 					var planckeApiRequester = new PlanckeApiRequester(actualNamesToCheck);
-					var teamData = await planckeApiRequester
+					// parse data
+					var nameData = await planckeApiRequester
 						.SendRequests();
-					var p = new ResponseParser(teamData);
-					foreach (var playerInfo in p.GetPlayerDataFromMap())
+					var checker = new ResponseParser(nameData);
+
+					foreach (var data in checker.GetPlayerDataFromMap())
 					{
-						CachedData.TryAdd(playerInfo.Name, playerInfo);
-						teamStats.Add(playerInfo);
+						CachedData.TryAdd(data.Name, data);
+						teamStats.Add(data);
 					}
 
-					nickedPlayers.AddRange(p.ErroredPlayers);
+					nickedPlayers.AddRange(checker.ErroredPlayers);
 				}
-
 
 				teamInfo.Add(
 					new TeamInfoResults(key, teamStats, nickedPlayers)
