@@ -107,7 +107,7 @@ namespace Winstreak
 			// infinite loop for command processing
 			while (true)
 			{
-				var input = Console.ReadLine() ?? string.Empty;
+				var input = (Console.ReadLine() ?? string.Empty).Trim();
 				if (input == string.Empty)
 					continue;
 
@@ -159,6 +159,9 @@ namespace Winstreak
 					Console.WriteLine("=====================================");
 					continue;
 				}
+
+				if (input.Contains('-'))
+					continue;
 
 				// check ign
 				var checkTime = new Stopwatch();
