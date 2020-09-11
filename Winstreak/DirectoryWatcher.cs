@@ -14,11 +14,11 @@ using Winstreak.Extensions;
 using Winstreak.Imaging;
 using Winstreak.Parser;
 using Winstreak.WebApi;
+using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Hypixel;
 using Winstreak.WebApi.Plancke;
 using static Winstreak.WebApi.ApiConstants;
 using Winstreak.WebApi.Plancke.Checker;
-using Winstreak.WebApi.Plancke.Definition;
 using static Winstreak.ConsoleTable.AnsiConstants;
 
 namespace Winstreak

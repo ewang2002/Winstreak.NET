@@ -1,9 +1,9 @@
 ﻿using System;
 using Winstreak.Calculations;
-using static Winstreak.Calculations.BedwarsExpLevel;
 using Winstreak.WebApi.Hypixel.Definitions;
+using static Winstreak.Calculations.BedwarsExpLevel;
 
-namespace Winstreak.WebApi.Plancke.Definition
+namespace Winstreak.WebApi.Definition
 {
 	public readonly struct BedwarsData
 	{
@@ -47,6 +47,20 @@ namespace Winstreak.WebApi.Plancke.Definition
 			if (resp.Player == null)
 				throw new ArgumentNullException(nameof(resp));
 			Name = resp.Player.DisplayName;
+
+			if (resp.Player.Stats?.Bedwars == null)
+			{
+				Kills = 0;
+				Deaths = 0;
+				FinalDeaths = 0;
+				FinalKills = 0;
+				Wins = 0;
+				Losses = 0;
+				BrokenBeds = 0;
+				Score = 0;
+				Level = 0;
+				return;
+			}
 
 			Kills = (int) (resp.Player.Stats.Bedwars.SolosKills
 			               + resp.Player.Stats.Bedwars.DoublesKills

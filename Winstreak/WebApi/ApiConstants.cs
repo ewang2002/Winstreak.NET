@@ -1,5 +1,5 @@
 ﻿using System.Net.Http;
-using Winstreak.WebApi.Plancke.Definition;
+using Winstreak.WebApi.Definition;
 
 namespace Winstreak.WebApi
 {

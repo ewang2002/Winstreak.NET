@@ -5,8 +5,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using Newtonsoft.Json;
+using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Hypixel.Definitions;
-using Winstreak.WebApi.Plancke.Definition;
 using static Winstreak.WebApi.ApiConstants;
 
 namespace Winstreak.WebApi.Hypixel

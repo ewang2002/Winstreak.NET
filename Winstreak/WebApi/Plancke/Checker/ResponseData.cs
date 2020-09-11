@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Winstreak.WebApi.Plancke.Definition;
+using Winstreak.WebApi.Definition;
 
 namespace Winstreak.WebApi.Plancke.Checker
 {

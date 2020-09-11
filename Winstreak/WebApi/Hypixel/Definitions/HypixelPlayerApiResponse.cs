@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Winstreak.WebApi.Hypixel.Definitions
 {
@@ -40,10 +39,12 @@ namespace Winstreak.WebApi.Hypixel.Definitions
         [JsonProperty("knownAliasesLower")]
         public string[] KnownAliasesLower { get; set; }
 
-        [JsonProperty("stats")]
-        public Stats Stats { get; set; }
+#nullable enable
+	    [JsonProperty("stats")]
+        public Stats? Stats { get; set; }
+#nullable disable
 
-        [JsonProperty("lastLogout")]
+		[JsonProperty("lastLogout")]
         public long LastLogout { get; set; }
 
         [JsonProperty("networkExp")]
@@ -55,9 +56,11 @@ namespace Winstreak.WebApi.Hypixel.Definitions
 
     public class Stats
     {
-	    [JsonProperty("Bedwars")]
-        public Bedwars Bedwars { get; set; }
-    }
+#nullable enable
+		[JsonProperty("Bedwars")]
+        public Bedwars? Bedwars { get; set; }
+#nullable disable
+	}
 
     public class Bedwars
     {
