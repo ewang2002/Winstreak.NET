@@ -8,7 +8,18 @@ namespace Winstreak.ConfigParser
 	{
 		public static async Task<ConfigFile> ParseConfigFile(FileInfo info)
 		{
-			var configFile = new ConfigFile();
+			var configFile = new ConfigFile
+			{
+				ClearConsole = true,
+				DangerousPlayers = new string[0],
+				ExemptPlayers = new string[0],
+				GamemodeType = 34,
+				HypixelApiKey = string.Empty,
+				PathToMinecraftFolder = string.Empty,
+				RetryMax = 2,
+				RetryDelay = 250,
+				ScreenshotDelay = 250
+			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
 			lines = lines
@@ -71,6 +82,9 @@ namespace Winstreak.ConfigParser
 						break;
 					case "HYPIXEL_API_KEY":
 						configFile.HypixelApiKey = val;
+						break;
+					case "DANGEROUS_PLAYERS":
+						configFile.DangerousPlayers = val.Split(",").Select(x => x.Trim()).ToArray();
 						break;
 				}
 			}

@@ -40,7 +40,8 @@ namespace Winstreak
 				RetryDelay = 250,
 				RetryMax = 2,
 				ScreenshotDelay = 250,
-				PathToMinecraftFolder = GetDefaultMinecraftFolderPath()
+				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
+				DangerousPlayers = new string[0]
 			};
 
 			if (configFileInfo != null)
@@ -69,7 +70,8 @@ namespace Winstreak
 				}
 			}
 
-			configurationFile.PathToMinecraftFolder ??= GetDefaultMinecraftFolderPath();
+			if (string.IsNullOrEmpty(configurationFile.PathToMinecraftFolder))
+				configurationFile.PathToMinecraftFolder = GetDefaultMinecraftFolderPath();
 
 			// check once more
 			if (!Directory.Exists(configurationFile.PathToMinecraftFolder))

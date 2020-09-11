@@ -10,5 +10,6 @@
 		public int ScreenshotDelay;
 		public int GamemodeType;
 		public string HypixelApiKey;
+		public string[] DangerousPlayers;
 	}
 }

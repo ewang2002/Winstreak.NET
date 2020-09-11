@@ -169,9 +169,6 @@ namespace Winstreak.Parser
 			var isGameScreenshot = false;
 
 			exempt ??= new List<string>();
-			exempt = exempt
-				.Select(x => x.ToLower())
-				.ToList();
 			var currentColor = TeamColor.Unknown;
 
 			var names = new Dictionary<TeamColor, IList<string>>();

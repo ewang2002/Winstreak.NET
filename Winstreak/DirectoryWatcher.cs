@@ -61,6 +61,7 @@ namespace Winstreak
 
 		public static async Task Run(ConfigFile file)
 		{
+			// init vars
 			Config = file;
 			McScreenshotsPath = new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"));
 			ShouldClearBeforeCheck = file.ClearConsole;
@@ -85,16 +86,29 @@ namespace Winstreak
 			}
 
 			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+			Console.WriteLine($"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
 			Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
+			Console.WriteLine($"[INFO] Using Hypixel API: {(file.HypixelApiKey != string.Empty && ApiKeyValid ? "Yes" : "No")}");
+			Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
+			Console.WriteLine();
 			Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
 			Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
 			Console.WriteLine($"[INFO] Retry Request Max Set: {Config.RetryMax}");
 			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
-			Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
+			Console.WriteLine();
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
 			Console.WriteLine("=========================");
 
+			// make all lowercase for ease of comparison 
+			Config.ExemptPlayers = Config.ExemptPlayers
+				.Select(x => x.ToLower())
+				.ToArray();
+			Config.DangerousPlayers = Config.DangerousPlayers
+				.Select(x => x.ToLower())
+				.ToArray();
+
+			// init watcher
 			using var watcher = new FileSystemWatcher
 			{
 				Path = McScreenshotsPath.FullName,
@@ -410,7 +424,9 @@ namespace Winstreak
 			foreach (var playerInfo in nameResults)
 				tableBuilder.AddRow(
 					playerInfo.Level == -1 ? "N/A" : playerInfo.Level.ToString(),
-					playerInfo.Name,
+					Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
+						? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
+						: playerInfo.Name,
 					playerInfo.FinalKills,
 					playerInfo.BrokenBeds,
 					playerInfo.FinalDeaths == 0
@@ -582,7 +598,9 @@ namespace Winstreak
 					table.AddRow(
 						string.Empty,
 						teammate.Level == -1 ? "N/A" : teammate.Level.ToString(),
-						ansiColorToUse + teammate.Name + ResetAnsi,
+						ansiColorToUse + (Config.DangerousPlayers.Contains(teammate.Name.ToLower())
+							? $"(!) {teammate.Name}"
+							: teammate.Name) + ResetAnsi,
 						teammate.FinalKills,
 						teammate.BrokenBeds,
 						teammate.FinalDeaths == 0
