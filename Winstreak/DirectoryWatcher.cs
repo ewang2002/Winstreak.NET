@@ -288,7 +288,7 @@ namespace Winstreak
 				await GameCheck(allNames, timeTaken);
 		}
 
-		private static async Task LobbyChecker(IList<string> names, TimeSpan timeTaken)
+		private static async Task LobbyChecker(IEnumerable<string> names, TimeSpan timeTaken)
 		{
 			var reqTime = new Stopwatch();
 			reqTime.Start();
@@ -298,6 +298,7 @@ namespace Winstreak
 			var totalFinalKills = 0;
 			var totalFinalDeaths = 0;
 			var totalBrokenBeds = 0;
+			var levels = 0;
 
 			// we assume this checks
 			// the entire cache
@@ -321,6 +322,9 @@ namespace Winstreak
 				totalFinalKills += data.FinalKills;
 				totalFinalDeaths += data.FinalDeaths;
 				totalBrokenBeds += data.BrokenBeds;
+				
+				if (data.Level != -1)
+					levels += data.Level;
 			}
 
 			// check hypixel api
@@ -336,6 +340,7 @@ namespace Winstreak
 					totalBrokenBeds += resp.BrokenBeds;
 					totalFinalKills += resp.FinalKills;
 					totalFinalDeaths += resp.FinalDeaths;
+					levels += resp.Level;
 
 					CachedData.TryAdd(resp.Name, resp);
 					nameResults.Add(resp);
@@ -355,6 +360,8 @@ namespace Winstreak
 					totalBrokenBeds += playerInfo.BrokenBeds;
 					totalWins += playerInfo.Wins;
 					totalLosses += playerInfo.Losses;
+					if (playerInfo.Level != -1)
+						levels += playerInfo.Level;
 
 					CachedData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
@@ -382,6 +389,8 @@ namespace Winstreak
 					totalBrokenBeds += playerInfo.BrokenBeds;
 					totalWins += playerInfo.Wins;
 					totalLosses += playerInfo.Losses;
+					if (playerInfo.Level != -1)
+						levels += playerInfo.Level;
 
 					CachedData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
@@ -395,11 +404,12 @@ namespace Winstreak
 			reqTime.Reset();
 
 			// start parsing the data
-			var tableBuilder = new Table(6)
-				.AddRow("Username", "Final Kills", "Broken Beds", "FKDR", "Score", "Assessment")
+			var tableBuilder = new Table(7)
+				.AddRow("LVL", "Username", "Final Kills", "Broken Beds", "FKDR", "Score", "Assessment")
 				.AddSeparator();
 			foreach (var playerInfo in nameResults)
 				tableBuilder.AddRow(
+					playerInfo.Level == -1 ? "N/A" : playerInfo.Level.ToString(),
 					playerInfo.Name,
 					playerInfo.FinalKills,
 					playerInfo.BrokenBeds,
@@ -412,6 +422,7 @@ namespace Winstreak
 
 			foreach (var nickedPlayer in nickedPlayers)
 				tableBuilder.AddRow(
+					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + nickedPlayer + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
@@ -424,6 +435,7 @@ namespace Winstreak
 			var ttlScore = PlayerCalculator.CalculatePlayerThreatLevel(totalWins, totalLosses,
 				totalFinalKills, totalFinalDeaths, totalBrokenBeds);
 			tableBuilder.AddRow(
+				levels,
 				"Total",
 				totalFinalKills,
 				totalBrokenBeds,
@@ -523,29 +535,24 @@ namespace Winstreak
 			// start parsing the data
 			var rank = 1;
 
-			var table = new Table(7);
-			table.AddRow("Rank", "Username", "Finals", "Beds", "FKDR", "Score", "Assessment")
+			var table = new Table(8);
+			table.AddRow("Rank", "LVL", "Username", "Finals", "Beds", "FKDR", "Score", "Assessment")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
 				var result = teamInfo[i];
-				var ansiColorToUse = result.Color == "Blue"
-					? TextBrightBlueAnsi
-					: result.Color == "Yellow"
-						? TextYellowAnsi
-						: result.Color == "Green"
-							? TextGreenAnsi
-							: result.Color == "Red"
-								? TextRedAnsi
-								: result.Color == "Aqua"
-									? TextCyanAnsi
-									: result.Color == "Grey"
-										? TextBrightBlackAnsi
-										: result.Color == "Pink"
-											? TextBrightRedAnsi
-											: result.Color == "White"
-												? TextWhiteAnsi
-												: ResetAnsi;
+				var ansiColorToUse = result.Color switch
+				{
+					"Blue" => TextBrightBlueAnsi,
+					"Yellow" => TextYellowAnsi,
+					"Green" => TextGreenAnsi,
+					"Red" => TextRedAnsi,
+					"Aqua" => TextCyanAnsi,
+					"Grey" => TextBrightBlackAnsi,
+					"Pink" => TextBrightRedAnsi,
+					"White" => TextWhiteAnsi,
+					_ => ResetAnsi
+				};
 
 				var allAvailablePlayers = result.AvailablePlayers
 					.OrderByDescending(x => x.Score)
@@ -553,8 +560,12 @@ namespace Winstreak
 
 				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
 				var totalDeaths = result.AvailablePlayers.Sum(x => x.FinalDeaths);
+				var totalLevel = result.AvailablePlayers
+					.Where(x => x.Level != -1)
+					.Sum(x => x.Level);
 				table.AddRow(
 					rank,
+					totalLevel,
 					$"{ansiColorToUse}[{result.Color} Team]{ResetAnsi}",
 					result.AvailablePlayers.Sum(x => x.FinalKills),
 					result.AvailablePlayers.Sum(x => x.BrokenBeds),
@@ -570,6 +581,7 @@ namespace Winstreak
 				{
 					table.AddRow(
 						string.Empty,
+						teammate.Level == -1 ? "N/A" : teammate.Level.ToString(),
 						ansiColorToUse + teammate.Name + ResetAnsi,
 						teammate.FinalKills,
 						teammate.BrokenBeds,
@@ -586,6 +598,7 @@ namespace Winstreak
 				{
 					table.AddRow(
 						string.Empty,
+						"N/A",
 						ansiColorToUse + erroredPlayers + ResetAnsi,
 						string.Empty,
 						string.Empty,

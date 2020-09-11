@@ -61,7 +61,11 @@ namespace Winstreak.WebApi.Hypixel.Definitions
 
     public class Bedwars
     {
-	    [JsonProperty("eight_one_kills_bedwars")]
+	    [JsonProperty("Experience")]
+	    public long Experience { get; set; }
+
+
+		[JsonProperty("eight_one_kills_bedwars")]
 	    public long SolosKills;
 
 	    [JsonProperty("eight_one_deaths_bedwars")]

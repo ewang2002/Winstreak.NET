@@ -1,5 +1,6 @@
 ﻿using System;
 using Winstreak.Calculations;
+using static Winstreak.Calculations.BedwarsExpLevel;
 using Winstreak.WebApi.Hypixel.Definitions;
 
 namespace Winstreak.WebApi.Plancke.Definition
@@ -15,6 +16,7 @@ namespace Winstreak.WebApi.Plancke.Definition
 		public readonly int Losses;
 		public readonly int BrokenBeds;
 		public readonly double Score;
+		public readonly int Level; 
 
 		public BedwarsData(
 			string name,
@@ -24,7 +26,8 @@ namespace Winstreak.WebApi.Plancke.Definition
 			int finalDeaths,
 			int wins,
 			int losses,
-			int bedsBroken
+			int bedsBroken,
+			int level
 		)
 		{
 			Name = name;
@@ -36,6 +39,7 @@ namespace Winstreak.WebApi.Plancke.Definition
 			Losses = losses;
 			BrokenBeds = bedsBroken;
 			Score = PlayerCalculator.CalculatePlayerThreatLevel(wins, losses, finalKills, finalDeaths, bedsBroken);
+			Level = level;
 		}
 
 		public BedwarsData(HypixelPlayerApiResponse resp)
@@ -73,6 +77,7 @@ namespace Winstreak.WebApi.Plancke.Definition
 			                    + resp.Player.Stats.Bedwars.ThreesBrokenBeds
 			                    + resp.Player.Stats.Bedwars.FoursBrokenBeds);
 			Score = PlayerCalculator.CalculatePlayerThreatLevel(Wins, Losses, FinalKills, FinalDeaths, BrokenBeds);
+			Level = GetLevelFromExp(resp.Player.Stats.Bedwars.Experience);
 		}
 	}
 }

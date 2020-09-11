@@ -44,9 +44,24 @@ namespace Winstreak.WebApi.Plancke.Checker
 			// only get bedwars data
 			var bedwarsData = HtmlContent
 				.Split(new[] {"Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
-				.Split("Build Battle")[0]
-				.Split("</thead>")[1]
-				.Split("</div>")[0];
+				.Split("Build Battle")[0];
+
+			var level = -1;
+			try
+			{
+				var parseRes = int.TryParse(bedwarsData
+					.Split("<ul class=\"list-unstyled\">")[1]
+					.Split("<li><b>Level:</b>")[1]
+					.Split("</li>")[0]
+					.Trim(), out var lvl);
+
+				if (parseRes)
+					level = lvl;
+			}
+			catch (Exception)
+			{
+				// ignored
+			}
 
 			// clean up data
 			bedwarsData = bedwarsData
@@ -74,7 +89,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(soloDataArr[4]),
 					int.Parse(soloDataArr[6]),
 					int.Parse(soloDataArr[7]),
-					int.Parse(soloDataArr[9])
+					int.Parse(soloDataArr[9]),
+					level
 				);
 			}
 			catch (Exception)
@@ -105,7 +121,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(doubleDataArr[4]),
 					int.Parse(doubleDataArr[6]),
 					int.Parse(doubleDataArr[7]),
-					int.Parse(doubleDataArr[9])
+					int.Parse(doubleDataArr[9]),
+					level
 				);
 			}
 			catch (Exception)
@@ -135,7 +152,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(threeDataArr[4]),
 					int.Parse(threeDataArr[6]),
 					int.Parse(threeDataArr[7]),
-					int.Parse(threeDataArr[9])
+					int.Parse(threeDataArr[9]),
+					level
 				);
 			}
 			catch (Exception)
@@ -165,7 +183,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(fourDataArr[4]),
 					int.Parse(fourDataArr[6]),
 					int.Parse(fourDataArr[7]),
-					int.Parse(fourDataArr[9])
+					int.Parse(fourDataArr[9]),
+					level
 				);
 			}
 			catch (Exception)
@@ -186,7 +205,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					threesData.FinalDeaths + foursData.FinalDeaths,
 					oneData.Wins + twoData.Wins + threesData.Wins + foursData.Wins,
 					oneData.Losses + twoData.Losses + threesData.Losses + foursData.Losses,
-					oneData.BrokenBeds + twoData.BrokenBeds + threesData.BrokenBeds + foursData.BrokenBeds
+					oneData.BrokenBeds + twoData.BrokenBeds + threesData.BrokenBeds + foursData.BrokenBeds,
+					level
 				);
 			}
 			else
