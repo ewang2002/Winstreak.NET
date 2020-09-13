@@ -111,7 +111,6 @@ namespace Winstreak.Imaging
 		/// <param name="red">Red component.</param>
 		/// <param name="green">Green component.</param>
 		/// <param name="blue">Blue component.</param>
-		/// 
 		public Rgb(byte red, byte green, byte blue)
 		{
 			Red = red;
@@ -128,7 +127,6 @@ namespace Winstreak.Imaging
 		/// <param name="green">Green component.</param>
 		/// <param name="blue">Blue component.</param>
 		/// <param name="alpha">Alpha component.</param>
-		/// 
 		public Rgb(byte red, byte green, byte blue, byte alpha)
 		{
 			Red = red;
@@ -142,7 +140,6 @@ namespace Winstreak.Imaging
 		/// </summary>
 		/// 
 		/// <param name="color">Initialize from specified <see cref="System.Drawing.Color">color.</see></param>
-		/// 
 		public Rgb(Color color)
 		{
 			Red = color.R;

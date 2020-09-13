@@ -89,7 +89,6 @@ namespace Winstreak.Imaging
 		// flag which indicates if the image should be disposed or not
 		private bool _mustBeDisposed;
 
-
 		/// <summary>
 		/// Pointer to image data in unmanaged memory.
 		/// </summary>
@@ -119,10 +118,7 @@ namespace Winstreak.Imaging
 		/// Gets the image size, in bytes.
 		/// </summary>
 		/// 
-		public int NumberOfBytes
-		{
-			get { return Stride * Height; }
-		}
+		public int NumberOfBytes => Stride * Height;
 
 		/// <summary>
 		/// Gets the image size, in pixels.
@@ -161,7 +157,6 @@ namespace Winstreak.Imaging
 		public UnmanagedImage(IntPtr imageData, int width, int height, int stride, PixelFormat pixelFormat)
 			=> Init(imageData, width, height, stride, pixelFormat);
 
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="UnmanagedImage"/> class.
 		/// </summary>
@@ -171,10 +166,8 @@ namespace Winstreak.Imaging
 		/// <remarks><note>Unlike <see cref="FromManagedImage(BitmapData)"/> method, this constructor does not make
 		/// copy of managed image. This means that managed image must stay locked for the time of using the instance
 		/// of unamanged image.</note></remarks>
-		/// 
 		public UnmanagedImage(BitmapData bitmapData)
 			=> Init(bitmapData.Scan0, bitmapData.Width, bitmapData.Height, bitmapData.Stride, bitmapData.PixelFormat);
-
 
 		private void Init(IntPtr imageData, int width, int height, int stride, PixelFormat pixelFormat)
 		{
@@ -363,18 +356,17 @@ namespace Winstreak.Imaging
 			var pixelFormat = imageData.PixelFormat;
 
 			// check source pixel format
-			if (pixelFormat != PixelFormat.Format8bppIndexed &&
-			    pixelFormat != PixelFormat.Format16bppGrayScale &&
-			    pixelFormat != PixelFormat.Format24bppRgb &&
-			    pixelFormat != PixelFormat.Format32bppRgb &&
-			    pixelFormat != PixelFormat.Format32bppArgb &&
-			    pixelFormat != PixelFormat.Format32bppPArgb &&
-			    pixelFormat != PixelFormat.Format48bppRgb &&
-			    pixelFormat != PixelFormat.Format64bppArgb &&
-			    pixelFormat != PixelFormat.Format64bppPArgb)
-				throw new InvalidImageException("Unsupported pixel format of the source image.");
-
-			return FromUnmanagedData(imageData.Scan0, imageData.Width, imageData.Height, imageData.Stride, pixelFormat);
+			return pixelFormat != PixelFormat.Format8bppIndexed &&
+			       pixelFormat != PixelFormat.Format16bppGrayScale &&
+			       pixelFormat != PixelFormat.Format24bppRgb &&
+			       pixelFormat != PixelFormat.Format32bppRgb &&
+			       pixelFormat != PixelFormat.Format32bppArgb &&
+			       pixelFormat != PixelFormat.Format32bppPArgb &&
+			       pixelFormat != PixelFormat.Format48bppRgb &&
+			       pixelFormat != PixelFormat.Format64bppArgb &&
+			       pixelFormat != PixelFormat.Format64bppPArgb
+				? throw new InvalidImageException("Unsupported pixel format of the source image.")
+				: FromUnmanagedData(imageData.Scan0, imageData.Width, imageData.Height, imageData.Stride, pixelFormat);
 		}
 
 		private static UnmanagedImage FromUnmanagedData(IntPtr imageData, int width, int height, int stride,
@@ -390,7 +382,6 @@ namespace Winstreak.Imaging
 
 			return image;
 		}
-
 
 		/// <summary>
 		/// Set pixel with the specified coordinates to the specified color.
@@ -411,7 +402,6 @@ namespace Winstreak.Imaging
 		/// </remarks>
 		public void SetPixel(int x, int y, Color color)
 			=> SetPixel(x, y, color.R, color.G, color.B, color.A);
-
 
 		private void SetPixel(int x, int y, byte r, byte g, byte b, byte a)
 		{
@@ -497,15 +487,12 @@ namespace Winstreak.Imaging
 				throw new ArgumentOutOfRangeException(nameof(y),
 					"The specified pixel coordinate is out of image's bounds.");
 
-
-			Color color;
-
 			unsafe
 			{
 				var pixelSize = PixelFormat.GetPixelFormatSize() / 8;
 				var ptr = (byte*) ImageData.ToPointer() + y * Stride + x * pixelSize;
 
-				color = PixelFormat switch
+				return PixelFormat switch
 				{
 					PixelFormat.Format8bppIndexed => Color.FromArgb(*ptr, *ptr, *ptr),
 					PixelFormat.Format24bppRgb => Color.FromArgb(ptr[Rgb.R], ptr[Rgb.G], ptr[Rgb.B]),
@@ -514,8 +501,6 @@ namespace Winstreak.Imaging
 					_ => throw new InvalidImageException("The pixel format is not supported: " + PixelFormat)
 				};
 			}
-
-			return color;
 		}
 
 		/// <summary>

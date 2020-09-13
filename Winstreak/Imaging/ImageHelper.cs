@@ -27,7 +27,6 @@ namespace Winstreak.Imaging
 		/// Grayscale image is represented as
 		/// <see cref="System.Drawing.Imaging.PixelFormat">Format8bppIndexed</see>
 		/// image with palette initialized to 256 gradients of gray color.</remarks>
-		/// 
 		public static Bitmap CreateGrayscaleImage(int width, int height)
 		{
 			// create new image
@@ -103,7 +102,6 @@ namespace Winstreak.Imaging
 		/// Bitmap image = AForge.Imaging.Image.FromFile( "test.jpg" );
 		/// </code>
 		/// </remarks>
-		/// 
 		public static Bitmap FromFile(string fileName)
 		{
 			Bitmap loadedImage;

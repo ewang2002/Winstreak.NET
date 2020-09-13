@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Winstreak.Extensions
 {
-	public static class ListExtensions
+	public static class EnumerableExtensions
 	{
 		/// <summary>
 		/// Essentially the ToString method, but shows all elements. 
@@ -11,7 +11,7 @@ namespace Winstreak.Extensions
 		/// <typeparam name="T">The object type.</typeparam>
 		/// <param name="list">The list of objects.</param>
 		/// <returns>All the string-represented elements in the array.</returns>
-		public static string ToReadableString<T>(this IList<T> list)
+		public static string ToReadableString<T>(this IEnumerable<T> list)
 			=> $"[{string.Join(", ", list.ToArray())}]";
 		
 	}
