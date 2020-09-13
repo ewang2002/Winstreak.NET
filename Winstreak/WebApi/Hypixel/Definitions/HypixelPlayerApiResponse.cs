@@ -151,5 +151,8 @@ namespace Winstreak.WebApi.Hypixel.Definitions
 
 	    [JsonProperty("four_four_beds_broken_bedwars")]
 	    public long FoursBrokenBeds;
-	}
+
+	    [JsonProperty("winstreak")] 
+	    public int Winstreak; 
+    }
 }

@@ -63,6 +63,22 @@ namespace Winstreak.WebApi.Plancke.Checker
 				// ignored
 			}
 
+			var winstreak = -1;
+			try
+			{
+				var parseResp = int.TryParse(bedwarsData
+					.Split("<ul class=\"list-unstyled\">")[1]
+					.Split("<li><b>Winstreak:</b>")[1]
+					.Split("</li>")[0]
+					.Trim(), out var ws);
+				if (parseResp)
+					winstreak = ws;
+			}
+			catch (Exception)
+			{
+				// ignored
+			}
+
 			// clean up data
 			bedwarsData = bedwarsData
 				.Replace("<td style=\"border-right: 1px solid #f3f3f3\">", "")
@@ -90,7 +106,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(soloDataArr[6]),
 					int.Parse(soloDataArr[7]),
 					int.Parse(soloDataArr[9]),
-					level
+					level,
+					winstreak
 				);
 			}
 			catch (Exception)
@@ -122,7 +139,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(doubleDataArr[6]),
 					int.Parse(doubleDataArr[7]),
 					int.Parse(doubleDataArr[9]),
-					level
+					level,
+					winstreak
 				);
 			}
 			catch (Exception)
@@ -153,7 +171,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(threeDataArr[6]),
 					int.Parse(threeDataArr[7]),
 					int.Parse(threeDataArr[9]),
-					level
+					level,
+					winstreak
 				);
 			}
 			catch (Exception)
@@ -184,7 +203,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					int.Parse(fourDataArr[6]),
 					int.Parse(fourDataArr[7]),
 					int.Parse(fourDataArr[9]),
-					level
+					level,
+					winstreak
 				);
 			}
 			catch (Exception)
@@ -206,7 +226,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 					oneData.Wins + twoData.Wins + threesData.Wins + foursData.Wins,
 					oneData.Losses + twoData.Losses + threesData.Losses + foursData.Losses,
 					oneData.BrokenBeds + twoData.BrokenBeds + threesData.BrokenBeds + foursData.BrokenBeds,
-					level
+					level,
+					winstreak
 				);
 			}
 			else

@@ -16,7 +16,8 @@ namespace Winstreak.WebApi.Definition
 		public readonly int Losses;
 		public readonly int BrokenBeds;
 		public readonly double Score;
-		public readonly int Level; 
+		public readonly int Level;
+		public readonly int Winstreak; 
 
 		public BedwarsData(
 			string name,
@@ -27,7 +28,8 @@ namespace Winstreak.WebApi.Definition
 			int wins,
 			int losses,
 			int bedsBroken,
-			int level
+			int level,
+			int winstreak
 		)
 		{
 			Name = name;
@@ -40,6 +42,7 @@ namespace Winstreak.WebApi.Definition
 			BrokenBeds = bedsBroken;
 			Score = PlayerCalculator.CalculatePlayerThreatLevel(wins, losses, finalKills, finalDeaths, bedsBroken);
 			Level = level;
+			Winstreak = winstreak;
 		}
 
 		public BedwarsData(HypixelPlayerApiResponse resp)
@@ -59,6 +62,7 @@ namespace Winstreak.WebApi.Definition
 				BrokenBeds = 0;
 				Score = 0;
 				Level = 0;
+				Winstreak = 0;
 				return;
 			}
 
@@ -92,6 +96,7 @@ namespace Winstreak.WebApi.Definition
 			                    + resp.Player.Stats.Bedwars.FoursBrokenBeds);
 			Score = PlayerCalculator.CalculatePlayerThreatLevel(Wins, Losses, FinalKills, FinalDeaths, BrokenBeds);
 			Level = GetLevelFromExp(resp.Player.Stats.Bedwars.Experience);
+			Winstreak = resp.Player.Stats.Bedwars.Winstreak;
 		}
 	}
 }

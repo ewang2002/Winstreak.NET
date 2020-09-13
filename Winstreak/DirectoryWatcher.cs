@@ -88,7 +88,8 @@ namespace Winstreak
 			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
 			Console.WriteLine($"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
 			Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
-			Console.WriteLine($"[INFO] Using Hypixel API: {(file.HypixelApiKey != string.Empty && ApiKeyValid ? "Yes" : "No")}");
+			Console.WriteLine(
+				$"[INFO] Using Hypixel API: {(file.HypixelApiKey != string.Empty && ApiKeyValid ? "Yes" : "No")}");
 			Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
 			Console.WriteLine();
 			Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
@@ -171,8 +172,9 @@ namespace Winstreak
 						case "-rate":
 						case "-ratelimit":
 							if (HypixelApi != null && ApiKeyValid)
-								Console.WriteLine($"[INFO] API Requests Made: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}.");
-							else 
+								Console.WriteLine(
+									$"[INFO] API Requests Made: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}.");
+							else
 								Console.WriteLine($"[INFO] Hypixel API is not used.");
 							Console.WriteLine(Divider);
 							continue;
@@ -208,6 +210,7 @@ namespace Winstreak
 					Console.WriteLine($"> Regular K/D Ratio: {(double) playerInfo.Kills / playerInfo.Deaths}");
 					Console.WriteLine($"> Final K/D Ratio: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
 					Console.WriteLine($"> W/L Ratio: {(double) playerInfo.Wins / playerInfo.Losses}");
+					Console.WriteLine($"> Winstreak: {playerInfo.Winstreak}");
 				}
 				else
 				{
@@ -241,7 +244,7 @@ namespace Winstreak
 				Console.WriteLine(init ? "\tTrying Again." : "\tNo Longer Trying Again.");
 				Console.ResetColor();
 				Console.WriteLine(Divider);
-				if (!init) 
+				if (!init)
 					return;
 				await Task.Delay(Config.ScreenshotDelay);
 				await OnChangeFile(e, false);
@@ -336,7 +339,7 @@ namespace Winstreak
 				totalFinalKills += data.FinalKills;
 				totalFinalDeaths += data.FinalDeaths;
 				totalBrokenBeds += data.BrokenBeds;
-				
+
 				if (data.Level != -1)
 					levels += data.Level;
 			}
@@ -418,8 +421,8 @@ namespace Winstreak
 			reqTime.Reset();
 
 			// start parsing the data
-			var tableBuilder = new Table(7)
-				.AddRow("LVL", "Username", "Final Kills", "Broken Beds", "FKDR", "Score", "Assessment")
+			var tableBuilder = new Table(8)
+				.AddRow("LVL", "Username", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
 				.AddSeparator();
 			foreach (var playerInfo in nameResults)
 				tableBuilder.AddRow(
@@ -432,7 +435,11 @@ namespace Winstreak
 					playerInfo.FinalDeaths == 0
 						? "N/A"
 						: Math.Round((double) playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
-							.ToString(CultureInfo.InvariantCulture), Math.Round(playerInfo.Score, 2),
+							.ToString(CultureInfo.InvariantCulture),
+					playerInfo.Winstreak == -1
+						? "N/A"
+						: playerInfo.Winstreak.ToString(),
+					Math.Round(playerInfo.Score, 2),
 					DetermineScoreMeaning(playerInfo.Score, true)
 				);
 
@@ -440,6 +447,7 @@ namespace Winstreak
 				tableBuilder.AddRow(
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + nickedPlayer + ResetAnsi,
+					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
@@ -459,6 +467,7 @@ namespace Winstreak
 					? "N/A"
 					: Math.Round((double) totalWins / totalLosses, 2)
 						.ToString(CultureInfo.InvariantCulture),
+				string.Empty,
 				Math.Round(ttlScore, 2),
 				DetermineScoreMeaning(ttlScore, false)
 			);
@@ -502,6 +511,7 @@ namespace Winstreak
 							CachedData.TryAdd(data.Name, data);
 						teamStats.Add(data);
 					}
+
 					nickedPlayers.AddRange(nicked);
 
 					if (unableToSearch.Count != 0)
@@ -551,8 +561,8 @@ namespace Winstreak
 			// start parsing the data
 			var rank = 1;
 
-			var table = new Table(8);
-			table.AddRow("Rank", "LVL", "Username", "Finals", "Beds", "FKDR", "Score", "Assessment")
+			var table = new Table(9);
+			table.AddRow("Rank", "LVL", "Username", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
@@ -588,6 +598,7 @@ namespace Winstreak
 					totalDeaths == 0
 						? "N/A"
 						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
+					string.Empty,
 					Math.Round(result.Score, 2),
 					DetermineScoreMeaning(result.Score, true)
 				);
@@ -607,6 +618,9 @@ namespace Winstreak
 							? "N/A"
 							: Math.Round((double) teammate.FinalKills / teammate.FinalDeaths, 2)
 								.ToString(CultureInfo.InvariantCulture),
+						teammate.Winstreak == -1
+							? "N/A"
+							: teammate.Winstreak.ToString(),
 						Math.Round(teammate.Score, 2),
 						DetermineScoreMeaning(teammate.Score, true)
 					);
@@ -618,6 +632,7 @@ namespace Winstreak
 						string.Empty,
 						"N/A",
 						ansiColorToUse + erroredPlayers + ResetAnsi,
+						string.Empty,
 						string.Empty,
 						string.Empty,
 						string.Empty,
