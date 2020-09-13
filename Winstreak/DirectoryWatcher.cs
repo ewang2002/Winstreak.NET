@@ -33,13 +33,13 @@ namespace Winstreak
 			.Append(
 				"> -tc: Determines whether the console should be cleared when a screenshot is provided.")
 			.AppendLine()
-			.Append("> -cache: Checks how many entries are cached.")
+			.Append("> -status: Views program status.")
 			.AppendLine()
 			.Append("> -emptycache: Empties the cache.")
 			.AppendLine()
-			.Append("> -ratelimit OR -rate: Checks the current API rate limit.")
+			.Append("> -gamemode OR -gm: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
 			.AppendLine()
-			.Append("> -switch OR -s: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
+			.Append("> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data. By default, this is set to the Score value.")
 			.AppendLine()
 			.Append("> -help OR -h: Shows this menu.")
 			.AppendLine()
@@ -58,6 +58,8 @@ namespace Winstreak
 
 		public static HypixelApi HypixelApi;
 		public static bool ApiKeyValid;
+
+		public static SortType SortingType = SortType.Score;
 
 		public static async Task Run(ConfigFile file)
 		{
@@ -147,8 +149,8 @@ namespace Winstreak
 						case "-c":
 							Console.Clear();
 							continue;
-						case "-switch":
-						case "-s":
+						case "-gamemode":
+						case "-gm":
 							Mode = Mode == 34 ? 12 : 34;
 							Console.WriteLine($"[INFO] Set parser gamemode to: {GamemodeIntToStr()}");
 							Console.WriteLine(Divider);
@@ -160,8 +162,14 @@ namespace Winstreak
 								: "[INFO] Console will not be cleared once a screenshot is provided.");
 							Console.WriteLine(Divider);
 							continue;
-						case "-cache":
+						case "-status":
+							var valid = HypixelApi != null && ApiKeyValid;
+							Console.WriteLine($"[INFO] Hypixel API: {(HypixelApi != null && ApiKeyValid ? "Valid" : "Invalid")}");
+							Console.WriteLine(valid
+								? $"[INFO] Usage: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
+								: "[INFO] Usage: Unlimited (Plancke)");
 							Console.WriteLine($"[INFO] Cache Length: {CachedData.Length}");
+							Console.WriteLine($"[INFO] Sort Mode: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-emptycache":
@@ -169,17 +177,29 @@ namespace Winstreak
 							CachedData.Empty();
 							Console.WriteLine(Divider);
 							continue;
-						case "-rate":
-						case "-ratelimit":
-							if (HypixelApi != null && ApiKeyValid)
-								Console.WriteLine(
-									$"[INFO] API Requests Made: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}.");
-							else
-								Console.WriteLine($"[INFO] Hypixel API is not used.");
+						case "-sortmode":
+						case "-sort":
+						case "-s":
+							SortingType = SortingType switch
+							{
+								SortType.Score => SortType.Beds,
+								SortType.Beds => SortType.Finals,
+								SortType.Finals => SortType.Fkdr,
+								SortType.Fkdr => SortType.Winstreak,
+								SortType.Winstreak => SortType.Level,
+								_ => SortType.Score
+							};
+
+							Console.WriteLine($"[INFO] Sorting By: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
 					}
-
+					/*
+					Winstreak,
+					Score,
+					Beds,
+					Finals,
+					Fkdr*/
 					Console.WriteLine(HelpInfo);
 					Console.WriteLine(Divider);
 					continue;
@@ -385,10 +405,6 @@ namespace Winstreak
 				}
 
 				nickedPlayers.AddRange(checker.ErroredPlayers);
-
-				nameResults = nameResults
-					.OrderByDescending(x => x.Score)
-					.ToList();
 			}
 			else
 			{
@@ -415,6 +431,10 @@ namespace Winstreak
 
 				nickedPlayers.AddRange(checker.ErroredPlayers.ToList());
 			}
+
+			nameResults = nameResults
+				.OrderByDescending(SortBySpecifiedType())
+				.ToList();
 
 			reqTime.Stop();
 			var apiRequestTime = reqTime.Elapsed;
@@ -552,7 +572,7 @@ namespace Winstreak
 			}
 
 			teamInfo = teamInfo
-				.OrderByDescending(x => x.Score)
+				.OrderByDescending(TeamSortBySpecifiedType())
 				.ToList();
 
 			reqTime.Stop();
@@ -581,7 +601,7 @@ namespace Winstreak
 				};
 
 				var allAvailablePlayers = result.AvailablePlayers
-					.OrderByDescending(x => x.Score)
+					.OrderByDescending(x => SortBySpecifiedType())
 					.ToArray();
 
 				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
@@ -670,5 +690,46 @@ namespace Winstreak
 				34 => "3v3v3v3s/4v4v4v4s/4v4s",
 				_ => throw new ArgumentOutOfRangeException(nameof(Mode), "Gamemode must either be 34 or 12.")
 			};
+
+
+		internal static Func<BedwarsData, double> SortBySpecifiedType()
+			=> SortingType switch
+			{
+				SortType.Beds => data => data.BrokenBeds,
+				SortType.Finals => data => data.FinalKills,
+				SortType.Fkdr => data =>
+					data.FinalDeaths == 0 ? data.FinalKills : data.FinalKills / (double) data.FinalDeaths,
+				SortType.Score => data => data.Score,
+				SortType.Winstreak => data => data.Winstreak,
+				SortType.Level => data => data.Level,
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+		internal static Func<TeamInfoResults, double> TeamSortBySpecifiedType()
+			=> SortingType switch
+			{
+				SortType.Beds => data => data.AvailablePlayers.Sum(x => x.BrokenBeds),
+				SortType.Finals => data => data.AvailablePlayers.Sum(x => x.FinalKills),
+				SortType.Fkdr => data =>
+				{
+					var fd = data.AvailablePlayers.Sum(x => x.FinalDeaths);
+					var fk = data.AvailablePlayers.Sum(x => x.FinalKills);
+					return fd == 0 ? fk : fk / (double) fd; 
+				},
+				SortType.Score => data => data.Score,
+				SortType.Winstreak => data => data.AvailablePlayers.Sum(x => x.Winstreak),
+				SortType.Level => data => data.AvailablePlayers.Sum(x => x.Level),
+				_ => throw new ArgumentOutOfRangeException()
+			};
+	}
+
+	public enum SortType
+	{
+		Winstreak,
+		Score,
+		Beds,
+		Finals,
+		Fkdr,
+		Level
 	}
 }

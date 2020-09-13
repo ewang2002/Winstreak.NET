@@ -64,10 +64,6 @@ namespace Winstreak.WebApi.Plancke.Checker
 			TotalWins = totalWins;
 			TotalLosses = totalLosses;
 
-			namesToWorryAbout = namesToWorryAbout
-				.OrderByDescending(x => x.Score)
-				.ToList();
-
 			return namesToWorryAbout;
 		}
 	}
