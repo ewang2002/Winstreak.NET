@@ -194,12 +194,7 @@ namespace Winstreak
 							Console.WriteLine(Divider);
 							continue;
 					}
-					/*
-					Winstreak,
-					Score,
-					Beds,
-					Finals,
-					Fkdr*/
+
 					Console.WriteLine(HelpInfo);
 					Console.WriteLine(Divider);
 					continue;
@@ -601,7 +596,7 @@ namespace Winstreak
 				};
 
 				var allAvailablePlayers = result.AvailablePlayers
-					.OrderByDescending(x => SortBySpecifiedType())
+					.OrderByDescending(SortBySpecifiedType())
 					.ToArray();
 
 				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
@@ -690,7 +685,6 @@ namespace Winstreak
 				34 => "3v3v3v3s/4v4v4v4s/4v4s",
 				_ => throw new ArgumentOutOfRangeException(nameof(Mode), "Gamemode must either be 34 or 12.")
 			};
-
 
 		internal static Func<BedwarsData, double> SortBySpecifiedType()
 			=> SortingType switch
