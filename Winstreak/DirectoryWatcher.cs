@@ -93,6 +93,7 @@ namespace Winstreak
 			Console.WriteLine(
 				$"[INFO] Using Hypixel API: {(file.HypixelApiKey != string.Empty && ApiKeyValid ? "Yes" : "No")}");
 			Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
+			Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
 			Console.WriteLine();
 			Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
 			Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
@@ -318,6 +319,9 @@ namespace Winstreak
 				await LobbyChecker(allNames[TeamColor.Unknown], timeTaken);
 			else
 				await GameCheck(allNames, timeTaken);
+
+			if (Config.DeleteScreenshot)
+				File.Delete(path);
 		}
 
 		private static async Task LobbyChecker(IEnumerable<string> names, TimeSpan timeTaken)

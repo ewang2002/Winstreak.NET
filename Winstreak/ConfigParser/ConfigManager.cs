@@ -18,7 +18,8 @@ namespace Winstreak.ConfigParser
 				PathToMinecraftFolder = string.Empty,
 				RetryMax = 2,
 				RetryDelay = 250,
-				ScreenshotDelay = 250
+				ScreenshotDelay = 250,
+				DeleteScreenshot = false
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
@@ -85,6 +86,9 @@ namespace Winstreak.ConfigParser
 						break;
 					case "DANGEROUS_PLAYERS":
 						configFile.DangerousPlayers = val.Split(",").Select(x => x.Trim()).ToArray();
+						break;
+					case "DELETE_SCREENSHOT":
+						configFile.DeleteScreenshot = int.TryParse(val, out var v6) && v6 == 1;
 						break;
 				}
 			}

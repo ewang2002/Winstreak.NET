@@ -41,7 +41,8 @@ namespace Winstreak
 				RetryMax = 2,
 				ScreenshotDelay = 250,
 				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
-				DangerousPlayers = new string[0]
+				DangerousPlayers = new string[0],
+				DeleteScreenshot = false
 			};
 
 			if (configFileInfo != null)

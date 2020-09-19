@@ -58,4 +58,10 @@ GAMEMODE_TYPE=
 # Hypixel API Key
 # If specified and valid, the program will send requests to Hypixel
 # Instead of using Plancke.
+# To get an API key, run this command in the lobby: /api new 
 HYPIXEL_API_KEY=
+
+# Whether to delete the screenshot after processing or not.
+# 1 = true (Delete); 2 = false (Keep)
+# Default Value=0
+DELETE_SCREENSHOT=

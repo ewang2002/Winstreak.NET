@@ -31,7 +31,8 @@ namespace Winstreak.WebApi.Plancke.Checker
 		/// <returns>This object.</returns>
 		public ResponseData Parse()
 		{
-			if (HtmlContent.Contains("Player does not exist!"))
+			if (HtmlContent.Contains("Player does not exist!") 
+				|| HtmlContent.Contains("Invalid Username/UUID!"))
 			{
 				SoloDataInfo = null;
 				DoubleDataInfo = null;

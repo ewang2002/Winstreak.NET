@@ -11,5 +11,6 @@
 		public int GamemodeType;
 		public string HypixelApiKey;
 		public string[] DangerousPlayers;
+		public bool DeleteScreenshot;
 	}
 }
