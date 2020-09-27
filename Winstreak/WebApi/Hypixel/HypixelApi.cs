@@ -81,11 +81,8 @@ namespace Winstreak.WebApi.Hypixel
 					RateLimitTimer.Stop();
 					RequestsMade = 0;
 				};
-
-				RequestsMade++;
 			}
-			else
-				RequestsMade++;
+			RequestsMade++;
 
 			var str = await resp.Content.ReadAsStringAsync();
 			if (str == string.Empty)
@@ -110,7 +107,7 @@ namespace Winstreak.WebApi.Hypixel
 		public async Task<(IList<BedwarsData> responses,
 				IList<string> nicked,
 				IList<string> unableToSearch)>
-			ProcessListOfPlayers(IList<string> names)
+			ProcessListOfPlayersAsync(IList<string> names)
 		{
 			var nicked = new List<string>();
 			var unableToSearch = new List<string>();

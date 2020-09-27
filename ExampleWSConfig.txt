@@ -1,7 +1,7 @@
 # Configuration file for Winstreak.NET
 # Please fill out before use. Once the program is in use, you will have to restart the program in order to make changes to this file.
 
-# Path to the Minecraft screenshots folder.
+# Path to the Minecraft folder.
 # Fill this out to override the default folder of .minecraft.
 # Default Value=
 # Example=C:\Path\To\Minecraft\Folder

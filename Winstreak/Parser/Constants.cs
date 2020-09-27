@@ -5,6 +5,7 @@ namespace Winstreak.Parser
 {
 	public static class Constants
 	{
+		// 1.8.9 and below 
 		public static readonly Color MvpPlusPlus = Color.FromArgb(255, 170, 0);
 		public static readonly Color MvpPlus = Color.FromArgb(85, 255, 255);
 		public static readonly Color Mvp = Color.FromArgb(85, 255, 255);
@@ -21,6 +22,24 @@ namespace Winstreak.Parser
 		public static readonly Color WhiteTeamColor = Color.FromArgb(255, 255, 255);
 		public static readonly Color PinkTeamColor = Color.FromArgb(255, 85, 255);
 
+		// 1.14 or something
+		public static readonly Color MvpPlusPlusLatest = Color.FromArgb(255, 170, 0);
+		public static readonly Color MvpPlusLatest = Color.FromArgb(85, 255, 255);
+		public static readonly Color MvpLatest = Color.FromArgb(85, 255, 255);
+		public static readonly Color VipPlusLatest = Color.FromArgb(85, 255, 85);
+		public static readonly Color VipLatest = Color.FromArgb(85, 255, 85);
+		public static readonly Color NoneLatest = Color.FromArgb(170, 170, 170);
+
+		public static readonly Color BlueTeamColorLatest = Color.FromArgb(85, 85, 255);
+		public static readonly Color GreenTeamColorLatest = Color.FromArgb(85, 255, 85);
+		public static readonly Color RedTeamColorLatest = Color.FromArgb(255, 85, 85);
+		public static readonly Color YellowTeamColorLatest = Color.FromArgb(255, 255, 85);
+		public static readonly Color AquaTeamColorLatest = Color.FromArgb(85, 255, 255);
+		public static readonly Color GreyTeamColorLatest = Color.FromArgb(85, 85, 85);
+		public static readonly Color WhiteTeamColorLatest = Color.FromArgb(255, 255, 255);
+		public static readonly Color PinkTeamColorLatest = Color.FromArgb(255, 85, 255);
+
+		// bin to char
 		public static readonly IDictionary<string, string> BinaryToCharactersMap;
 
 		static Constants()

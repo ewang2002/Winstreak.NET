@@ -13,7 +13,7 @@ namespace Winstreak.Parser
 	/// <summary>
 	/// Parses a screenshot containing the member tab list.
 	/// </summary>
-	public class NameParser : IDisposable
+	public sealed class NameParser : IDisposable
 	{
 		/// <summary>
 		/// The image.

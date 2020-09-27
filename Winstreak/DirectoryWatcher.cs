@@ -366,7 +366,7 @@ namespace Winstreak
 			// check hypixel api
 			if (HypixelApi != null && ApiKeyValid)
 			{
-				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(namesToCheck);
+				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayersAsync(namesToCheck);
 				nickedPlayers = nicked.ToList();
 
 				foreach (var resp in responses)
@@ -522,7 +522,7 @@ namespace Winstreak
 
 				if (HypixelApi != null && ApiKeyValid)
 				{
-					var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayers(actualNamesToCheck);
+					var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayersAsync(actualNamesToCheck);
 
 					foreach (var data in responses)
 					{
