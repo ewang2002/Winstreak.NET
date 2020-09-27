@@ -283,7 +283,14 @@ namespace Winstreak.Parser
 			   || Mvp.IsRgbEqualTo(color)
 			   || VipPlus.IsRgbEqualTo(color)
 			   || Vip.IsRgbEqualTo(color)
-			   || None.IsRgbEqualTo(color);
+			   || None.IsRgbEqualTo(color)
+			   // 1.14+
+			   || MvpPlusPlus == color
+			   || MvpPlus == color
+			   || Mvp == color
+			   || VipPlus == color
+			   || Vip == color
+			   || None == color;
 
 		/// <summary>
 		/// Determines whether a color is a valid team color.
@@ -295,12 +302,22 @@ namespace Winstreak.Parser
 			var generalColors = RedTeamColor.IsRgbEqualTo(color)
 			                    || GreenTeamColor.IsRgbEqualTo(color)
 			                    || YellowTeamColor.IsRgbEqualTo(color)
-			                    || BlueTeamColor.IsRgbEqualTo(color);
+			                    || BlueTeamColor.IsRgbEqualTo(color)
+								// 1.14+
+			                    || RedTeamColor == color
+			                    || GreenTeamColor == color
+			                    || YellowTeamColor == color
+			                    || BlueTeamColor == color;
 
 			var accountForOnesTwos = GreyTeamColor.IsRgbEqualTo(color)
 			                         || AquaTeamColor.IsRgbEqualTo(color)
 			                         || PinkTeamColor.IsRgbEqualTo(color)
-			                         || WhiteTeamColor.IsRgbEqualTo(color);
+			                         || WhiteTeamColor.IsRgbEqualTo(color)
+									 // 1.14+
+			                         || GreyTeamColor == color
+			                         || AquaTeamColor == color
+			                         || PinkTeamColor == color
+			                         || WhiteTeamColor == color; 
 
 			return Mode == 12
 				? generalColors || accountForOnesTwos

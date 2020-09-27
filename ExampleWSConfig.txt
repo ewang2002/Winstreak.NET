@@ -62,6 +62,6 @@ GAMEMODE_TYPE=
 HYPIXEL_API_KEY=
 
 # Whether to delete the screenshot after processing or not.
-# 1 = true (Delete); 2 = false (Keep)
+# 1 = true (Delete); 0 = false (Keep)
 # Default Value=0
 DELETE_SCREENSHOT=

@@ -13,10 +13,15 @@ namespace Winstreak.WebApi.Hypixel
 {
 	public class HypixelApi
 	{
-		public int MaximumRequestsInRateLimit = 120;
-		public static TimeSpan HypixelRateLimit = TimeSpan.FromMinutes(1);
+		/// <summary>
+		/// The maximum number of requests that can be made in "HypixelRateLimit"
+		/// </summary>
+		public static int MaximumRequestsInRateLimit = 120;
 
-		private readonly string _apiKey;
+		/// <summary>
+		/// The amount of time before the rate limit is reset. 
+		/// </summary>
+		public static TimeSpan HypixelRateLimit = TimeSpan.FromMinutes(1);
 
 		/// <summary>
 		/// The timer.
@@ -27,6 +32,8 @@ namespace Winstreak.WebApi.Hypixel
 		/// The number of requests made within the time period.
 		/// </summary>
 		public int RequestsMade { get; set; }
+
+		private readonly string _apiKey;
 
 		/// <summary>
 		/// Hypixel API constructor.
