@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Winstreak.Parser.ImgExcept
+namespace Winstreak.Parsers.ImageParser.ImgExcept
 {
 	public class InvalidImageException : Exception
 	{

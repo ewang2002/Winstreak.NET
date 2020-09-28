@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 
-namespace Winstreak.Parser
+namespace Winstreak.Parsers.ImageParser
 {
 	public static class Constants
 	{

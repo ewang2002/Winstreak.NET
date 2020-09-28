@@ -1,4 +1,4 @@
-﻿namespace Winstreak.ConfigParser
+﻿namespace Winstreak.Parsers.ConfigParser
 {
 	public struct ConfigFile
 	{

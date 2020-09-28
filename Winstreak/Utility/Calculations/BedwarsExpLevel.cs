@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Winstreak.Calculations
+namespace Winstreak.Utility.Calculations
 {
 	public static class BedwarsExpLevel
 	{

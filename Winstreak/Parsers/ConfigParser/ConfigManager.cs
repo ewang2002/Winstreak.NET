@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Winstreak.ConfigParser
+namespace Winstreak.Parsers.ConfigParser
 {
 	public static class ConfigManager
 	{

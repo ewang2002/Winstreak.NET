@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Winstreak.Parser
+namespace Winstreak.Parsers.ImageParser
 {
 	public abstract class ParserHelper
 	{

@@ -4,11 +4,11 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using Winstreak.Extensions;
-using Winstreak.Imaging;
-using Winstreak.Parser.ImgExcept;
-using static Winstreak.Parser.Constants;
+using Winstreak.Parsers.ImageParser.Imaging;
+using Winstreak.Parsers.ImageParser.ImgExcept;
+using static Winstreak.Parsers.ImageParser.Constants;
 
-namespace Winstreak.Parser
+namespace Winstreak.Parsers.ImageParser
 {
 	/// <summary>
 	/// Parses a screenshot containing the member tab list.

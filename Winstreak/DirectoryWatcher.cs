@@ -7,19 +7,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Winstreak.Calculations;
-using Winstreak.ConfigParser;
-using Winstreak.ConsoleTable;
 using Winstreak.Extensions;
-using Winstreak.Imaging;
-using Winstreak.Parser;
+using Winstreak.Parsers.ConfigParser;
+using Winstreak.Parsers.ImageParser;
+using Winstreak.Parsers.ImageParser.Imaging;
+using Winstreak.Utility.Calculations;
+using Winstreak.Utility.ConsoleTable;
 using Winstreak.WebApi;
 using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Hypixel;
 using Winstreak.WebApi.Plancke;
 using static Winstreak.WebApi.ApiConstants;
 using Winstreak.WebApi.Plancke.Checker;
-using static Winstreak.ConsoleTable.AnsiConstants;
+using static Winstreak.Utility.ConsoleTable.AnsiConstants;
 
 namespace Winstreak
 {

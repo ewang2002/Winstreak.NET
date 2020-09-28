@@ -32,7 +32,7 @@
 using System;
 using System.Drawing;
 
-namespace Winstreak.Imaging
+namespace Winstreak.Parsers.ImageParser.Imaging
 {
 	/// <summary>
 	///   RGB components.

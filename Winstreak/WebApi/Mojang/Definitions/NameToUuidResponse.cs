@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace Winstreak.WebApi.Mojang
+namespace Winstreak.WebApi.Mojang.Definitions
 {
-	internal class MojangApiResponse
+	internal class NameToUuidResponse
 	{
 		[JsonProperty("name")]
 		public string Name { get; set; }

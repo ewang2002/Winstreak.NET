@@ -1,4 +1,4 @@
-﻿namespace Winstreak.ConsoleTable
+﻿namespace Winstreak.Utility.ConsoleTable
 {
 	public enum Position
 	{

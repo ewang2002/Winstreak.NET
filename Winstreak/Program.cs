@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Winstreak.ConfigParser;
+using Winstreak.Parsers.ConfigParser;
 
 namespace Winstreak
 {

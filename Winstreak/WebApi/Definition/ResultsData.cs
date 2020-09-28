@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Winstreak.Calculations;
-using Winstreak.Parser;
+using Winstreak.Parsers.ImageParser;
+using Winstreak.Utility.Calculations;
 
 namespace Winstreak.WebApi.Definition
 {

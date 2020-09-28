@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Winstreak.ConsoleTable
+namespace Winstreak.Utility.ConsoleTable
 {
 	public class Table
 	{

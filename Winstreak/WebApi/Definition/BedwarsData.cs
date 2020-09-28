@@ -1,7 +1,7 @@
 ﻿using System;
-using Winstreak.Calculations;
+using Winstreak.Utility.Calculations;
 using Winstreak.WebApi.Hypixel.Definitions;
-using static Winstreak.Calculations.BedwarsExpLevel;
+using static Winstreak.Utility.Calculations.BedwarsExpLevel;
 
 namespace Winstreak.WebApi.Definition
 {

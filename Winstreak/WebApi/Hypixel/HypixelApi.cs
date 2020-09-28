@@ -79,6 +79,7 @@ namespace Winstreak.WebApi.Hypixel
 			};
 
 			using var resp = await ApiClient.SendAsync(reqMsgInfo);
+
 			// start timer
 			if (!RateLimitTimer.Enabled)
 			{
