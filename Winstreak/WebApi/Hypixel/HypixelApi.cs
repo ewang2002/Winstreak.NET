@@ -92,6 +92,9 @@ namespace Winstreak.WebApi.Hypixel
 			}
 			RequestsMade++;
 
+			if (!resp.IsSuccessStatusCode)
+				throw new Exception("Invalid status code provided. Perhaps your input was invalid?");
+
 			var str = await resp.Content.ReadAsStringAsync();
 			if (str == string.Empty)
 				throw new Exception("No response data to parse.");
@@ -108,6 +111,96 @@ namespace Winstreak.WebApi.Hypixel
 			=> await SendRequestAsync<HypixelPlayerApiResponse>($"player?name={name}&");
 
 		/// <summary>
+		/// Gets friend data from Hypixel's API.
+		/// </summary>
+		/// <param name="uuid">The Uuid to look up.</param>
+		/// <returns>The result.</returns>
+		public async Task<FriendsApiResponse> GetFriendsInfoAsync(string uuid)
+			=> await SendRequestAsync<FriendsApiResponse>($"friends?uuid={uuid}&");
+
+		/// <summary>
+		/// Gets guild data from Hypixel's API.
+		/// </summary>
+		/// <param name="uuid">The Uuid to look up.</param>
+		/// <returns>The result.</returns>
+		public async Task<GuildsApiResponse> GetGuildInfoAsync(string uuid)
+			=> await SendRequestAsync<GuildsApiResponse>($"guild?player={uuid}&");
+
+		/// <summary>
+		/// Processes a list of Uuids for friends data.
+		/// </summary>
+		/// <param name="uuids">The Uuids to look up.</param>
+		/// <returns>A tuple containing all responses and list of names that couldn't be processed due to rate limit issues.</returns>
+		public async Task<(IList<FriendsApiResponse> responses, 
+				IList<string> unableToSearch)>
+			GetAllFriendsAsync(IList<string> uuids)
+		{
+			var responses = new List<FriendsApiResponse>();
+			var unableToSearch = new List<string>();
+			var actualUuidToLookUp = new List<string>();
+
+			var tempReqMade = RequestsMade;
+			foreach (var uuid in uuids)
+			{
+				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
+				{
+					unableToSearch.Add(uuid);
+					continue;
+				}
+
+				tempReqMade++;
+				actualUuidToLookUp.Add(uuid);
+			}
+
+			if (actualUuidToLookUp.Count == 0)
+				return (responses, unableToSearch);
+
+			var requests = actualUuidToLookUp
+				.Select(GetFriendsInfoAsync)
+				.ToArray();
+
+			responses.AddRange(await Task.WhenAll(requests));
+			return (responses, unableToSearch);
+		}
+
+		/// <summary>
+		/// Processes a list of Uuids for guild data.
+		/// </summary>
+		/// <param name="uuids">The Uuids to look up.</param>
+		/// <returns>A tuple containing all responses and list of names that couldn't be processed due to rate limit issues.</returns>
+		public async Task<(IList<GuildsApiResponse> responses,
+				IList<string> unableToSearch)>
+			GetAllGuildsAsync(IList<string> uuids)
+		{
+			var responses = new List<GuildsApiResponse>();
+			var unableToSearch = new List<string>();
+			var actualUuidToLookUp = new List<string>();
+
+			var tempReqMade = RequestsMade;
+			foreach (var uuid in uuids)
+			{
+				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
+				{
+					unableToSearch.Add(uuid);
+					continue;
+				}
+
+				tempReqMade++;
+				actualUuidToLookUp.Add(uuid);
+			}
+
+			if (actualUuidToLookUp.Count == 0)
+				return (responses, unableToSearch);
+
+			var requests = actualUuidToLookUp
+				.Select(GetGuildInfoAsync)
+				.ToArray();
+
+			responses.AddRange(await Task.WhenAll(requests));
+			return (responses, unableToSearch);
+		}
+
+		/// <summary>
 		/// Processes a list of names. 
 		/// </summary>
 		/// <param name="names">The names to look up.</param>
@@ -115,7 +208,7 @@ namespace Winstreak.WebApi.Hypixel
 		public async Task<(IList<BedwarsData> responses,
 				IList<string> nicked,
 				IList<string> unableToSearch)>
-			ProcessListOfPlayersAsync(IList<string> names)
+			GetAllPlayersAsync(IList<string> names)
 		{
 			var nicked = new List<string>();
 			var unableToSearch = new List<string>();

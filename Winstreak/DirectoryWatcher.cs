@@ -46,7 +46,7 @@ namespace Winstreak
 			.Append("> -quit OR -q: Quits the program.")
 			.ToString();
 
-		public static string Divider = "=====================================";
+		public static readonly string Divider = "=====================================";
 
 		public static DirectoryInfo McScreenshotsPath;
 
@@ -169,13 +169,13 @@ namespace Winstreak
 							Console.WriteLine(valid
 								? $"[INFO] Usage: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
 								: "[INFO] Usage: Unlimited (Plancke)");
-							Console.WriteLine($"[INFO] Cache Length: {CachedData.Length}");
+							Console.WriteLine($"[INFO] Cache Length: {CachedPlayerData.Length}");
 							Console.WriteLine($"[INFO] Sort Mode: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-emptycache":
 							Console.WriteLine("[INFO] Cache has been cleared.");
-							CachedData.Empty();
+							CachedPlayerData.Empty();
 							Console.WriteLine(Divider);
 							continue;
 						case "-sortmode":
@@ -344,13 +344,13 @@ namespace Winstreak
 			var namesToCheck = new List<string>();
 			foreach (var name in names)
 			{
-				if (!CachedData.Contains(name))
+				if (!CachedPlayerData.Contains(name))
 				{
 					namesToCheck.Add(name);
 					continue;
 				}
 
-				var data = CachedData[name];
+				var data = CachedPlayerData[name];
 				nameResults.Add(data);
 
 				totalWins += data.Wins;
@@ -366,7 +366,8 @@ namespace Winstreak
 			// check hypixel api
 			if (HypixelApi != null && ApiKeyValid)
 			{
-				var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayersAsync(namesToCheck);
+				var (responses, nicked, unableToSearch) = await HypixelApi
+					.GetAllPlayersAsync(namesToCheck);
 				nickedPlayers = nicked.ToList();
 
 				foreach (var resp in responses)
@@ -378,7 +379,7 @@ namespace Winstreak
 					totalFinalDeaths += resp.FinalDeaths;
 					levels += resp.Level;
 
-					CachedData.TryAdd(resp.Name, resp);
+					CachedPlayerData.TryAdd(resp.Name, resp);
 					nameResults.Add(resp);
 				}
 
@@ -399,7 +400,7 @@ namespace Winstreak
 					if (playerInfo.Level != -1)
 						levels += playerInfo.Level;
 
-					CachedData.TryAdd(playerInfo.Name, playerInfo);
+					CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
@@ -424,7 +425,7 @@ namespace Winstreak
 					if (playerInfo.Level != -1)
 						levels += playerInfo.Level;
 
-					CachedData.TryAdd(playerInfo.Name, playerInfo);
+					CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
@@ -509,25 +510,25 @@ namespace Winstreak
 				var teamStats = new List<BedwarsData>();
 				foreach (var name in value)
 				{
-					if (!CachedData.Contains(name))
+					if (!CachedPlayerData.Contains(name))
 					{
 						actualNamesToCheck.Add(name);
 						continue;
 					}
 
-					teamStats.Add(CachedData[name]);
+					teamStats.Add(CachedPlayerData[name]);
 				}
 
 				var nickedPlayers = new List<string>();
 
 				if (HypixelApi != null && ApiKeyValid)
 				{
-					var (responses, nicked, unableToSearch) = await HypixelApi.ProcessListOfPlayersAsync(actualNamesToCheck);
+					var (responses, nicked, unableToSearch) = await HypixelApi.GetAllPlayersAsync(actualNamesToCheck);
 
 					foreach (var data in responses)
 					{
-						if (!CachedData.Contains(data.Name))
-							CachedData.TryAdd(data.Name, data);
+						if (!CachedPlayerData.Contains(data.Name))
+							CachedPlayerData.TryAdd(data.Name, data);
 						teamStats.Add(data);
 					}
 
@@ -541,7 +542,7 @@ namespace Winstreak
 						var p = new ResponseParser(teamData);
 						foreach (var playerInfo in p.GetPlayerDataFromMap())
 						{
-							CachedData.TryAdd(playerInfo.Name, playerInfo);
+							CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 							teamStats.Add(playerInfo);
 						}
 
@@ -558,7 +559,7 @@ namespace Winstreak
 
 					foreach (var data in checker.GetPlayerDataFromMap())
 					{
-						CachedData.TryAdd(data.Name, data);
+						CachedPlayerData.TryAdd(data.Name, data);
 						teamStats.Add(data);
 					}
 
@@ -673,12 +674,14 @@ namespace Winstreak
 
 		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
-			if (score <= 20) return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
+			if (score <= 20) 
+				return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
 			if (score > 20 && score <= 40)
 				return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
 			if (score > 40 && score <= 60)
 				return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
-			if (score > 60 && score <= 80) return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
+			if (score > 60 && score <= 80) 
+				return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
 			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
 		}
 

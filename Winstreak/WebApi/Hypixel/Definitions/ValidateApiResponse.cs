@@ -10,11 +10,11 @@ namespace Winstreak.WebApi.Hypixel.Definitions
 
 #nullable enable
 		[JsonProperty("record")]
-		public Record? Record { get; set; }
+		public ApiRespRecord? Record { get; set; }
 #nullable disable
 	}
 
-	public class Record
+	public class ApiRespRecord
 	{
 		[JsonProperty("key")]
 		public Guid Key { get; set; }

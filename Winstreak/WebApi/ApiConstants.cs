@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 using Winstreak.WebApi.Definition;
+using Winstreak.WebApi.Hypixel.Definitions;
 
 namespace Winstreak.WebApi
 {
@@ -8,7 +9,17 @@ namespace Winstreak.WebApi
 		/// <summary>
 		/// The cached data.
 		/// </summary>
-		public static CacheDictionary<string, BedwarsData> CachedData; 
+		public static CacheDictionary<string, BedwarsData> CachedPlayerData;
+
+		/// <summary>
+		/// The cached friends data.
+		/// </summary>
+		public static CacheDictionary<string, FriendsApiResponse> CachedFriendsData;
+
+		/// <summary>
+		/// The cached guild data. 
+		/// </summary>
+		public static CacheDictionary<string, GuildsApiResponse> CachedGuildData; 
 
 		/// <summary>
 		/// The API Client.
@@ -23,7 +34,10 @@ namespace Winstreak.WebApi
 			ApiClient = new HttpClient();
 			ApiClient.DefaultRequestHeaders.Add("User-Agent",
 				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
-			CachedData = new CacheDictionary<string, BedwarsData>();
+
+			CachedPlayerData = new CacheDictionary<string, BedwarsData>();
+			CachedFriendsData = new CacheDictionary<string, FriendsApiResponse>();
+			CachedGuildData = new CacheDictionary<string, GuildsApiResponse>();
 		}
 	}
 }
