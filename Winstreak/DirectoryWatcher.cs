@@ -319,7 +319,7 @@ namespace Winstreak
 				await LobbyChecker(allNames[TeamColor.Unknown], timeTaken);
 			else
 				await GameCheck(allNames, timeTaken);
-
+			
 			if (Config.DeleteScreenshot)
 				File.Delete(path);
 		}
