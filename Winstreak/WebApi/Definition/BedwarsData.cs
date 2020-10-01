@@ -8,6 +8,8 @@ namespace Winstreak.WebApi.Definition
 	public readonly struct BedwarsData
 	{
 		public readonly string Name;
+		// This will be an empty string if Plancke is used. 
+		public readonly string Uuid; 
 		public readonly int Kills;
 		public readonly int Deaths;
 		public readonly int FinalKills;
@@ -21,6 +23,7 @@ namespace Winstreak.WebApi.Definition
 
 		public BedwarsData(
 			string name,
+			string uuid,
 			int kills,
 			int deaths,
 			int finalKills,
@@ -33,6 +36,7 @@ namespace Winstreak.WebApi.Definition
 		)
 		{
 			Name = name;
+			Uuid = uuid;
 			Kills = kills;
 			Deaths = deaths;
 			FinalKills = finalKills;
@@ -50,6 +54,7 @@ namespace Winstreak.WebApi.Definition
 			if (resp.Player == null)
 				throw new ArgumentNullException(nameof(resp));
 			Name = resp.Player.DisplayName;
+			Uuid = resp.Player.Uuid;
 
 			if (resp.Player.Stats?.Bedwars == null)
 			{

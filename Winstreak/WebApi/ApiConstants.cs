@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Collections.Concurrent;
+using System.Net.Http;
 using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Hypixel.Definitions;
 
@@ -7,17 +8,22 @@ namespace Winstreak.WebApi
 	public static class ApiConstants
 	{
 		/// <summary>
+		/// Caching Names & UUID.
+		/// </summary>
+		public static ConcurrentDictionary<string, string> NameUuid = new ConcurrentDictionary<string, string>();
+
+		/// <summary>
 		/// The cached data.
 		/// </summary>
 		public static CacheDictionary<string, BedwarsData> CachedPlayerData;
 
 		/// <summary>
-		/// The cached friends data.
+		/// The cached friends data. K = Uuid, V = FriendsApiResponse
 		/// </summary>
 		public static CacheDictionary<string, FriendsApiResponse> CachedFriendsData;
 
 		/// <summary>
-		/// The cached guild data. 
+		/// The cached guild data. K = Uuid, V = FriendsApiResponse
 		/// </summary>
 		public static CacheDictionary<string, GuildsApiResponse> CachedGuildData; 
 

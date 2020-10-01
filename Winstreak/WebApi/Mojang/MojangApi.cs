@@ -24,11 +24,6 @@ namespace Winstreak.WebApi.Mojang
 		public static TimeSpan MojangRateLimit = TimeSpan.FromMinutes(10);
 
 		/// <summary>
-		/// Caching Names & UUID.
-		/// </summary>
-		public static ConcurrentDictionary<string, string> NameUuid = new ConcurrentDictionary<string, string>();
-
-		/// <summary>
 		/// The rate limit timer. 
 		/// </summary>
 		public static Timer RateLimitTimer;

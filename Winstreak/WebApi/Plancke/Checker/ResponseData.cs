@@ -100,6 +100,7 @@ namespace Winstreak.WebApi.Plancke.Checker
 			{
 				SoloDataInfo = new BedwarsData(
 					Name,
+					string.Empty,
 					int.Parse(soloDataArr[0]),
 					int.Parse(soloDataArr[1]),
 					int.Parse(soloDataArr[3]),
@@ -133,6 +134,7 @@ namespace Winstreak.WebApi.Plancke.Checker
 			{
 				DoubleDataInfo = new BedwarsData(
 					Name,
+					string.Empty,
 					int.Parse(doubleDataArr[0]),
 					int.Parse(doubleDataArr[1]),
 					int.Parse(doubleDataArr[3]),
@@ -165,6 +167,7 @@ namespace Winstreak.WebApi.Plancke.Checker
 			{
 				ThreesDataInfo = new BedwarsData(
 					Name,
+					string.Empty,
 					int.Parse(threeDataArr[0]),
 					int.Parse(threeDataArr[1]),
 					int.Parse(threeDataArr[3]),
@@ -197,6 +200,7 @@ namespace Winstreak.WebApi.Plancke.Checker
 			{
 				FoursDataInfo = new BedwarsData(
 					Name,
+					string.Empty,
 					int.Parse(fourDataArr[0]),
 					int.Parse(fourDataArr[1]),
 					int.Parse(fourDataArr[3]),
@@ -219,6 +223,7 @@ namespace Winstreak.WebApi.Plancke.Checker
 			{
 				TotalDataInfo = new BedwarsData(
 					Name,
+					string.Empty,
 					oneData.Kills + twoData.Kills + threesData.Kills + foursData.Kills,
 					oneData.Deaths + twoData.Deaths + threesData.Deaths + foursData.Deaths,
 					oneData.FinalKills + twoData.FinalKills + threesData.FinalKills + foursData.FinalKills,
