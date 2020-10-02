@@ -130,18 +130,24 @@ namespace Winstreak.WebApi.Hypixel
 		/// Processes a list of Uuids for friends data.
 		/// </summary>
 		/// <param name="uuids">The Uuids to look up.</param>
-		/// <returns>A tuple containing all responses and list of names that couldn't be processed due to rate limit issues.</returns>
-		public async Task<(IList<FriendsApiResponse> responses, 
+		/// <returns>A tuple containing all responses and list of uuids that couldn't be processed due to rate limit issues.</returns>
+		public async Task<(IList<(string uuid, FriendsApiResponse friends)> responses, 
 				IList<string> unableToSearch)>
 			GetAllFriendsAsync(IList<string> uuids)
 		{
-			var responses = new List<FriendsApiResponse>();
+			var responses = new List<(string, FriendsApiResponse)>();
 			var unableToSearch = new List<string>();
 			var actualUuidToLookUp = new List<string>();
 
 			var tempReqMade = RequestsMade;
 			foreach (var uuid in uuids)
 			{
+				if (CachedFriendsData.Contains(uuid))
+				{
+					responses.Add((uuid, CachedFriendsData[uuid]));
+					continue;
+				}
+
 				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(uuid);
@@ -159,7 +165,17 @@ namespace Winstreak.WebApi.Hypixel
 				.Select(GetFriendsInfoAsync)
 				.ToArray();
 
-			responses.AddRange(await Task.WhenAll(requests));
+			var completedRequests = await Task.WhenAll(requests);
+			for (var i = 0; i < completedRequests.Length; i++)
+			{
+				var finishedReq = completedRequests[i];
+				if (!finishedReq.Success || finishedReq.Records == null)
+					continue;
+
+				responses.Add((actualUuidToLookUp[i], finishedReq));
+				// TODO is this the correct way to do it? 
+				CachedFriendsData.TryAdd(actualUuidToLookUp[i], finishedReq);
+			}
 			return (responses, unableToSearch);
 		}
 
@@ -179,6 +195,12 @@ namespace Winstreak.WebApi.Hypixel
 			var tempReqMade = RequestsMade;
 			foreach (var uuid in uuids)
 			{
+				if (CachedGuildData.Contains(uuid))
+				{
+					responses.Add(CachedGuildData[uuid]);
+					continue;
+				}
+
 				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(uuid);
@@ -196,7 +218,17 @@ namespace Winstreak.WebApi.Hypixel
 				.Select(GetGuildInfoAsync)
 				.ToArray();
 
-			responses.AddRange(await Task.WhenAll(requests));
+			var completedRequests = await Task.WhenAll(requests);
+			for (var i = 0; i < completedRequests.Length; i++)
+			{
+				var finishedReq = completedRequests[i];
+				if (!finishedReq.Success || finishedReq.Guild == null) 
+					continue;
+
+				responses.Add(finishedReq);
+				// TODO is this the correct way to do it? 
+				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq);
+			}
 			return (responses, unableToSearch);
 		}
 
@@ -219,6 +251,12 @@ namespace Winstreak.WebApi.Hypixel
 			var tempReqMade = RequestsMade;
 			foreach (var name in names)
 			{
+				if (CachedPlayerData.Contains(name))
+				{
+					responses.Add(CachedPlayerData[name]);
+					continue;
+				}
+
 				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(name);
@@ -241,7 +279,11 @@ namespace Winstreak.WebApi.Hypixel
 			{
 				var finishedReq = completedRequests[i];
 				if (finishedReq.Success && finishedReq.Player != null)
+				{
 					responses.Add(new BedwarsData(finishedReq));
+					CachedPlayerData.TryAdd(finishedReq.Player.DisplayName, new BedwarsData(finishedReq));
+					NameUuid.TryAdd(finishedReq.Player.DisplayName, finishedReq.Player.Uuid);
+				}
 				else
 					nicked.Add(actualNamesToLookUp[i]);
 			}

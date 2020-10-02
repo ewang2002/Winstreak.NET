@@ -338,38 +338,13 @@ namespace Winstreak
 			var totalBrokenBeds = 0;
 			var levels = 0;
 
-			// we assume this checks
-			// the entire cache
-			// so no need to check cache again
-			// except to add more people
 			var nameResults = new List<BedwarsData>();
-			var namesToCheck = new List<string>();
-			foreach (var name in names)
-			{
-				if (!CachedPlayerData.Contains(name))
-				{
-					namesToCheck.Add(name);
-					continue;
-				}
-
-				var data = CachedPlayerData[name];
-				nameResults.Add(data);
-
-				totalWins += data.Wins;
-				totalLosses += data.Losses;
-				totalFinalKills += data.FinalKills;
-				totalFinalDeaths += data.FinalDeaths;
-				totalBrokenBeds += data.BrokenBeds;
-
-				if (data.Level != -1)
-					levels += data.Level;
-			}
 
 			// check hypixel api
 			if (HypixelApi != null && ApiKeyValid)
 			{
 				var (responses, nicked, unableToSearch) = await HypixelApi
-					.GetAllPlayersAsync(namesToCheck);
+					.GetAllPlayersAsync(names.ToList());
 				nickedPlayers = nicked.ToList();
 
 				foreach (var resp in responses)
@@ -411,7 +386,7 @@ namespace Winstreak
 			else
 			{
 				// request data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(namesToCheck);
+				var planckeApiRequester = new PlanckeApiRequester(names.ToList());
 				// parse data
 				var nameData = await planckeApiRequester
 					.SendRequests();
@@ -440,8 +415,10 @@ namespace Winstreak
 
 			// let's get names needed for friends check
 			// first, we dont want any nicked people
-			var friendsData = new List<FriendsApiResponse>();
+			var friendsData = new List<(string uuid, FriendsApiResponse friends)>();
 			var nameFriendsUnable = new HashSet<string>();
+			var friendGroups = new List<HashSet<string>>();
+
 			if (HypixelApi != null && ApiKeyValid)
 			{
 				var namesNeededForFriends = new HashSet<(string name, string uuid)>();
@@ -450,23 +427,30 @@ namespace Winstreak
 					// this will only be empty if
 					// requested through plancke, which is a
 					// possibility considering rate limit. 
+					if (NameUuid.ContainsKey(playerData.Name))
+					{
+						namesNeededForFriends.Add((playerData.Name, NameUuid[playerData.Name]));
+						continue;
+					}
+
 					if (playerData.Uuid == string.Empty)
 					{
-						
 						var mojangResp = await MojangApi.GetUuidFromPlayerNameAsync(playerData.Name);
 						if (mojangResp == string.Empty)
+						{
+							nameFriendsUnable.Add(playerData.Name);
 							continue;
+						}
 
-
+						namesNeededForFriends.Add((playerData.Name, mojangResp));
 						continue;
 					}
 
 					if (CachedFriendsData.Contains(playerData.Uuid))
 					{
-						friendsData.Add(CachedFriendsData[playerData.Name]);
+						friendsData.Add((playerData.Uuid, CachedFriendsData[playerData.Uuid]));
 						continue;
 					}
-
 
 					namesNeededForFriends.Add((playerData.Name, playerData.Uuid));
 				}
@@ -475,9 +459,38 @@ namespace Winstreak
 					.GetAllFriendsAsync(namesNeededForFriends.Select(x => x.uuid)
 						.ToList());
 
+				foreach (var invalidUuid in unableToSearch)
+				{
+					var name = namesNeededForFriends
+						.Where(x => x.uuid == invalidUuid)
+						.ToArray();
+					if (!name.Any())
+						continue;
 
+					nameFriendsUnable.Add(name.First().name);
+				}
+
+				friendsData.AddRange(responses);
+
+				// sort each name into friend groups
+				// friendsData should only contain names from the particular lobby
+				foreach (var (uuid, fData) in friendsData)
+				{
+					var isFound = false;
+					for (var j = 0; j < friendGroups.Count; ++j)
+					{
+						if (friendGroups[j].Contains(uuid))
+						{
+							foreach (var record in fData.Records)
+							{
+								var otherUuid = record.UuidReceiver == uuid
+									? record.UuidSender
+									: record.UuidReceiver;
+							}
+						}
+					}
+				}
 			}
-
 
 			reqTime.Stop();
 			var apiRequestTime = reqTime.Elapsed;

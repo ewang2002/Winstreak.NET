@@ -44,6 +44,7 @@ namespace Winstreak.WebApi
 			CachedPlayerData = new CacheDictionary<string, BedwarsData>();
 			CachedFriendsData = new CacheDictionary<string, FriendsApiResponse>();
 			CachedGuildData = new CacheDictionary<string, GuildsApiResponse>();
+			NameUuid = new ConcurrentDictionary<string, string>();
 		}
 	}
 }
