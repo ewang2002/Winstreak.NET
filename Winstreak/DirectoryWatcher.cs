@@ -16,8 +16,6 @@ using Winstreak.Utility.ConsoleTable;
 using Winstreak.WebApi;
 using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Hypixel;
-using Winstreak.WebApi.Hypixel.Definitions;
-using Winstreak.WebApi.Mojang;
 using Winstreak.WebApi.Plancke;
 using static Winstreak.WebApi.ApiConstants;
 using Winstreak.WebApi.Plancke.Checker;
