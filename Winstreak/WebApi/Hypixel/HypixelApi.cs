@@ -174,7 +174,7 @@ namespace Winstreak.WebApi.Hypixel
 
 				responses.Add((actualUuidToLookUp[i], finishedReq));
 				// TODO is this the correct way to do it? 
-				CachedFriendsData.TryAdd(actualUuidToLookUp[i], finishedReq);
+				CachedFriendsData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromMinutes(45));
 			}
 			return (responses, unableToSearch);
 		}
@@ -227,7 +227,7 @@ namespace Winstreak.WebApi.Hypixel
 
 				responses.Add(finishedReq);
 				// TODO is this the correct way to do it? 
-				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq);
+				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromMinutes(45));
 			}
 			return (responses, unableToSearch);
 		}

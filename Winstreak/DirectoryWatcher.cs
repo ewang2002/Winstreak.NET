@@ -11,11 +11,14 @@ using Winstreak.Extensions;
 using Winstreak.Parsers.ConfigParser;
 using Winstreak.Parsers.ImageParser;
 using Winstreak.Parsers.ImageParser.Imaging;
+using Winstreak.Utility;
 using Winstreak.Utility.Calculations;
 using Winstreak.Utility.ConsoleTable;
 using Winstreak.WebApi;
 using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Hypixel;
+using Winstreak.WebApi.Hypixel.Definitions;
+using Winstreak.WebApi.Mojang;
 using Winstreak.WebApi.Plancke;
 using static Winstreak.WebApi.ApiConstants;
 using Winstreak.WebApi.Plancke.Checker;
@@ -39,7 +42,8 @@ namespace Winstreak
 			.AppendLine()
 			.Append("> -gamemode OR -gm: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
 			.AppendLine()
-			.Append("> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data. By default, this is set to the Score value.")
+			.Append(
+				"> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data. By default, this is set to the Score value.")
 			.AppendLine()
 			.Append("> -help OR -h: Shows this menu.")
 			.AppendLine()
@@ -165,17 +169,21 @@ namespace Winstreak
 							continue;
 						case "-status":
 							var valid = HypixelApi != null && ApiKeyValid;
-							Console.WriteLine($"[INFO] Hypixel API: {(HypixelApi != null && ApiKeyValid ? "Valid" : "Invalid")}");
+							Console.WriteLine(
+								$"[INFO] Hypixel API: {(HypixelApi != null && ApiKeyValid ? "Valid" : "Invalid")}");
 							Console.WriteLine(valid
 								? $"[INFO] Usage: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
 								: "[INFO] Usage: Unlimited (Plancke)");
-							Console.WriteLine($"[INFO] Cache Length: {CachedPlayerData.Length}");
+							Console.WriteLine($"[INFO] Player Cache Length: {CachedPlayerData.Length}");
+							Console.WriteLine($"[INFO] Friend Cache Length: {CachedFriendsData.Length}");
 							Console.WriteLine($"[INFO] Sort Mode: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-emptycache":
 							Console.WriteLine("[INFO] Cache has been cleared.");
 							CachedPlayerData.Empty();
+							CachedFriendsData.Empty();
+							CachedGuildData.Empty();
 							Console.WriteLine(Divider);
 							continue;
 						case "-sortmode":
@@ -319,12 +327,12 @@ namespace Winstreak
 				await LobbyChecker(allNames[TeamColor.Unknown], timeTaken);
 			else
 				await GameCheck(allNames, timeTaken);
-			
+
 			if (Config.DeleteScreenshot)
 				File.Delete(path);
 		}
 
-		private static async Task LobbyChecker(IEnumerable<string> names, TimeSpan timeTaken)
+		private static async Task LobbyChecker(IList<string> names, TimeSpan timeTaken)
 		{
 			var reqTime = new Stopwatch();
 			reqTime.Start();
@@ -411,12 +419,121 @@ namespace Winstreak
 				.OrderByDescending(SortBySpecifiedType())
 				.ToList();
 
+			// let's get names needed for friends check
+			// first, we dont want any nicked people
+			var friendsData = new List<(string uuid, FriendsApiResponse friends)>();
+			// names of people where we couldnt get friends data
+			var nameFriendsUnable = new HashSet<string>();
+			// groups of friends
+			var friendGroups = new List<IList<BedwarsData>>();
+
+			if (HypixelApi != null && ApiKeyValid)
+			{
+				var namesNeededForFriends = new HashSet<(string name, string uuid)>();
+				foreach (var playerData in nameResults)
+				{
+					// this will only be empty if
+					// requested through plancke, which is a
+					// possibility considering rate limit. 
+					if (NameUuid.ContainsKey(playerData.Name))
+					{
+						namesNeededForFriends.Add((playerData.Name, NameUuid[playerData.Name]));
+						continue;
+					}
+
+					if (playerData.Uuid == string.Empty)
+					{
+						var mojangResp = await MojangApi.GetUuidFromPlayerNameAsync(playerData.Name);
+						if (mojangResp == string.Empty)
+						{
+							nameFriendsUnable.Add(playerData.Name);
+							continue;
+						}
+
+						namesNeededForFriends.Add((playerData.Name, mojangResp));
+						continue;
+					}
+
+					if (CachedFriendsData.Contains(playerData.Uuid))
+					{
+						friendsData.Add((playerData.Uuid, CachedFriendsData[playerData.Uuid]));
+						continue;
+					}
+
+					namesNeededForFriends.Add((playerData.Name, playerData.Uuid));
+				}
+
+				var (responses, unableToSearch) = await HypixelApi
+					.GetAllFriendsAsync(namesNeededForFriends.Select(x => x.uuid)
+						.ToList());
+
+				foreach (var invalidUuid in unableToSearch)
+				{
+					var name = namesNeededForFriends
+						.Where(x => x.uuid == invalidUuid)
+						.ToArray();
+					if (!name.Any())
+						continue;
+
+					nameFriendsUnable.Add(name.First().name);
+				}
+
+				friendsData.AddRange(responses);
+
+				// sort each name into friend groups
+				// friendsData should only contain names from the particular lobby
+				var friendsName = new List<IList<string>>();
+				foreach (var (uuid, recordFriends) in responses)
+				{
+					var nameUuid = namesNeededForFriends
+						.Where(x => x.uuid == uuid)
+						.ToArray();
+					if (nameUuid.Length == 0)
+						continue;
+
+					var group = new HashSet<string>
+					{
+						nameUuid[0].name
+					};
+					foreach (var record in recordFriends.Records)
+					{
+						var uuidToFocusOn = record.UuidSender == uuid
+							? record.UuidReceiver
+							: record.UuidSender;
+
+						var valInLobby = namesNeededForFriends
+							.Where(x => x.uuid == uuidToFocusOn)
+							.ToArray();
+
+						// not in this lobby
+						if (valInLobby.Length == 0)
+							continue;
+
+						group.Add(valInLobby[0].name);
+					}
+
+					friendsName.Add(group.ToList());
+				}
+
+				var groups = ListUtil.GetGroups(ListUtil.GetGroups(friendsName))
+					.Where(x => x.Count > 1)
+					.ToList();
+
+
+				friendGroups.AddRange(groups.Select(@group => (from member in @group
+					select nameResults.Where(x => x.Name == member)
+						.ToArray()
+					into q
+					where q.Length != 0
+					select q[0]).ToList()));
+			}
+
 			reqTime.Stop();
 			var apiRequestTime = reqTime.Elapsed;
 
 			// start parsing the data
 			var tableBuilder = new Table(8)
-				.AddRow("LVL", "Username", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
+				.AddRow("LVL", $"{names.Count} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
 				.AddSeparator();
 			foreach (var playerInfo in nameResults)
 				tableBuilder.AddRow(
@@ -466,7 +583,55 @@ namespace Winstreak
 				DetermineScoreMeaning(ttlScore, false)
 			);
 
+
+			// group friends
+			Table friendTableBuilder;
+			if (friendGroups.Count != 0)
+			{
+				friendTableBuilder = new Table(5)
+					.AddRow("LVL", $"{friendGroups.Count} Friend Groups", "FKDR", "Score", "Assessment")
+					.AddSeparator();
+
+				for (var i = 0; i < friendGroups.Count; i++)
+				{
+					var friendGroup = friendGroups[i];
+					foreach (var member in friendGroup)
+					{
+						friendTableBuilder.AddRow(
+							member.Level,
+							member.Name,
+							member.FinalDeaths == 0
+								? "N/A"
+								: Math.Round((double)member.FinalKills / member.FinalDeaths, 2)
+									.ToString(CultureInfo.InvariantCulture),
+							Math.Round(member.Score, 2),
+							DetermineScoreMeaning(member.Score, true)
+						);
+					}
+
+					if (i + 1 != friendGroups.Count)
+						friendTableBuilder.AddSeparator();
+				}
+
+				friendTableBuilder
+					.AddSeparator()
+					.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty, string.Empty,
+						string.Empty);
+			}
+			else
+			{
+				if (HypixelApi != null && ApiKeyValid)
+					friendTableBuilder = new Table(1)
+						.AddRow(BackgroundBrightGreenAnsi + "No Friend Groups Detected!" + ResetAnsi)
+						.AddSeparator()
+						.AddRow($"{nameFriendsUnable.Count} Names Not Checked.");
+				else
+					friendTableBuilder = new Table(1)
+						.AddRow("Hypixel API Not Used!");
+			}
+
 			Console.WriteLine(tableBuilder.ToString());
+			Console.WriteLine(friendTableBuilder.ToString());
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalSeconds} Sec.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 			Console.WriteLine(Divider);
@@ -522,6 +687,8 @@ namespace Winstreak
 
 						nickedPlayers.AddRange(p.ErroredPlayers);
 					}
+
+					// TODO add friend check
 				}
 				else
 				{
@@ -539,9 +706,9 @@ namespace Winstreak
 
 					nickedPlayers.AddRange(checker.ErroredPlayers);
 				}
-
+				
 				teamInfo.Add(
-					new TeamInfoResults(key, teamStats, nickedPlayers)
+					new TeamInfoResults(key, teamStats, nickedPlayers, new List<IList<string>>())
 				);
 			}
 
@@ -648,13 +815,13 @@ namespace Winstreak
 
 		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
-			if (score <= 20) 
+			if (score <= 20)
 				return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
 			if (score > 20 && score <= 40)
 				return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
 			if (score > 40 && score <= 60)
 				return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
-			if (score > 60 && score <= 80) 
+			if (score > 60 && score <= 80)
 				return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
 			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
 		}
@@ -689,7 +856,7 @@ namespace Winstreak
 				{
 					var fd = data.AvailablePlayers.Sum(x => x.FinalDeaths);
 					var fk = data.AvailablePlayers.Sum(x => x.FinalKills);
-					return fd == 0 ? fk : fk / (double) fd; 
+					return fd == 0 ? fk : fk / (double) fd;
 				},
 				SortType.Score => data => data.Score,
 				SortType.Winstreak => data => data.AvailablePlayers.Sum(x => x.Winstreak),
