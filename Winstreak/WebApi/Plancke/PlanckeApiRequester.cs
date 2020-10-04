@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Winstreak.DirectoryManager;
 using static Winstreak.WebApi.ApiConstants;
 
 namespace Winstreak.WebApi.Plancke
@@ -24,7 +25,7 @@ namespace Winstreak.WebApi.Plancke
 		/// Sends requests to Plancke for the stats of each name (of players) specified in the list passed in the constructor.
 		/// </summary>
 		/// <returns>A dictionary, with the key being the player's name and the value being the raw HTML data.</returns>
-		public async Task<IDictionary<string, string>> SendRequests()
+		public async Task<IDictionary<string, string>> SendRequestsAsync()
 		{
 			if (ApiClient.DefaultRequestHeaders.Contains("X-Forwarded-For"))
 				ApiClient.DefaultRequestHeaders.Remove("X-Forwarded-For");

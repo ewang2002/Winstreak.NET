@@ -226,8 +226,7 @@ namespace Winstreak.WebApi.Hypixel
 					continue;
 
 				responses.Add(finishedReq);
-				// TODO is this the correct way to do it? 
-				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromMinutes(45));
+				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromHours(1));
 			}
 			return (responses, unableToSearch);
 		}

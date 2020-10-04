@@ -11,13 +11,11 @@ namespace Winstreak.WebApi.Definition
 		public readonly IList<BedwarsData> AvailablePlayers;
 		public readonly IList<string> ErroredPlayers;
 		public readonly double Score;
-		public readonly IList<IList<string>> Parties; 
 
 		public TeamInfoResults(
 			TeamColor color,
 			IList<BedwarsData> availablePlayers,
-			IList<string> errored,
-			IList<IList<string>> parties
+			IList<string> errored
 		)
 		{
 			Color = color.ToString();
@@ -30,7 +28,6 @@ namespace Winstreak.WebApi.Definition
 				availablePlayers.Sum(x => x.FinalDeaths),
 				availablePlayers.Sum(x => x.BrokenBeds)
 			);
-			Parties = parties;
 		}
 	}
 }

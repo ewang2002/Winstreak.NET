@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Winstreak.DirectoryManager;
 using Winstreak.Parsers.ConfigParser;
 
 namespace Winstreak
@@ -84,7 +85,7 @@ namespace Winstreak
 				return;
 			}
 
-			await DirectoryWatcher.Run(configurationFile);
+			await DirectoryWatcher.RunAsync(configurationFile);
 			Console.WriteLine("[INFO] Program has been terminated. Press ENTER to close this program.");
 			Console.ReadLine();
 		}

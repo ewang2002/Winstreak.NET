@@ -19,7 +19,7 @@ namespace Winstreak.Utility
 				if (index == -1)
 					arr.Add(element.Distinct().ToList());
 				else
-					arr[index] = element.Distinct().ToList();
+					arr[index] = element.Concat(arr[index]).Distinct().ToList();
 			}
 
 			return arr; 

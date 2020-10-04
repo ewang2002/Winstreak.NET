@@ -8,6 +8,7 @@ namespace Winstreak.Utility.ConsoleTable
 {
 	public class Table
 	{
+		private const int ExtraSpace = 1; 
 		private const string TopLeftJoint = "┌";
 		private const string TopRightJoint = "┐";
 		private const string BottomLeftJoint = "└";
@@ -136,7 +137,7 @@ namespace Winstreak.Utility.ConsoleTable
 		public override string ToString()
 		{
 			for (var c = 0; c < MaxTextLengthPerColumn.Length; ++c)
-				MaxTextLengthPerColumn[c] += 2;
+				MaxTextLengthPerColumn[c] += ExtraSpace;
 
 			var sb = new StringBuilder();
 			sb.Append(GenerateLine(Position.Top))
