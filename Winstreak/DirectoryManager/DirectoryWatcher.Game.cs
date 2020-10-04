@@ -94,7 +94,7 @@ namespace Winstreak.DirectoryManager
 			var rank = 1;
 
 			var table = new Table(10);
-			table.AddRow("Rank", "LVL", "Username", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment", "P")
+			table.AddRow("Rank", "LVL", "Username", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment", "Party")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
@@ -157,11 +157,12 @@ namespace Winstreak.DirectoryManager
 							: teammate.Winstreak.ToString(),
 						Math.Round(teammate.Score, 2),
 						DetermineScoreMeaning(teammate.Score, true),
-						groupNum == -2
-							? "E"
-							: groupNum == -1
-								? string.Empty
-								: groupNum.ToString()
+						groupNum switch
+						{
+							-2 => "ERR",
+							-1 => string.Empty,
+							_ => $"P{groupNum}"
+						}
 					);
 				}
 
@@ -177,7 +178,7 @@ namespace Winstreak.DirectoryManager
 						string.Empty,
 						string.Empty,
 						BackgroundRedAnsi + "Nicked!" + ResetAnsi,
-						"E"
+						"ERR"
 					);
 				}
 

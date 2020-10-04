@@ -15,6 +15,12 @@ namespace Winstreak.DirectoryManager
 	{
 		#region Minor Stuff
 
+		/// <summary>
+		/// Determines what the score means in the context of the situation.
+		/// </summary>
+		/// <param name="score">The score.</param>
+		/// <param name="isPlayer">Whether the score is referring to a player or the lobby.</param>
+		/// <returns>What the score means in the situation.</returns>
 		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
 			if (score <= 20)
@@ -28,6 +34,10 @@ namespace Winstreak.DirectoryManager
 			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
 		}
 
+		/// <summary>
+		/// Gets the current gamemode as a string format that can be displayed.
+		/// </summary>
+		/// <returns>The current, written-out gamemode.</returns>
 		private static string GamemodeIntToStr()
 			=> Mode switch
 			{
@@ -36,6 +46,10 @@ namespace Winstreak.DirectoryManager
 				_ => throw new ArgumentOutOfRangeException(nameof(Mode), "Gamemode must either be 34 or 12.")
 			};
 
+		/// <summary>
+		/// Returns a function that can be used to sort Bedwars stats.
+		/// </summary>
+		/// <returns>The function.</returns>
 		private static Func<BedwarsData, double> SortBySpecifiedType()
 			=> SortingType switch
 			{
@@ -49,6 +63,10 @@ namespace Winstreak.DirectoryManager
 				_ => throw new ArgumentOutOfRangeException()
 			};
 
+		/// <summary>
+		/// Returns a function that can be used to sort team stats.
+		/// </summary>
+		/// <returns>The function.</returns>
 		private static Func<TeamInfoResults, double> TeamSortBySpecifiedType()
 			=> SortingType switch
 			{

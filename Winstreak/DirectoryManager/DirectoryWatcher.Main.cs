@@ -16,6 +16,11 @@ namespace Winstreak.DirectoryManager
 {
 	public static partial class DirectoryWatcher
 	{
+		/// <summary>
+		/// The "main" entry point for the program. This is where the program will be executing from.
+		/// </summary>
+		/// <param name="file">The configuration file.</param>
+		/// <returns>Nothing.</returns>
 		public static async Task RunAsync(ConfigFile file)
 		{
 			// init vars
@@ -200,10 +205,21 @@ namespace Winstreak.DirectoryManager
 			}
 		}
 
+		/// <summary>
+		/// Method that is to be executed when a file is created.
+		/// </summary>
+		/// <param name="source">The source.</param>
+		/// <param name="e">Arguments.</param>
 		private static async void OnChangedAsync(object source, FileSystemEventArgs e)
 			// wait for image to fully load
 			=> await OnChangeFileAsync(e);
 
+		/// <summary>
+		/// Method that is to be executed when a file is created.
+		/// </summary>
+		/// <param name="e">The arguments.</param>
+		/// <param name="init">Whether the method was executed by another method (true) or by itself (false).</param>
+		/// <returns>Nothing.</returns>
 		private static async Task OnChangeFileAsync(FileSystemEventArgs e, bool init = true)
 		{
 			await Task.Delay(Config.ScreenshotDelay);
@@ -238,6 +254,12 @@ namespace Winstreak.DirectoryManager
 			bitmap.Dispose();
 		}
 
+		/// <summary>
+		/// Processes the screenshot that was provided.
+		/// </summary>
+		/// <param name="bitmap">The screenshot as a Bitmap.</param>
+		/// <param name="path">The path to the screenshot.</param>
+		/// <returns>Nothing.</returns>
 		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
 		{
 			if (ShouldClearBeforeCheck)
