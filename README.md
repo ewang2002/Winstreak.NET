@@ -1,4 +1,5 @@
 ![Winstreak Intro](https://github.com/ewang2002/Winstreak.NET/blob/master/ws_github.png)
+
 Winstreak is a program that is designed to ensure you, the player, can maintain a winstreak in Hypixel's popular Bedwars game.
 
 ## Technologies
