@@ -1,4 +1,4 @@
-![Winstreak Intro](https://github.com/ewang2002/Winstreak.NET/ws_github.png)
+![Winstreak Intro](https://github.com/ewang2002/Winstreak.NET/blob/master/ws_github.png)
 Winstreak is a program that is designed to ensure you, the player, can maintain a winstreak in Hypixel's popular Bedwars game.
 
 ## Technologies
@@ -13,7 +13,7 @@ My friends and I have often dealt with these experienced players. To say the lea
 A somewhat better solution, of course, would be putting players in lobbies with other players that have similar stats. But, of course, we all know Hypixel enjoys listening to their players. Plus, some experienced players often have alternative accounts designed to "disguise" their identity. 
 
 ## Features
-Winstreak boasts several key features. 
+Winstreak boasts several key features.
 - **Lobby Checker**: Winstreak can check a lobby screenshot for any potential tryhards. The program will go through each player's stats and tell you if you should leave or not.
 - **Game Checker**: Winstreak can check an in-game screenshot and will tell you exactly which team you should target or be careful around. It'll check each team's stats to show you where your team stands compared to opposing teams.
 - **Group Checker**: For both lobby & game checkers, Winstreak will be able to check each player's friends to see if there are any potential parties.*
@@ -23,6 +23,9 @@ Winstreak boasts several key features.
 
 ## Minecraft Versions
 Winstreak can be used with any Minecraft version. Please refrain from using texture packs, especially texture packs that change the Minecraft font or colors. 
+
+## Winstreak(s)
+
 
 ## Credits
 - I came up with the original idea.
