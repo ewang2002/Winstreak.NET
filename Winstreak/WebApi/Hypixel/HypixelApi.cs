@@ -92,9 +92,6 @@ namespace Winstreak.WebApi.Hypixel
 			}
 			RequestsMade++;
 
-			if (!resp.IsSuccessStatusCode)
-				throw new Exception("Invalid status code provided. Perhaps your input was invalid?");
-
 			var str = await resp.Content.ReadAsStringAsync();
 			if (str == string.Empty)
 				throw new Exception("No response data to parse.");
