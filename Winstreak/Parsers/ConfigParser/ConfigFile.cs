@@ -12,5 +12,6 @@
 		public string HypixelApiKey;
 		public string[] DangerousPlayers;
 		public bool DeleteScreenshot;
+		public bool CheckFriends;
 	}
 }

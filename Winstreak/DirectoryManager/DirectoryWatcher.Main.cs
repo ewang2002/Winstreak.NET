@@ -53,18 +53,10 @@ namespace Winstreak.DirectoryManager
 			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
 			Console.WriteLine($"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
 			Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
-			Console.WriteLine(
-				$"[INFO] Using Hypixel API: {(file.HypixelApiKey != string.Empty && ApiKeyValid ? "Yes" : "No")}");
-			Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
-			Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
-			Console.WriteLine();
-			Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
-			Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
-			Console.WriteLine($"[INFO] Retry Request Max Set: {Config.RetryMax}");
-			Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
 			Console.WriteLine();
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
+			Console.WriteLine("[INFO] To view current configuration, type -config in here!");
 			Console.WriteLine("=========================");
 
 			// make all lowercase for ease of comparison 
@@ -104,6 +96,22 @@ namespace Winstreak.DirectoryManager
 
 					switch (input.ToLower().Trim())
 					{
+						case "-config":
+							Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+							Console.WriteLine($"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
+							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
+							Console.WriteLine(
+								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
+							Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
+							Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
+							Console.WriteLine($"[INFO] Checking Friends? {(ApiKeyValid && file.CheckFriends ? "Yes" : "No")}");
+							Console.WriteLine();
+							Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
+							Console.WriteLine($"[INFO] Retry Request Delay Set: {Config.RetryDelay} MS");
+							Console.WriteLine($"[INFO] Retry Request Max Set: {Config.RetryMax}");
+							Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
+							Console.WriteLine(Divider);
+							continue;
 						case "-help":
 						case "-h":
 							Console.WriteLine(HelpInfo);

@@ -109,11 +109,6 @@ namespace Winstreak.DirectoryManager
 				.OrderByDescending(SortBySpecifiedType())
 				.ToList();
 
-			var (friendGroups, nameFriendsUnable) = await GetGroups(nameResults);
-
-			reqTime.Stop();
-			var apiRequestTime = reqTime.Elapsed;
-
 			// start parsing the data
 			var tableBuilder = new Table(8)
 				.AddRow("LVL", $"{names.Count} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
@@ -128,7 +123,7 @@ namespace Winstreak.DirectoryManager
 					playerInfo.BrokenBeds,
 					playerInfo.FinalDeaths == 0
 						? "N/A"
-						: Math.Round((double)playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
+						: Math.Round((double) playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
 							.ToString(CultureInfo.InvariantCulture),
 					playerInfo.Winstreak == -1
 						? "N/A"
@@ -159,61 +154,68 @@ namespace Winstreak.DirectoryManager
 				totalBrokenBeds,
 				totalLosses == 0
 					? "N/A"
-					: Math.Round((double)totalWins / totalLosses, 2)
+					: Math.Round((double) totalWins / totalLosses, 2)
 						.ToString(CultureInfo.InvariantCulture),
 				string.Empty,
 				Math.Round(ttlScore, 2),
 				DetermineScoreMeaning(ttlScore, false)
 			);
 
-			// group friends
-			Table friendTableBuilder;
-			if (friendGroups.Count != 0)
+			// check friends
+			Table friendTableBuilder = null;
+			if (HypixelApi != null && ApiKeyValid && Config.CheckFriends)
 			{
-				friendTableBuilder = new Table(5)
-					.AddRow("LVL", $"{friendGroups.Count} Friend Groups", "FKDR", "Score", "Assessment")
-					.AddSeparator();
+				var (friendGroups, nameFriendsUnable) = await GetGroups(nameResults);
 
-				for (var i = 0; i < friendGroups.Count; i++)
+				if (friendGroups.Count != 0)
 				{
-					var friendGroup = friendGroups[i];
-					foreach (var member in friendGroup)
+					friendTableBuilder = new Table(5)
+						.AddRow("LVL", $"{friendGroups.Count} Friend Groups", "FKDR", "Score", "Assessment")
+						.AddSeparator();
+
+					for (var i = 0; i < friendGroups.Count; i++)
 					{
-						friendTableBuilder.AddRow(
-							member.Level,
-							member.Name,
-							member.FinalDeaths == 0
-								? "N/A"
-								: Math.Round((double)member.FinalKills / member.FinalDeaths, 2)
-									.ToString(CultureInfo.InvariantCulture),
-							Math.Round(member.Score, 2),
-							DetermineScoreMeaning(member.Score, true)
-						);
+						var friendGroup = friendGroups[i];
+						foreach (var member in friendGroup)
+						{
+							friendTableBuilder.AddRow(
+								member.Level,
+								member.Name,
+								member.FinalDeaths == 0
+									? "N/A"
+									: Math.Round((double) member.FinalKills / member.FinalDeaths, 2)
+										.ToString(CultureInfo.InvariantCulture),
+								Math.Round(member.Score, 2),
+								DetermineScoreMeaning(member.Score, true)
+							);
+						}
+
+						if (i + 1 != friendGroups.Count)
+							friendTableBuilder.AddSeparator();
 					}
 
-					if (i + 1 != friendGroups.Count)
-						friendTableBuilder.AddSeparator();
+					friendTableBuilder
+						.AddSeparator()
+						.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty,
+							string.Empty,
+							string.Empty);
 				}
-
-				friendTableBuilder
-					.AddSeparator()
-					.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty, string.Empty,
-						string.Empty);
-			}
-			else
-			{
-				if (HypixelApi != null && ApiKeyValid)
+				else
+				{
 					friendTableBuilder = new Table(1)
 						.AddRow(BackgroundBrightGreenAnsi + "No Friend Groups Detected!" + ResetAnsi)
 						.AddSeparator()
 						.AddRow($"{nameFriendsUnable.Count} Names Not Checked.");
-				else
-					friendTableBuilder = new Table(1)
-						.AddRow("Hypixel API Not Used!");
+				}
 			}
 
+			reqTime.Stop();
+			var apiRequestTime = reqTime.Elapsed;
+
 			Console.WriteLine(tableBuilder.ToString());
-			Console.WriteLine(friendTableBuilder.ToString());
+			if (friendTableBuilder != null)
+				Console.WriteLine(friendTableBuilder.ToString());
+
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalMilliseconds} Milliseconds.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
 			Console.WriteLine(Divider);

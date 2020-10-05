@@ -17,6 +17,8 @@ namespace Winstreak.DirectoryManager
 			.AppendLine()
 			.Append("> -status: Views program status.")
 			.AppendLine()
+			.Append("> -config: Views current configuration.")
+			.AppendLine()
 			.Append("> -emptycache: Empties the cache.")
 			.AppendLine()
 			.Append("> -gamemode OR -gm: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")

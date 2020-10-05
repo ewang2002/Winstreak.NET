@@ -19,7 +19,8 @@ namespace Winstreak.Parsers.ConfigParser
 				RetryMax = 2,
 				RetryDelay = 250,
 				ScreenshotDelay = 250,
-				DeleteScreenshot = false
+				DeleteScreenshot = false,
+				CheckFriends = true
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
@@ -89,6 +90,9 @@ namespace Winstreak.Parsers.ConfigParser
 						break;
 					case "DELETE_SCREENSHOT":
 						configFile.DeleteScreenshot = int.TryParse(val, out var v6) && v6 == 1;
+						break;
+					case "CHECK_FRIENDS":
+						configFile.CheckFriends = int.TryParse(val, out var v7) && v7 == 1;
 						break;
 				}
 			}

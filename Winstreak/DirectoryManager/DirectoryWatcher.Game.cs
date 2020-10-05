@@ -76,7 +76,7 @@ namespace Winstreak.DirectoryManager
 			var friendGroups = new List<IList<BedwarsData>>();
 			var friendErrored = new List<string>();
 
-			if (HypixelApi != null && ApiKeyValid)
+			if (HypixelApi != null && ApiKeyValid && Config.CheckFriends)
 			{
 				var (friendG, friendU) = await GetGroups(people);
 				friendGroups.AddRange(friendG);
