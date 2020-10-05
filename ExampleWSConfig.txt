@@ -57,7 +57,8 @@ GAMEMODE_TYPE=
 
 # Hypixel API Key
 # If specified and valid, the program will send requests to Hypixel
-# Instead of using Plancke.
+# Instead of using Plancke. Note that Plancke will still be used
+# in case of rate limit.
 # To get an API key, run this command in the lobby: /api new 
 HYPIXEL_API_KEY=
 

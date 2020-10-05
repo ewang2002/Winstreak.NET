@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +9,9 @@ using Winstreak.Extensions;
 using Winstreak.Parsers.ConfigParser;
 using Winstreak.Parsers.ImageParser;
 using Winstreak.Parsers.ImageParser.Imaging;
+using Winstreak.Utility.ConsoleTable;
 using Winstreak.WebApi.Hypixel;
+using Winstreak.WebApi.Plancke;
 using Winstreak.WebApi.Plancke.Checker;
 using static Winstreak.WebApi.ApiConstants;
 
@@ -165,38 +168,78 @@ namespace Winstreak.DirectoryManager
 					continue;
 				}
 
-				if (input.Contains('-'))
+				if (input.Contains('-') || input.Contains('\\'))
 					continue;
+
+				var ignsToCheck = input.Split(" ")
+					.Select(x => x.Trim())
+					.Where(x => x != string.Empty)
+					.ToList();
 
 				// check ign
 				var checkTime = new Stopwatch();
 				checkTime.Start();
-				var results = await ApiClient
-					.GetAsync($"https://plancke.io/hypixel/player/stats/{input}");
-				var responseHtml = await results.Content.ReadAsStringAsync();
-				var data = new ResponseData(input, responseHtml)
-					.Parse();
-				if (data.TotalDataInfo is { } playerInfo)
+				var requester = new PlanckeApiRequester(ignsToCheck);
+				var results = await requester.SendRequestsAsync();
+				var respPar = new ResponseParser(results);
+				var data = respPar.GetPlayerDataFromMap();
+
+				if (data.Count == 1)
 				{
 					Console.ForegroundColor = ConsoleColor.Green;
 					Console.WriteLine($@"[INFO] ""{input}"" Found!");
 					Console.ResetColor();
-					Console.WriteLine($"> Broken Beds: {playerInfo.BrokenBeds}");
-					Console.WriteLine($"> Final Kills: {playerInfo.FinalKills}");
-					Console.WriteLine($"> Final Deaths: {playerInfo.FinalDeaths}");
-					Console.WriteLine($"> Total Wins: {playerInfo.Wins}");
-					Console.WriteLine($"> Total Losses: {playerInfo.Losses}");
+					Console.WriteLine($"> Broken Beds: {data[0].BrokenBeds}");
+					Console.WriteLine($"> Final Kills: {data[0].FinalKills}");
+					Console.WriteLine($"> Final Deaths: {data[0].FinalDeaths}");
+					Console.WriteLine($"> Total Wins: {data[0].Wins}");
+					Console.WriteLine($"> Total Losses: {data[0].Losses}");
 					Console.WriteLine();
-					Console.WriteLine($"> Regular K/D Ratio: {(double) playerInfo.Kills / playerInfo.Deaths}");
-					Console.WriteLine($"> Final K/D Ratio: {(double) playerInfo.FinalKills / playerInfo.FinalDeaths}");
-					Console.WriteLine($"> W/L Ratio: {(double) playerInfo.Wins / playerInfo.Losses}");
-					Console.WriteLine($"> Winstreak: {playerInfo.Winstreak}");
+					Console.WriteLine($"> Regular K/D Ratio: {(double) data[0].Kills / data[0].Deaths}");
+					Console.WriteLine($"> Final K/D Ratio: {(double) data[0].FinalKills / data[0].FinalDeaths}");
+					Console.WriteLine($"> W/L Ratio: {(double) data[0].Wins / data[0].Losses}");
+					Console.WriteLine($"> Winstreak: {data[0].Winstreak}");
 				}
 				else
 				{
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine($@"[INFO] ""{input}"" Not Found!");
-					Console.ResetColor();
+					var table = new Table(6)
+						.AddRow("LVL", "Username", "FKDR", "Beds", "W/L", "WS")
+						.AddSeparator();
+					foreach (var bedwarsData in data)
+					{
+						table.AddRow(
+							bedwarsData.Level,
+							bedwarsData.Name,
+							bedwarsData.FinalDeaths == 0
+								? "N/A"
+								: Math.Round((double) bedwarsData.FinalKills / bedwarsData.FinalDeaths, 2)
+									.ToString(CultureInfo.InvariantCulture),
+							bedwarsData.BrokenBeds,
+							bedwarsData.Losses == 0
+								? "N/A"
+								: Math.Round((double) bedwarsData.Wins / bedwarsData.Losses, 2)
+									.ToString(CultureInfo.InvariantCulture),
+							bedwarsData.Winstreak
+						);
+					}
+
+					if (respPar.ErroredPlayers.Count > 0)
+					{
+						table.AddSeparator();
+						foreach (var erroredPlayer in respPar.ErroredPlayers)
+						{
+							table.AddRow(
+								"N/A",
+								erroredPlayer,
+								"N/A",
+								"N/A",
+								"N/A",
+								"N/A"
+							);
+						}
+					}
+
+					Console.WriteLine(table.ToString());
 				}
 
 				checkTime.Stop();
@@ -223,8 +266,10 @@ namespace Winstreak.DirectoryManager
 		private static async Task OnChangeFileAsync(FileSystemEventArgs e, bool init = true)
 		{
 			await Task.Delay(Config.ScreenshotDelay);
+
 			Bitmap bitmap;
 			try
+
 			{
 				bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			}
@@ -241,6 +286,7 @@ namespace Winstreak.DirectoryManager
 				await OnChangeFileAsync(e, false);
 				return;
 			}
+
 			catch (Exception ex)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
@@ -271,6 +317,7 @@ namespace Winstreak.DirectoryManager
 			// parse time
 			using var parser = new NameParser(bitmap);
 			try
+
 			{
 				parser.SetGameMode(Mode);
 				parser.SetGuiScale(GuiScale);
@@ -293,9 +340,7 @@ namespace Winstreak.DirectoryManager
 			// end parse
 			processingTime.Stop();
 			var timeTaken = processingTime.Elapsed;
-
 			Console.WriteLine($"[INFO] Determined Screenshot Type: {(parser.IsLobby ? "Lobby" : "Game")}");
-
 			if (parser.IsLobby)
 			{
 				if (allNames.ContainsKey(TeamColor.Unknown))
@@ -303,7 +348,8 @@ namespace Winstreak.DirectoryManager
 				else
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine("[ERROR] An error occurred with the result of the parsing. Please take another screenshot.");
+					Console.WriteLine(
+						"[ERROR] An error occurred with the result of the parsing. Please take another screenshot.");
 					Console.ResetColor();
 				}
 			}
