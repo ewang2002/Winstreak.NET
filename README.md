@@ -19,7 +19,7 @@ Winstreak boasts several key features.
 - **Group Checker**: For both lobby & game checkers, Winstreak will be able to check each player's friends to see if there are any potential parties.*
 - **IGN Lookup**: You can directly type names into the console window to get an overview of a player's stats. And of course, you can put multiple names to compare them.
 
-* - Requires Hypixel API Key.
+\* - Requires Hypixel API Key.
 
 ## Minecraft Versions
 Winstreak can be used with any Minecraft version. Please refrain from using texture packs, especially texture packs that change the Minecraft font or colors. 
