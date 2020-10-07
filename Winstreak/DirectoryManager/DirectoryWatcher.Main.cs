@@ -137,7 +137,7 @@ namespace Winstreak.DirectoryManager
 						case "-status":
 							var valid = HypixelApi != null && ApiKeyValid;
 							Console.WriteLine(
-								$"[INFO] Hypixel API: {(HypixelApi != null && ApiKeyValid ? "Valid" : "Invalid")}");
+								$"[INFO] Hypixel API: {(valid ? "Valid" : "Invalid")}");
 							Console.WriteLine(valid
 								? $"[INFO] Usage: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
 								: "[INFO] Usage: Unlimited (Plancke)");

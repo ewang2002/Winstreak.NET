@@ -1,4 +1,6 @@
-![Winstreak Intro](https://github.com/ewang2002/Winstreak.NET/blob/master/ws_github.png)
+<p align="center">
+  <img src="https://github.com/ewang2002/Winstreak.NET/blob/master/ws_github.png" alt="Winstreak Introduction"/>
+</p>
 
 Winstreak is a program that is designed to ensure you, the player, can maintain a winstreak in Hypixel's popular Bedwars game.
 
@@ -24,9 +26,6 @@ Winstreak boasts several key features.
 
 ## Minecraft Versions
 Winstreak can be used with any Minecraft version. Please refrain from using texture packs, especially texture packs that change the Minecraft font or colors. 
-
-## Winstreak(s)
-
 
 ## Credits
 - I came up with the original idea.
