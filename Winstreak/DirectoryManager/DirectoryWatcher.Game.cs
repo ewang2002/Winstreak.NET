@@ -156,7 +156,9 @@ namespace Winstreak.DirectoryManager
 							? "N/A"
 							: teammate.Winstreak.ToString(),
 						Math.Round(teammate.Score, 2),
-						DetermineScoreMeaning(teammate.Score, true),
+						teammate.FinalDeaths == 0
+							? BackgroundBrightRedAnsi + "Poss. Alt./Sus." + ResetAnsi
+							: DetermineScoreMeaning(teammate.Score, true),
 						groupNum switch
 						{
 							-2 => "E",

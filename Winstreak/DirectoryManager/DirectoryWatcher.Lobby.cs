@@ -113,7 +113,8 @@ namespace Winstreak.DirectoryManager
 			var tableBuilder = new Table(8)
 				.AddRow("LVL", $"{names.Count} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
 				.AddSeparator();
-			foreach (var playerInfo in nameResults)
+
+			foreach (var playerInfo in nameResults) 
 				tableBuilder.AddRow(
 					playerInfo.Level == -1 ? "N/A" : playerInfo.Level.ToString(),
 					Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
@@ -129,7 +130,9 @@ namespace Winstreak.DirectoryManager
 						? "N/A"
 						: playerInfo.Winstreak.ToString(),
 					Math.Round(playerInfo.Score, 2),
-					DetermineScoreMeaning(playerInfo.Score, true)
+					playerInfo.FinalDeaths == 0
+						? BackgroundBrightRedAnsi + "Poss. Alt./Sus." + ResetAnsi
+						: DetermineScoreMeaning(playerInfo.Score, true)
 				);
 
 			foreach (var nickedPlayer in nickedPlayers)
