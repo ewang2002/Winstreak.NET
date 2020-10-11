@@ -11,8 +11,6 @@ namespace Winstreak.Extensions
 		/// <param name="right">The second color to compare with.</param>
 		/// <returns>Whether the two colors are the same in terms of RGB.</returns>
 		public static bool IsRgbEqualTo(this Color left, Color right)
-		{
-			return left.R == right.R && left.G == right.G && left.B == right.B;
-		}
+			=> left.R == right.R && left.G == right.G && left.B == right.B;
 	}
 }

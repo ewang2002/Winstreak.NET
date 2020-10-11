@@ -1,11 +1,11 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Winstreak.ConfigParser;
+using Winstreak.DirectoryManager;
+using Winstreak.Parsers.ConfigParser;
 
 namespace Winstreak
 {
@@ -34,19 +34,25 @@ namespace Winstreak
 			// default values
 			var configurationFile = new ConfigFile
 			{
+				HypixelApiKey = string.Empty,
+				GamemodeType = 34,
 				ClearConsole = false,
 				ExemptPlayers = new string[0],
 				RetryDelay = 250,
 				RetryMax = 2,
-				ScreenshotDelay = 450,
-				PathToMinecraftFolder = GetDefaultMinecraftFolderPath()
+				ScreenshotDelay = 250,
+				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
+				DangerousPlayers = new string[0],
+				DeleteScreenshot = false,
+				CheckFriends = true
 			};
 
 			if (configFileInfo != null)
 				configurationFile = await ConfigManager.ParseConfigFile(configFileInfo);
 			else
 			{
-				Console.WriteLine("[INFO] A WSConfig file couldn't be found. Please type the path to the folder containing this file. If you would like to use the default settings, simply skip.");
+				Console.WriteLine(
+					"[INFO] A WSConfig file couldn't be found. Please type the path to the folder containing this file. If you would like to use the default settings, simply skip.");
 				var pathToCheck = Console.ReadLine() ?? string.Empty;
 				if (pathToCheck == string.Empty)
 					Console.WriteLine("[INFO] No path specified. Using default settings.");
@@ -67,18 +73,22 @@ namespace Winstreak
 				}
 			}
 
-			configurationFile.PathToMinecraftFolder ??= GetDefaultMinecraftFolderPath();
+			if (string.IsNullOrEmpty(configurationFile.PathToMinecraftFolder))
+				configurationFile.PathToMinecraftFolder = GetDefaultMinecraftFolderPath();
 
 			// check once more
 			if (!Directory.Exists(configurationFile.PathToMinecraftFolder))
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"[ERROR] Couldn't find your Minecraft folder. Given parameter: {configurationFile.PathToMinecraftFolder}");
+				Console.WriteLine(
+					$"[ERROR] Couldn't find your Minecraft folder. Given parameter: {configurationFile.PathToMinecraftFolder}");
 				Console.ResetColor();
 				return;
 			}
 
-			await DirectoryWatcher.Run(configurationFile);
+			await DirectoryWatcher.RunAsync(configurationFile);
+			Console.WriteLine("[INFO] Program has been terminated. Press ENTER to close this program.");
+			Console.ReadLine();
 		}
 
 		public static string GetDefaultMinecraftFolderPath() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -88,6 +98,5 @@ namespace Winstreak
 				: RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
 					? Path.Join("Library", "Application Support", "minecraft")
 					: throw new PlatformNotSupportedException("Winstreak isn't supported by the current platform.");
-	
 	}
 }
