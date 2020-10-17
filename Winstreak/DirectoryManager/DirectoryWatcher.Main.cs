@@ -186,12 +186,13 @@ namespace Winstreak.DirectoryManager
 				// check ign
 				var checkTime = new Stopwatch();
 				checkTime.Start();
-				var (profiles, nicked) = await PlanckeApi.GetMultipleProfilesFromPlancke(ignsToCheck);
+				var (profiles, nicked) = await PlanckeApi
+					.GetMultipleProfilesFromPlancke(ignsToCheck);
 				
 				if (profiles.Count == 1)
 				{
 					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($@"[INFO] ""{profiles[0].Name}"" Found!");
+					Console.WriteLine($"[{profiles[0].BedwarsStats.BedwarsLevel}] {profiles[0].Name}");
 					Console.ResetColor();
 					Console.WriteLine($"> Broken Beds: {profiles[0].BedwarsStats.BrokenBeds}");
 					Console.WriteLine($"> Final Kills: {profiles[0].BedwarsStats.FinalKills}");
@@ -199,9 +200,9 @@ namespace Winstreak.DirectoryManager
 					Console.WriteLine($"> Total Wins: {profiles[0].BedwarsStats.Wins}");
 					Console.WriteLine($"> Total Losses: {profiles[0].BedwarsStats.Losses}");
 					Console.WriteLine();
-					Console.WriteLine($"> Regular K/D Ratio: {(double)profiles[0].BedwarsStats.Kills / profiles[0].BedwarsStats.Deaths}");
-					Console.WriteLine($"> Final K/D Ratio: {(double)profiles[0].BedwarsStats.FinalKills / profiles[0].BedwarsStats.FinalDeaths}");
-					Console.WriteLine($"> W/L Ratio: {(double)profiles[0].BedwarsStats.Wins / profiles[0].BedwarsStats.Losses}");
+					Console.WriteLine($"> Regular K/D Ratio: {Math.Round((double)profiles[0].BedwarsStats.Kills / profiles[0].BedwarsStats.Deaths, 2)}");
+					Console.WriteLine($"> Final K/D Ratio: {Math.Round((double)profiles[0].BedwarsStats.FinalKills / profiles[0].BedwarsStats.FinalDeaths, 2)}");
+					Console.WriteLine($"> W/L Ratio: {Math.Round((double)profiles[0].BedwarsStats.Wins / profiles[0].BedwarsStats.Losses, 2)}");
 					Console.WriteLine($"> Winstreak: {profiles[0].BedwarsStats.Winstreak}");
 					Console.WriteLine();
 					Console.WriteLine($"> Network Level: {profiles[0].NetworkLevel}");
@@ -233,9 +234,10 @@ namespace Winstreak.DirectoryManager
 
 					if (nicked.Count > 0)
 					{
-						table.AddSeparator();
+						if (profiles.Count > 0)
+							table.AddSeparator();
+
 						foreach (var erroredPlayer in nicked)
-						{
 							table.AddRow(
 								"N/A",
 								erroredPlayer,
@@ -244,13 +246,13 @@ namespace Winstreak.DirectoryManager
 								"N/A",
 								"N/A"
 							);
-						}
 					}
 
 					Console.WriteLine(table.ToString());
 				}
 
 				checkTime.Stop();
+				Console.WriteLine();
 				Console.WriteLine($"> Time Taken: {checkTime.Elapsed.TotalSeconds} Seconds.");
 				Console.WriteLine(Divider);
 			}
@@ -277,7 +279,6 @@ namespace Winstreak.DirectoryManager
 
 			Bitmap bitmap;
 			try
-
 			{
 				bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			}

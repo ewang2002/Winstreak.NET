@@ -50,8 +50,10 @@ namespace Winstreak.WebApi.Plancke
 					.Trim();
 
 				// name exists
-				if (nameOfWebsite.Contains('\''))
+				if (nameOfWebsite.Contains("'"))
 					playerName = nameOfWebsite.Split('\'')[0].Trim();
+				else
+					return (name, null);
 			}
 			catch (Exception)
 			{

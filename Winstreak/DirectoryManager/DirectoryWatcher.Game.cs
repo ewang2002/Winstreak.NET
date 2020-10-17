@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Winstreak.Parsers.ImageParser;
 using Winstreak.Profile;
 using Winstreak.Utility.ConsoleTable;
-using Winstreak.WebApi;
 using Winstreak.WebApi.Plancke;
 using static Winstreak.Utility.ConsoleTable.AnsiConstants;
 

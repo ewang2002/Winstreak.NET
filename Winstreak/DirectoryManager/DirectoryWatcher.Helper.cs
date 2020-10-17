@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Winstreak.Profile;
 using Winstreak.Utility;
-using Winstreak.WebApi;
 using Winstreak.WebApi.Hypixel.Definitions;
 using Winstreak.WebApi.Mojang;
 using static Winstreak.Utility.ConsoleTable.AnsiConstants;
