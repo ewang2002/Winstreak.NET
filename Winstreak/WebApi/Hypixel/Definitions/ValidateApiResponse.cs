@@ -23,12 +23,12 @@ namespace Winstreak.WebApi.Hypixel.Definitions
 		public Guid Owner { get; set; }
 
 		[JsonProperty("limit")]
-		public long Limit { get; set; }
+		public int Limit { get; set; }
 
 		[JsonProperty("queriesInPastMin")]
-		public long QueriesInPastMin { get; set; }
+		public int QueriesInPastMin { get; set; }
 
 		[JsonProperty("totalQueries")]
-		public long TotalQueries { get; set; }
+		public int TotalQueries { get; set; }
 	}
 }

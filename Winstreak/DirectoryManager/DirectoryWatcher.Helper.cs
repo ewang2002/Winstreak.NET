@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Winstreak.Profile;
 using Winstreak.Utility;
-using Winstreak.WebApi.Definition;
+using Winstreak.WebApi;
 using Winstreak.WebApi.Hypixel.Definitions;
 using Winstreak.WebApi.Mojang;
 using static Winstreak.Utility.ConsoleTable.AnsiConstants;
@@ -50,16 +51,18 @@ namespace Winstreak.DirectoryManager
 		/// Returns a function that can be used to sort Bedwars stats.
 		/// </summary>
 		/// <returns>The function.</returns>
-		private static Func<BedwarsData, double> SortBySpecifiedType()
+		private static Func<PlayerProfile, double> SortBySpecifiedType()
 			=> SortingType switch
 			{
-				SortType.Beds => data => data.BrokenBeds,
-				SortType.Finals => data => data.FinalKills,
+				SortType.Beds => data => data.BedwarsStats.BrokenBeds,
+				SortType.Finals => data => data.BedwarsStats.FinalKills,
 				SortType.Fkdr => data =>
-					data.FinalDeaths == 0 ? data.FinalKills : data.FinalKills / (double) data.FinalDeaths,
-				SortType.Score => data => data.Score,
-				SortType.Winstreak => data => data.Winstreak,
-				SortType.Level => data => data.Level,
+					data.BedwarsStats.FinalDeaths == 0 
+						? data.BedwarsStats.FinalKills 
+						: data.BedwarsStats.FinalKills / (double) data.BedwarsStats.FinalDeaths,
+				SortType.Score => data => data.BedwarsStats.GetScore(),
+				SortType.Winstreak => data => data.BedwarsStats.Winstreak,
+				SortType.Level => data => data.BedwarsStats.BedwarsLevel,
 				_ => throw new ArgumentOutOfRangeException()
 			};
 
@@ -67,20 +70,20 @@ namespace Winstreak.DirectoryManager
 		/// Returns a function that can be used to sort team stats.
 		/// </summary>
 		/// <returns>The function.</returns>
-		private static Func<TeamInfoResults, double> TeamSortBySpecifiedType()
+		private static Func<TeamProfile, double> TeamSortBySpecifiedType()
 			=> SortingType switch
 			{
-				SortType.Beds => data => data.AvailablePlayers.Sum(x => x.BrokenBeds),
-				SortType.Finals => data => data.AvailablePlayers.Sum(x => x.FinalKills),
+				SortType.Beds => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.BrokenBeds),
+				SortType.Finals => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills),
 				SortType.Fkdr => data =>
 				{
-					var fd = data.AvailablePlayers.Sum(x => x.FinalDeaths);
-					var fk = data.AvailablePlayers.Sum(x => x.FinalKills);
+					var fd = data.PlayersInTeam.Sum(x => x.BedwarsStats.FinalDeaths);
+					var fk = data.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills);
 					return fd == 0 ? fk : fk / (double) fd;
 				},
-				SortType.Score => data => data.Score,
-				SortType.Winstreak => data => data.AvailablePlayers.Sum(x => x.Winstreak),
-				SortType.Level => data => data.AvailablePlayers.Sum(x => x.Level),
+				SortType.Score => data => data.CalculateScore(),
+				SortType.Winstreak => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.Winstreak),
+				SortType.Level => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.BedwarsLevel),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 
@@ -91,12 +94,12 @@ namespace Winstreak.DirectoryManager
 		/// </summary>
 		/// <param name="nameResults">The names to check.</param>
 		/// <returns>A tuple containing two elements -- one element with all groups and the other element with names that couldn't be checked.</returns>
-		public static async Task<(IList<IList<BedwarsData>> friendGroups, HashSet<string> nameFriendsUnable)>
-			GetGroups(IList<BedwarsData> nameResults)
+		public static async Task<(IList<IList<PlayerProfile>> friendGroups, HashSet<string> nameFriendsUnable)>
+			GetGroups(IList<PlayerProfile> nameResults)
 		{
 			var nameFriendsUnable = new HashSet<string>();
 			// groups of friends
-			var friendGroups = new List<IList<BedwarsData>>();
+			var friendGroups = new List<IList<PlayerProfile>>();
 
 			if (HypixelApi == null || !ApiKeyValid)
 				return (friendGroups, nameFriendsUnable);
@@ -210,7 +213,7 @@ namespace Winstreak.DirectoryManager
 		/// <param name="friendErrored">The people that couldn't be searched due to rate limiting issues.</param>
 		/// <param name="name">The name to look for.</param>
 		/// <returns>-2 if the name was errored. -1 if the name doesn't belong to any group. index + 1 if the name is found in a group.</returns>
-		private static int GetGroupIndex(IList<IList<BedwarsData>> friendGroups, IList<string> friendErrored,
+		private static int GetGroupIndex(IList<IList<PlayerProfile>> friendGroups, IList<string> friendErrored,
 			string name)
 		{
 			if (friendErrored.Contains(name))

@@ -1,7 +1,7 @@
 ﻿using System;
 using Winstreak.WebApi.Hypixel.Definitions;
 
-namespace Winstreak.WebApi
+namespace Winstreak.Profile
 {
 	/// <summary>
 	/// <para>This class contains information about a player. However, since this is designed primarily for Bedwars, there will also be Bedwars stats. Each <c>PlayerProfile</c> object should have associated Bedwars stats.</para>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Winstreak.DirectoryManager;
+using Winstreak.Profile;
 using static Winstreak.WebApi.ApiConstants;
 
 namespace Winstreak.WebApi.Plancke
@@ -96,8 +97,8 @@ namespace Winstreak.WebApi.Plancke
 				var tempFirstLogin = strMessage.Split("Firstlogin: </b>")[1]
 					.Split("<br")[0]
 					.Trim()
-					.Replace("EDT", "-5")
-					.Replace("EST", "-4");
+					.Replace("EDT", "-4")
+					.Replace("EST", "-5");
 
 				firstLogin = DateTime.ParseExact(tempFirstLogin, "yyyy-MM-dd HH:mm z", CultureInfo.InvariantCulture);
 			}
@@ -285,13 +286,26 @@ namespace Winstreak.WebApi.Plancke
 		public static async Task<(IList<PlayerProfile> profiles, ISet<string> nicked)> GetMultipleProfilesFromPlancke(
 			IList<string> names)
 		{
-			var requests = names
+			var profiles = new List<PlayerProfile>();
+			var namesToCheck = new List<string>();
+
+			foreach (var name in names)
+			{
+				if (CachedPlayerData.Contains(name))
+				{
+					profiles.Add(CachedPlayerData[name]);
+					continue;
+				}
+
+				namesToCheck.Add(name);	
+			}
+
+			var requests = namesToCheck
 				.Select(GetProfileFromPlancke)
 				.ToArray();
 
 			var profileData = await Task.WhenAll(requests);
 
-			var profiles = new List<PlayerProfile>();
 			var nicked = new HashSet<string>();
 			foreach (var (name, profile) in profileData)
 			{

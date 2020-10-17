@@ -12,7 +12,6 @@ using Winstreak.Parsers.ImageParser.Imaging;
 using Winstreak.Utility.ConsoleTable;
 using Winstreak.WebApi.Hypixel;
 using Winstreak.WebApi.Plancke;
-using Winstreak.WebApi.Plancke.Checker;
 using static Winstreak.WebApi.ApiConstants;
 
 namespace Winstreak.DirectoryManager
@@ -187,54 +186,55 @@ namespace Winstreak.DirectoryManager
 				// check ign
 				var checkTime = new Stopwatch();
 				checkTime.Start();
-				var requester = new PlanckeApiRequester(ignsToCheck);
-				var results = await requester.SendRequestsAsync();
-				var respPar = new ResponseParser(results);
-				var data = respPar.GetPlayerDataFromMap();
-
-				if (data.Count == 1)
+				var (profiles, nicked) = await PlanckeApi.GetMultipleProfilesFromPlancke(ignsToCheck);
+				
+				if (profiles.Count == 1)
 				{
 					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($@"[INFO] ""{input}"" Found!");
+					Console.WriteLine($@"[INFO] ""{profiles[0].Name}"" Found!");
 					Console.ResetColor();
-					Console.WriteLine($"> Broken Beds: {data[0].BrokenBeds}");
-					Console.WriteLine($"> Final Kills: {data[0].FinalKills}");
-					Console.WriteLine($"> Final Deaths: {data[0].FinalDeaths}");
-					Console.WriteLine($"> Total Wins: {data[0].Wins}");
-					Console.WriteLine($"> Total Losses: {data[0].Losses}");
+					Console.WriteLine($"> Broken Beds: {profiles[0].BedwarsStats.BrokenBeds}");
+					Console.WriteLine($"> Final Kills: {profiles[0].BedwarsStats.FinalKills}");
+					Console.WriteLine($"> Final Deaths: {profiles[0].BedwarsStats.FinalDeaths}");
+					Console.WriteLine($"> Total Wins: {profiles[0].BedwarsStats.Wins}");
+					Console.WriteLine($"> Total Losses: {profiles[0].BedwarsStats.Losses}");
 					Console.WriteLine();
-					Console.WriteLine($"> Regular K/D Ratio: {(double) data[0].Kills / data[0].Deaths}");
-					Console.WriteLine($"> Final K/D Ratio: {(double) data[0].FinalKills / data[0].FinalDeaths}");
-					Console.WriteLine($"> W/L Ratio: {(double) data[0].Wins / data[0].Losses}");
-					Console.WriteLine($"> Winstreak: {data[0].Winstreak}");
+					Console.WriteLine($"> Regular K/D Ratio: {(double)profiles[0].BedwarsStats.Kills / profiles[0].BedwarsStats.Deaths}");
+					Console.WriteLine($"> Final K/D Ratio: {(double)profiles[0].BedwarsStats.FinalKills / profiles[0].BedwarsStats.FinalDeaths}");
+					Console.WriteLine($"> W/L Ratio: {(double)profiles[0].BedwarsStats.Wins / profiles[0].BedwarsStats.Losses}");
+					Console.WriteLine($"> Winstreak: {profiles[0].BedwarsStats.Winstreak}");
+					Console.WriteLine();
+					Console.WriteLine($"> Network Level: {profiles[0].NetworkLevel}");
+					Console.WriteLine($"> Karma: {profiles[0].Karma}");
+					Console.WriteLine($"> First Joined: {profiles[0].FirstJoined:MM/dd/yyyy hh:mm tt}");
 				}
 				else
 				{
 					var table = new Table(6)
 						.AddRow("LVL", "Username", "FKDR", "Beds", "W/L", "WS")
 						.AddSeparator();
-					foreach (var bedwarsData in data)
+					foreach (var bedwarsData in profiles)
 					{
 						table.AddRow(
-							bedwarsData.Level,
+							bedwarsData.BedwarsStats.BedwarsLevel,
 							bedwarsData.Name,
-							bedwarsData.FinalDeaths == 0
+							bedwarsData.BedwarsStats.FinalDeaths == 0
 								? "N/A"
-								: Math.Round((double) bedwarsData.FinalKills / bedwarsData.FinalDeaths, 2)
+								: Math.Round((double) bedwarsData.BedwarsStats.FinalKills / bedwarsData.BedwarsStats.FinalDeaths, 2)
 									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.BrokenBeds,
-							bedwarsData.Losses == 0
+							bedwarsData.BedwarsStats.BrokenBeds,
+							bedwarsData.BedwarsStats.Losses == 0
 								? "N/A"
-								: Math.Round((double) bedwarsData.Wins / bedwarsData.Losses, 2)
+								: Math.Round((double) bedwarsData.BedwarsStats.Wins / bedwarsData.BedwarsStats.Losses, 2)
 									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.Winstreak
+							bedwarsData.BedwarsStats.Winstreak
 						);
 					}
 
-					if (respPar.ErroredPlayers.Count > 0)
+					if (nicked.Count > 0)
 					{
 						table.AddSeparator();
-						foreach (var erroredPlayer in respPar.ErroredPlayers)
+						foreach (var erroredPlayer in nicked)
 						{
 							table.AddRow(
 								"N/A",

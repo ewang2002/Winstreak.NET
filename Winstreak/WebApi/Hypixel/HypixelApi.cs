@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using Newtonsoft.Json;
-using Winstreak.WebApi.Definition;
+using Winstreak.Profile;
 using Winstreak.WebApi.Hypixel.Definitions;
 using static Winstreak.WebApi.ApiConstants;
 
@@ -233,14 +233,14 @@ namespace Winstreak.WebApi.Hypixel
 		/// </summary>
 		/// <param name="names">The names to look up.</param>
 		/// <returns>A tuple containing three elements: one element consisting of all valid responses; another element consisting of all nicked players; a third element consisting of the names that couldn't be searched due to rate limit issues.</returns>
-		public async Task<(IList<BedwarsData> responses,
+		public async Task<(IList<PlayerProfile> responses,
 				IList<string> nicked,
 				IList<string> unableToSearch)>
 			GetAllPlayersAsync(IList<string> names)
 		{
 			var nicked = new List<string>();
 			var unableToSearch = new List<string>();
-			var responses = new List<BedwarsData>();
+			var responses = new List<PlayerProfile>();
 
 			// names that wont error due to rate limit
 			var actualNamesToLookUp = new List<string>();
@@ -276,8 +276,8 @@ namespace Winstreak.WebApi.Hypixel
 				var finishedReq = completedRequests[i];
 				if (finishedReq.Success && finishedReq.Player != null)
 				{
-					responses.Add(new BedwarsData(finishedReq));
-					CachedPlayerData.TryAdd(finishedReq.Player.DisplayName, new BedwarsData(finishedReq));
+					responses.Add(new PlayerProfile(finishedReq));
+					CachedPlayerData.TryAdd(finishedReq.Player.DisplayName, new PlayerProfile(finishedReq));
 					NameUuid.TryAdd(finishedReq.Player.DisplayName, finishedReq.Player.Uuid);
 				}
 				else

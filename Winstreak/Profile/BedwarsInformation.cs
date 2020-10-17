@@ -1,8 +1,8 @@
 ﻿using System;
-using Winstreak.WebApi.Definition;
+using Winstreak.Profile.Calculations;
 using Winstreak.WebApi.Hypixel.Definitions;
 
-namespace Winstreak.WebApi
+namespace Winstreak.Profile
 {
 	public readonly struct BedwarsInformation
 	{
@@ -128,105 +128,23 @@ namespace Winstreak.WebApi
 			                    + resp.Player.Stats.Bedwars.ThreesBrokenBeds
 			                    + resp.Player.Stats.Bedwars.FoursBrokenBeds);
 			Winstreak = resp.Player.Stats.Bedwars.Winstreak;
-			BedwarsLevel = GetLevelFromExp(resp.Player.Stats.Bedwars.Experience);
-		}
-
-		/// <summary>
-		/// Gets the "danger" score of the person.
-		/// </summary>
-		/// <returns>The "danger" score of this person.</returns>
-		public double GetScore()
-		{
-			var fkdr = GetFkdr();
-			var fkdrScoreVal = FinalDeaths == 0
-				? 0
-				: 1 - 1 / (2 * Math.Pow(fkdr, 2) + 1);
-
-			var bedScoreVal = 1 - 1 / (1 / (double) 650 * BrokenBeds + 1);
-
-			return 58 * fkdrScoreVal + 42 * bedScoreVal;
+			BedwarsLevel = BedwarsExpLevel.GetLevelFromExp(resp.Player.Stats.Bedwars.Experience);
 		}
 
 		/// <summary>
 		/// Gets the person's FKDR. 
 		/// </summary>
-		/// <returns>If no final deaths, -1; otherwise, the FKDR.</returns>
-		public double GetFkdr() => FinalDeaths == 0
+		/// <returns>A tuple containing two elements. If the first element is true, then the person's final deaths would be 0. If the first element is false, then there is a defined FKDR.</returns>
+		public (bool fdZero, double fkdr) GetFkdr() => FinalDeaths == 0
 			// to avoid getting exception
-			? -1
-			: FinalKills / (double)FinalDeaths;
-
-		#region const, static methods and variables
-
-		// private constant fields, used for calculations
-		private const int EasyLevels = 4;
-		private const int EasyLevelsXp = 7000;
-		private const long XpPerPrestige = (long) 96 * 5000 * EasyLevelsXp;
-		private const int LevelsPerPrestige = 100;
-		private const int HighestPrestige = 10;
-
-		// static methods
+			? (true, -1)
+			: (false, FinalKills / (double)FinalDeaths);
 
 		/// <summary>
-		/// Gets the Bedwars EXP from level.
+		/// Gets the person's "perceived" danger score. 
 		/// </summary>
-		/// <param name="level">The level.</param>
-		/// <returns>The corresponding Bedwars EXP.</returns>
-		public static double GetExpFromLevel(int level)
-		{
-			if (level == 0)
-				return 0;
-
-			var respectedLevel = GetLevelRespectingPrestige(level);
-			if (respectedLevel > EasyLevels)
-				return 5000;
-
-			return respectedLevel switch
-			{
-				1 => 500,
-				2 => 1000,
-				3 => 2000,
-				4 => 3500,
-				_ => 5000
-			};
-		}
-
-		/// <summary>
-		/// Gets the level corresponding to prestige level.
-		/// </summary>
-		/// <param name="level">The level.</param>
-		/// <returns>The prestige level.</returns>
-		private static int GetLevelRespectingPrestige(int level)
-		{
-			return level > HighestPrestige * LevelsPerPrestige
-				? level - HighestPrestige * LevelsPerPrestige
-				: level % LevelsPerPrestige;
-		}
-
-		/// <summary>
-		/// Gets the level from Bedwars experience.
-		/// </summary>
-		/// <param name="exp">The experience.</param>
-		/// <returns>The corresponding Bedwars level.</returns>
-		public static int GetLevelFromExp(long exp)
-		{
-			var prestige = Math.Floor(exp / (double) XpPerPrestige);
-			var level = prestige * LevelsPerPrestige;
-			var expWithoutPrestige = exp - prestige * XpPerPrestige;
-
-			for (var i = 1; i <= EasyLevels; ++i)
-			{
-				var expForEasyLevel = GetExpFromLevel(i);
-				if (expWithoutPrestige < expForEasyLevel)
-					break;
-
-				level++;
-				expWithoutPrestige -= expForEasyLevel;
-			}
-
-			return (int) (level + Math.Floor(expWithoutPrestige / 5000));
-		}
-
-		#endregion
+		/// <returns>The person's "perceived" danger score.</returns>
+		public double GetScore()
+			=> PlayerCalculator.GetScore(GetFkdr(), BrokenBeds);
 	}
 }
