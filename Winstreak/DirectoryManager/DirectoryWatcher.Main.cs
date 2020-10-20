@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Winstreak.Extensions;
 using Winstreak.Parsers.ConfigParser;
@@ -49,9 +50,17 @@ namespace Winstreak.DirectoryManager
 				return;
 			}
 
-			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
-			Console.WriteLine($"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
-			Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
+			var version = Assembly.GetEntryAssembly()?.GetName().Version;
+			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
+			Console.WriteLine("Winstreak For Hypixel Bedwars");
+			if (version != null)
+				Console.WriteLine($"Version: {version}");
+			Console.WriteLine("By CM19 & icicl");
+			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
+
+			Console.WriteLine();
+			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}.");
+			Console.WriteLine($"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Length} Exempt Players Set.");
 			Console.WriteLine();
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
