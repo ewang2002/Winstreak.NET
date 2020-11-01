@@ -16,9 +16,9 @@ namespace Winstreak.Profile.Calculations
 				? 0
 				: fkdrVal.fkdr;
 
-			var fkdrScoreVal = 1 - 1 / (2 * Math.Pow(fkdr, 2) + 1);
+			var fkdrScoreVal = 1 - 1 / (0.40 * Math.Pow(fkdr, 3) + 0.08333 * Math.Pow(fkdr, 2) + 1);
 			var bedScoreVal = 1 - 1 / (1 / (double) 650 * bedsBroken + 1);
-			return 58 * fkdrScoreVal + 42 * bedScoreVal;
+			return 75 * fkdrScoreVal + 25 * bedScoreVal;
 		}
 	}
 }
