@@ -42,7 +42,7 @@ namespace Winstreak.WebApi.Plancke
 			var strMessage = await response.Content.ReadAsStringAsync();
 
 			// get player name
-			var playerName = string.Empty;
+			string playerName;
 			try
 			{
 				var nameOfWebsite = strMessage.Split("<title>")[1]
@@ -121,6 +121,7 @@ namespace Winstreak.WebApi.Plancke
 					.Split("<ul class=\"list-unstyled\">")[1]
 					.Split("<li><b>Level:</b>")[1]
 					.Split("</li>")[0]
+					.Replace(",", "")
 					.Trim(), out var lvl);
 
 				if (parseRes)

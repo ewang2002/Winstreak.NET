@@ -2,7 +2,7 @@
 
 namespace Winstreak.Parsers.ImageParser
 {
-	public abstract class ParserHelper
+	public static class ParserHelper
 	{
 		/// <summary>
 		/// Gets the defined Gui scale from your Minecraft settings. 
