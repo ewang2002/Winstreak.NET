@@ -58,7 +58,7 @@ namespace Winstreak.WebApi.Plancke
 			catch (Exception)
 			{
 				// an exception probably means the name doesn't exist. 
-				return (name, null); 
+				return (name, null);
 			}
 
 			// get player network level
@@ -111,7 +111,7 @@ namespace Winstreak.WebApi.Plancke
 
 			// parse stats, the hardest part 
 			var bedwarsData = strMessage
-				.Split(new[] { "Bed Wars </a>", "Bed Wars  </a>" }, StringSplitOptions.RemoveEmptyEntries)[1]
+				.Split(new[] {"Bed Wars </a>", "Bed Wars  </a>"}, StringSplitOptions.RemoveEmptyEntries)[1]
 				.Split("Build Battle")[0];
 
 			var bedwarsLevel = -1;
@@ -163,28 +163,20 @@ namespace Winstreak.WebApi.Plancke
 				.Replace("</td></tr><tr>", "");
 			var soloDataArr = soloData
 				.Replace(",", "")
-				.Split(new[] { "</td>", "<td>" }, StringSplitOptions.RemoveEmptyEntries);
-			soloDataArr = soloDataArr
-				.Where(x => x != string.Empty)
-				.ToArray();
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 
-			var kills = 0;
-			var deaths = 0;
-			var finalKills = 0;
-			var finalDeaths = 0;
-			var wins = 0;
-			var losses = 0;
-			var brokenBeds = 0;
-
+			var solos = new BedwarsStats();
 			try
 			{
-				kills += int.Parse(soloDataArr[0]);
-				deaths += int.Parse(soloDataArr[1]);
-				finalKills += int.Parse(soloDataArr[3]);
-				finalDeaths += int.Parse(soloDataArr[4]);
-				wins += int.Parse(soloDataArr[6]);
-				losses += int.Parse(soloDataArr[7]);
-				brokenBeds += int.Parse(soloDataArr[9]);
+				solos = new BedwarsStats(
+					int.Parse(soloDataArr[0]),
+					int.Parse(soloDataArr[1]),
+					int.Parse(soloDataArr[3]),
+					int.Parse(soloDataArr[4]),
+					int.Parse(soloDataArr[6]),
+					int.Parse(soloDataArr[7]),
+					int.Parse(soloDataArr[9])
+				);
 			}
 			catch (Exception)
 			{
@@ -199,20 +191,20 @@ namespace Winstreak.WebApi.Plancke
 				.Replace("</td></tr><tr>", "");
 			var doubleDataArr = doubleData
 				.Replace(",", "")
-				.Split(new[] { "</td>", "<td>" }, StringSplitOptions.RemoveEmptyEntries);
-			doubleDataArr = doubleDataArr
-				.Where(x => x != string.Empty)
-				.ToArray();
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 
+			var doubles = new BedwarsStats();
 			try
 			{
-				kills += int.Parse(doubleDataArr[0]);
-				deaths += int.Parse(doubleDataArr[1]);
-				finalKills += int.Parse(doubleDataArr[3]);
-				finalDeaths += int.Parse(doubleDataArr[4]);
-				wins += int.Parse(doubleDataArr[6]);
-				losses += int.Parse(doubleDataArr[7]);
-				brokenBeds += int.Parse(doubleDataArr[9]);
+				doubles = new BedwarsStats(
+					int.Parse(doubleDataArr[0]),
+					int.Parse(doubleDataArr[1]),
+					int.Parse(doubleDataArr[3]),
+					int.Parse(doubleDataArr[4]),
+					int.Parse(doubleDataArr[6]),
+					int.Parse(doubleDataArr[7]),
+					int.Parse(doubleDataArr[9])
+				);
 			}
 			catch (Exception)
 			{
@@ -227,20 +219,20 @@ namespace Winstreak.WebApi.Plancke
 				.Replace("</td></tr><tr>", "");
 			var threeDataArr = threeData
 				.Replace(",", "")
-				.Split(new[] { "</td>", "<td>" }, StringSplitOptions.RemoveEmptyEntries);
-			threeDataArr = threeDataArr
-				.Where(x => x != string.Empty)
-				.ToArray();
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 
+			var threes = new BedwarsStats();
 			try
 			{
-				kills += int.Parse(threeDataArr[0]);
-				deaths += int.Parse(threeDataArr[1]);
-				finalKills += int.Parse(threeDataArr[3]);
-				finalDeaths += int.Parse(threeDataArr[4]);
-				wins += int.Parse(threeDataArr[6]);
-				losses += int.Parse(threeDataArr[7]);
-				brokenBeds += int.Parse(threeDataArr[9]);
+				threes = new BedwarsStats(
+					int.Parse(threeDataArr[0]),
+					int.Parse(threeDataArr[1]),
+					int.Parse(threeDataArr[3]),
+					int.Parse(threeDataArr[4]),
+					int.Parse(threeDataArr[6]),
+					int.Parse(threeDataArr[7]),
+					int.Parse(threeDataArr[9])
+				);
 			}
 			catch (Exception)
 			{
@@ -255,30 +247,36 @@ namespace Winstreak.WebApi.Plancke
 				.Replace("</td></tr><tr>", "");
 			var fourDataArr = fourData
 				.Replace(",", "")
-				.Split(new[] { "</td>", "<td>" }, StringSplitOptions.RemoveEmptyEntries);
-			fourDataArr = fourDataArr
-				.Where(x => x != string.Empty)
-				.ToArray();
+				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
 
+			var fours = new BedwarsStats();
 			try
 			{
-				kills += int.Parse(fourDataArr[0]);
-				deaths += int.Parse(fourDataArr[1]);
-				finalKills += int.Parse(fourDataArr[3]);
-				finalDeaths += int.Parse(fourDataArr[4]);
-				wins += int.Parse(fourDataArr[6]);
-				losses += int.Parse(fourDataArr[7]);
-				brokenBeds += int.Parse(fourDataArr[9]);
+				fours = new BedwarsStats(
+					int.Parse(fourDataArr[0]),
+					int.Parse(fourDataArr[1]),
+					int.Parse(fourDataArr[3]),
+					int.Parse(fourDataArr[4]),
+					int.Parse(fourDataArr[6]),
+					int.Parse(fourDataArr[7]),
+					int.Parse(fourDataArr[9])
+				);
 			}
 			catch (Exception)
 			{
 				// ignored
 			}
 
+			var statsArr = new BedwarsStats[5];
+			statsArr[0] = solos;
+			statsArr[1] = doubles;
+			statsArr[2] = threes;
+			statsArr[3] = fours;
+			statsArr[4] = solos + doubles + threes + fours;
+
 			return (playerName,
-				new PlayerProfile(playerName, networkLevel, karma, firstLogin,
-					new BedwarsInformation(kills, deaths, finalKills, finalDeaths, wins, losses, brokenBeds,
-						bedwarsWinstreak, bedwarsLevel)));
+				new PlayerProfile(playerName, networkLevel, karma, firstLogin, statsArr, bedwarsWinstreak,
+					bedwarsLevel));
 		}
 
 		/// <summary>
@@ -300,7 +298,7 @@ namespace Winstreak.WebApi.Plancke
 					continue;
 				}
 
-				namesToCheck.Add(name);	
+				namesToCheck.Add(name);
 			}
 
 			var requests = namesToCheck

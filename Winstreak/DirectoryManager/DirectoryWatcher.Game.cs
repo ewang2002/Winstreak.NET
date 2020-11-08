@@ -111,17 +111,17 @@ namespace Winstreak.DirectoryManager
 					.OrderByDescending(SortBySpecifiedType())
 					.ToArray();
 
-				var totalFinals = result.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills);
-				var totalDeaths = result.PlayersInTeam.Sum(x => x.BedwarsStats.FinalDeaths);
+				var totalFinals = result.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
+				var totalDeaths = result.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalDeaths);
 				var totalLevel = result.PlayersInTeam
-					.Where(x => x.BedwarsStats.BedwarsLevel != -1)
-					.Sum(x => x.BedwarsStats.BedwarsLevel);
+					.Where(x => x.BedwarsLevel != -1)
+					.Sum(x => x.BedwarsLevel);
 				table.AddRow(
 					rank,
 					totalLevel,
 					$"{ansiColorToUse}[{result.TeamColor} Team]{ResetAnsi}",
-					result.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills),
-					result.PlayersInTeam.Sum(x => x.BedwarsStats.BrokenBeds),
+					result.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills),
+					result.PlayersInTeam.Sum(x => x.OverallBedwarsStats.BrokenBeds),
 					totalDeaths == 0
 						? "N/A"
 						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
@@ -135,23 +135,23 @@ namespace Winstreak.DirectoryManager
 				foreach (var teammate in allAvailablePlayers)
 				{
 					var groupNum = GetGroupIndex(friendGroups, friendErrored, teammate.Name);
-					var fkdr = teammate.BedwarsStats.GetFkdr();
+					var fkdr = teammate.OverallBedwarsStats.GetFkdr();
 					table.AddRow(
 						string.Empty,
-						teammate.BedwarsStats.BedwarsLevel == -1 ? "N/A" : teammate.BedwarsStats.BedwarsLevel.ToString(),
+						teammate.BedwarsLevel == -1 ? "N/A" : teammate.BedwarsLevel.ToString(),
 						ansiColorToUse + (Config.DangerousPlayers.Contains(teammate.Name.ToLower())
 							? $"(!) {teammate.Name}"
 							: teammate.Name) + ResetAnsi,
-						teammate.BedwarsStats.FinalKills,
-						teammate.BedwarsStats.BrokenBeds,
+						teammate.OverallBedwarsStats.FinalKills,
+						teammate.OverallBedwarsStats.BrokenBeds,
 						fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
-						teammate.BedwarsStats.Winstreak == -1
+						teammate.Winstreak == -1
 							? "N/A"
-							: teammate.BedwarsStats.Winstreak.ToString(),
-						Math.Round(teammate.BedwarsStats.GetScore(), 2),
-						teammate.BedwarsStats.FinalDeaths == 0
+							: teammate.Winstreak.ToString(),
+						Math.Round(teammate.OverallBedwarsStats.GetScore(), 2),
+						teammate.OverallBedwarsStats.FinalDeaths == 0
 							? BackgroundBrightRedAnsi + "Poss. Alt./Sus." + ResetAnsi
-							: DetermineScoreMeaning(teammate.BedwarsStats.GetScore(), true),
+							: DetermineScoreMeaning(teammate.OverallBedwarsStats.GetScore(), true),
 						groupNum switch
 						{
 							-2 => "E",

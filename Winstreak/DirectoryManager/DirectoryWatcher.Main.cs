@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -24,6 +25,7 @@ namespace Winstreak.DirectoryManager
 		/// </summary>
 		/// <param name="file">The configuration file.</param>
 		/// <returns>Nothing.</returns>
+		[SuppressMessage("Microsoft.Style", "IDE0042")]
 		public static async Task RunAsync(ConfigFile file)
 		{
 			// init vars
@@ -201,19 +203,110 @@ namespace Winstreak.DirectoryManager
 				if (profiles.Count == 1)
 				{
 					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($"[{profiles[0].BedwarsStats.BedwarsLevel}] {profiles[0].Name}");
+					Console.WriteLine($"[{profiles[0].BedwarsLevel}] {profiles[0].Name}");
 					Console.ResetColor();
-					Console.WriteLine($"> Broken Beds: {profiles[0].BedwarsStats.BrokenBeds}");
-					Console.WriteLine($"> Final Kills: {profiles[0].BedwarsStats.FinalKills}");
-					Console.WriteLine($"> Final Deaths: {profiles[0].BedwarsStats.FinalDeaths}");
-					Console.WriteLine($"> Total Wins: {profiles[0].BedwarsStats.Wins}");
-					Console.WriteLine($"> Total Losses: {profiles[0].BedwarsStats.Losses}");
-					Console.WriteLine();
-					Console.WriteLine($"> Regular K/D Ratio: {Math.Round((double)profiles[0].BedwarsStats.Kills / profiles[0].BedwarsStats.Deaths, 2)}");
-					Console.WriteLine($"> Final K/D Ratio: {Math.Round((double)profiles[0].BedwarsStats.FinalKills / profiles[0].BedwarsStats.FinalDeaths, 2)}");
-					Console.WriteLine($"> W/L Ratio: {Math.Round((double)profiles[0].BedwarsStats.Wins / profiles[0].BedwarsStats.Losses, 2)}");
-					Console.WriteLine($"> Winstreak: {profiles[0].BedwarsStats.Winstreak}");
-					Console.WriteLine();
+
+					var eightOne = profiles[0].EightOneBedwarsStats;
+					var eightOneKdr = eightOne.GetKdr();
+					var eightOneFkdr = eightOne.GetFkdr();
+					var eightOneWlr = eightOne.GetWinLossRatio();
+
+					var eightTwo = profiles[0].EightTwoBedwarsStats;
+					var eightTwoKdr = eightTwo.GetKdr();
+					var eightTwoFkdr = eightTwo.GetFkdr();
+					var eightTwoWlr = eightTwo.GetWinLossRatio();
+
+					var fourThree = profiles[0].FourThreeBedwarsStats;
+					var fourThreeKdr = fourThree.GetKdr();
+					var fourThreeFkdr = fourThree.GetFkdr();
+					var fourThreeWlr = fourThree.GetWinLossRatio();
+
+					var fourFour = profiles[0].FourFourBedwarsStats;
+					var fourFourKdr = fourFour.GetKdr();
+					var fourFourFkdr = fourFour.GetFkdr();
+					var fourFourWlr = fourFour.GetWinLossRatio();
+
+					var overall = profiles[0].OverallBedwarsStats;
+					var overallKdr = overall.GetKdr();
+					var overallFkdr = overall.GetFkdr();
+					var overallWlr = overall.GetWinLossRatio();
+
+					var table = new Table(11)
+						.AddRow("Type", "Kills", "Deaths", "KDR", "F Kills", "F Deaths", "FKDR", "Wins",
+							"Losses", "WLR", "Beds")
+						.AddSeparator()
+						.AddRow("Solos", eightOne.Kills, eightOne.Deaths,
+							eightOneKdr.dZero
+								? "-"
+								: Math.Round(eightOneKdr.kdr, 2) + "",
+							eightOne.FinalKills, eightOne.FinalDeaths,
+							eightOneFkdr.fdZero
+								? "-"
+								: Math.Round(eightOneFkdr.fkdr, 2) + "",
+							eightOne.Wins, eightOne.Losses,
+							eightOneWlr.lZero
+								? "-"
+								: Math.Round(eightOneWlr.wlr, 2) + "",
+							eightOne.BrokenBeds)
+						.AddSeparator()
+						.AddRow("Doubles", eightTwo.Kills, eightTwo.Deaths,
+							eightTwoKdr.dZero
+								? "-"
+								: Math.Round(eightTwoKdr.kdr, 2) + "",
+							eightTwo.FinalKills, eightTwo.FinalDeaths,
+							eightTwoFkdr.fdZero
+								? "-"
+								: Math.Round(eightTwoFkdr.fkdr, 2) + "",
+							eightTwo.Wins, eightTwo.Losses,
+							eightTwoWlr.lZero
+								? "-"
+								: Math.Round(eightTwoWlr.wlr, 2) + "",
+							eightTwo.BrokenBeds)
+						.AddSeparator()
+						.AddRow("3v3v3v3", fourThree.Kills, fourThree.Deaths,
+							fourThreeKdr.dZero
+								? "-"
+								: Math.Round(fourThreeKdr.kdr, 2) + "",
+							fourThree.FinalKills, fourThree.FinalDeaths,
+							fourThreeFkdr.fdZero
+								? "-"
+								: Math.Round(fourThreeFkdr.fkdr, 2) + "",
+							fourThree.Wins, fourThree.Losses,
+							fourThreeWlr.lZero
+								? "-"
+								: Math.Round(fourThreeWlr.wlr, 2) + "",
+							fourThree.BrokenBeds)
+						.AddSeparator()
+						.AddRow("4v4v4v4", fourFour.Kills, fourFour.Deaths,
+							fourFourKdr.dZero
+								? "-"
+								: Math.Round(fourFourKdr.kdr, 2) + "",
+							fourFour.FinalKills, fourFour.FinalDeaths,
+							fourFourFkdr.fdZero
+								? "-"
+								: Math.Round(fourFourFkdr.fkdr, 2) + "",
+							fourFour.Wins, fourFour.Losses,
+							fourFourWlr.lZero
+								? "-"
+								: Math.Round(fourFourWlr.wlr, 2) + "",
+							fourFour.BrokenBeds)
+						.AddSeparator()
+						.AddRow("Overall", overall.Kills, overall.Deaths,
+							overallKdr.dZero
+								? "-"
+								: Math.Round(overallKdr.kdr, 2) + "",
+							overall.FinalKills, overall.FinalDeaths,
+							overallFkdr.fdZero
+								? "-"
+								: Math.Round(overallFkdr.fkdr, 2) + "",
+							overall.Wins, overall.Losses,
+							overallWlr.lZero
+								? "-"
+								: Math.Round(overallWlr.wlr, 2) + "",
+							overall.BrokenBeds);
+
+					Console.WriteLine(table.ToString());
+					Console.WriteLine($"> Winstreak: {profiles[0].Winstreak}");
 					Console.WriteLine($"> Network Level: {profiles[0].NetworkLevel}");
 					Console.WriteLine($"> Karma: {profiles[0].Karma}");
 					Console.WriteLine($"> First Joined: {profiles[0].FirstJoined:MM/dd/yyyy hh:mm tt}");
@@ -226,18 +319,18 @@ namespace Winstreak.DirectoryManager
 					foreach (var bedwarsData in profiles)
 					{
 						table.AddRow(
-							bedwarsData.BedwarsStats.BedwarsLevel,
+							bedwarsData.BedwarsLevel,
 							bedwarsData.Name,
-							bedwarsData.BedwarsStats.FinalDeaths == 0
+							bedwarsData.OverallBedwarsStats.FinalDeaths == 0
 								? "N/A"
-								: Math.Round((double) bedwarsData.BedwarsStats.FinalKills / bedwarsData.BedwarsStats.FinalDeaths, 2)
+								: Math.Round((double) bedwarsData.OverallBedwarsStats.FinalKills / bedwarsData.OverallBedwarsStats.FinalDeaths, 2)
 									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.BedwarsStats.BrokenBeds,
-							bedwarsData.BedwarsStats.Losses == 0
+							bedwarsData.OverallBedwarsStats.BrokenBeds,
+							bedwarsData.OverallBedwarsStats.Losses == 0
 								? "N/A"
-								: Math.Round((double) bedwarsData.BedwarsStats.Wins / bedwarsData.BedwarsStats.Losses, 2)
+								: Math.Round((double) bedwarsData.OverallBedwarsStats.Wins / bedwarsData.OverallBedwarsStats.Losses, 2)
 									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.BedwarsStats.Winstreak
+							bedwarsData.Winstreak
 						);
 					}
 

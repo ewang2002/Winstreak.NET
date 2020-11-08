@@ -53,15 +53,15 @@ namespace Winstreak.DirectoryManager
 		private static Func<PlayerProfile, double> SortBySpecifiedType()
 			=> SortingType switch
 			{
-				SortType.Beds => data => data.BedwarsStats.BrokenBeds,
-				SortType.Finals => data => data.BedwarsStats.FinalKills,
+				SortType.Beds => data => data.OverallBedwarsStats.BrokenBeds,
+				SortType.Finals => data => data.OverallBedwarsStats.FinalKills,
 				SortType.Fkdr => data =>
-					data.BedwarsStats.FinalDeaths == 0 
-						? data.BedwarsStats.FinalKills 
-						: data.BedwarsStats.FinalKills / (double) data.BedwarsStats.FinalDeaths,
-				SortType.Score => data => data.BedwarsStats.GetScore(),
-				SortType.Winstreak => data => data.BedwarsStats.Winstreak,
-				SortType.Level => data => data.BedwarsStats.BedwarsLevel,
+					data.OverallBedwarsStats.FinalDeaths == 0 
+						? data.OverallBedwarsStats.FinalKills 
+						: data.OverallBedwarsStats.FinalKills / (double) data.OverallBedwarsStats.FinalDeaths,
+				SortType.Score => data => data.OverallBedwarsStats.GetScore(),
+				SortType.Winstreak => data => data.Winstreak,
+				SortType.Level => data => data.BedwarsLevel,
 				_ => throw new ArgumentOutOfRangeException()
 			};
 
@@ -72,17 +72,17 @@ namespace Winstreak.DirectoryManager
 		private static Func<TeamProfile, double> TeamSortBySpecifiedType()
 			=> SortingType switch
 			{
-				SortType.Beds => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.BrokenBeds),
-				SortType.Finals => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills),
+				SortType.Beds => data => data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.BrokenBeds),
+				SortType.Finals => data => data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills),
 				SortType.Fkdr => data =>
 				{
-					var fd = data.PlayersInTeam.Sum(x => x.BedwarsStats.FinalDeaths);
-					var fk = data.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills);
+					var fd = data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalDeaths);
+					var fk = data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
 					return fd == 0 ? fk : fk / (double) fd;
 				},
 				SortType.Score => data => data.CalculateScore(),
-				SortType.Winstreak => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.Winstreak),
-				SortType.Level => data => data.PlayersInTeam.Sum(x => x.BedwarsStats.BedwarsLevel),
+				SortType.Winstreak => data => data.PlayersInTeam.Sum(x => x.Winstreak),
+				SortType.Level => data => data.PlayersInTeam.Sum(x => x.BedwarsLevel),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 

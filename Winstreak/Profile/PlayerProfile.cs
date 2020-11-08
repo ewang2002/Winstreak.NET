@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Winstreak.Profile.Calculations;
 using Winstreak.WebApi.Hypixel.Definitions;
 
 namespace Winstreak.Profile
@@ -35,9 +37,39 @@ namespace Winstreak.Profile
 		public double NetworkLevel { get; private set; }
 
 		/// <summary>
-		/// This person's Bedwars statistics. 
+		/// This person's overall Bedwars statistics. 
 		/// </summary>
-		public BedwarsInformation BedwarsStats { get; private set; }
+		public BedwarsStats OverallBedwarsStats { get; private set; }
+
+		/// <summary>
+		/// Bedwars stats for solos.
+		/// </summary>
+		public BedwarsStats EightOneBedwarsStats { get; private set; }
+
+		/// <summary>
+		/// Bedwars stats for doubles.
+		/// </summary>
+		public BedwarsStats EightTwoBedwarsStats { get; private set; }
+
+		/// <summary>
+		/// Bedwars stats for 3v3v3v3.
+		/// </summary>
+		public BedwarsStats FourThreeBedwarsStats { get; private set; }
+
+		/// <summary>
+		/// Bedwars stats for 4v4v4v4.
+		/// </summary>
+		public BedwarsStats FourFourBedwarsStats { get; private set; }
+
+		/// <summary>
+		/// The person's Bedwars level. 
+		/// </summary>
+		public int BedwarsLevel { get; private set; }
+
+		/// <summary>
+		/// The person's current Bedwars winstreak.
+		/// </summary>
+		public int Winstreak { get; private set; }
 
 		/// <summary>
 		/// A constructor that takes in the response object from Hypixel's API. 
@@ -55,7 +87,71 @@ namespace Winstreak.Profile
 				.AddMilliseconds(apiResponse.Player.FirstLogin);
 			Karma = apiResponse.Player.Karma;
 			NetworkLevel = Math.Sqrt(2 * apiResponse.Player.NetworkExp + 30625) / 50 - 2.5;
-			BedwarsStats = new BedwarsInformation(apiResponse);
+
+			if (apiResponse.Player.Stats?.Bedwars != null)
+			{
+				EightOneBedwarsStats = new BedwarsStats(
+					(int) apiResponse.Player.Stats.Bedwars.SolosKills,
+					(int) apiResponse.Player.Stats.Bedwars.SolosDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.SolosFinalKills,
+					(int) apiResponse.Player.Stats.Bedwars.SolosFinalDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.SolosWins,
+					(int) apiResponse.Player.Stats.Bedwars.SolosLosses,
+					(int) apiResponse.Player.Stats.Bedwars.SolosBrokenBeds
+				);
+
+				EightTwoBedwarsStats = new BedwarsStats(
+					(int) apiResponse.Player.Stats.Bedwars.DoublesKills,
+					(int) apiResponse.Player.Stats.Bedwars.DoublesDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.DoublesFinalKills,
+					(int) apiResponse.Player.Stats.Bedwars.DoublesFinalDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.DoublesWins,
+					(int) apiResponse.Player.Stats.Bedwars.DoublesLosses,
+					(int) apiResponse.Player.Stats.Bedwars.DoublesBrokenBeds
+				);
+
+				FourThreeBedwarsStats = new BedwarsStats(
+					(int) apiResponse.Player.Stats.Bedwars.ThreesKills,
+					(int) apiResponse.Player.Stats.Bedwars.ThreesDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.ThreesFinalKills,
+					(int) apiResponse.Player.Stats.Bedwars.ThreesFinalDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.ThreesWins,
+					(int) apiResponse.Player.Stats.Bedwars.ThreesLosses,
+					(int) apiResponse.Player.Stats.Bedwars.ThreesBrokenBeds
+				);
+
+				FourFourBedwarsStats = new BedwarsStats(
+					(int) apiResponse.Player.Stats.Bedwars.FoursKills,
+					(int) apiResponse.Player.Stats.Bedwars.FoursDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.FoursFinalKills,
+					(int) apiResponse.Player.Stats.Bedwars.FoursFinalDeaths,
+					(int) apiResponse.Player.Stats.Bedwars.FoursWins,
+					(int) apiResponse.Player.Stats.Bedwars.FoursLosses,
+					(int) apiResponse.Player.Stats.Bedwars.FoursBrokenBeds
+				);
+
+				OverallBedwarsStats = EightOneBedwarsStats
+				                      + EightTwoBedwarsStats
+				                      + FourThreeBedwarsStats
+				                      + FourFourBedwarsStats;
+
+				BedwarsLevel = BedwarsExpLevel.GetLevelFromExp(apiResponse.Player.Stats.Bedwars.Experience);
+				Winstreak = apiResponse.Player.Stats.Bedwars.Winstreak;
+			}
+			else
+			{
+				EightOneBedwarsStats = new BedwarsStats();
+				EightTwoBedwarsStats = new BedwarsStats();
+				FourThreeBedwarsStats = new BedwarsStats();
+				FourFourBedwarsStats = new BedwarsStats();
+				OverallBedwarsStats = EightOneBedwarsStats
+				                      + EightTwoBedwarsStats
+				                      + FourThreeBedwarsStats
+				                      + FourFourBedwarsStats;
+
+				BedwarsLevel = 0;
+				Winstreak = 0;
+			}
 		}
 
 		/// <summary>
@@ -65,18 +161,30 @@ namespace Winstreak.Profile
 		/// <param name="level">The person's network level.</param>
 		/// <param name="karma">The amount of karma this person has.</param>
 		/// <param name="firstLogin">When the person first logged in.</param>
-		/// <param name="stats">The person's stats.</param>
-		public PlayerProfile(string name, 
-			double level, 
-			long karma, 
+		/// <param name="stats">The person's stats. The first element is solos; the second element is doubles; the third element is 3v3v3v3s; the fourth element is 4v4v4v4s; the fifth element is overall.</param>
+		/// <param name="bedwarsLevel">The person's bedwars level.</param>
+		/// <param name="winstreak">The person's winstreak.</param>
+		public PlayerProfile(string name,
+			double level,
+			long karma,
 			DateTime firstLogin,
-			BedwarsInformation stats)
+			IReadOnlyList<BedwarsStats> stats,
+			int bedwarsLevel,
+			int winstreak)
 		{
 			Name = name;
 			NetworkLevel = level;
 			FirstJoined = firstLogin;
 			Karma = karma;
-			BedwarsStats = stats;
+
+			EightOneBedwarsStats = stats[0];
+			EightTwoBedwarsStats = stats[1];
+			FourThreeBedwarsStats = stats[2];
+			FourFourBedwarsStats = stats[3];
+			OverallBedwarsStats = stats[4];
+
+			BedwarsLevel = bedwarsLevel;
+			Winstreak = winstreak;
 		}
 
 		/// <summary>

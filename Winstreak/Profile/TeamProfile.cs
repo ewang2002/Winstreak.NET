@@ -41,9 +41,9 @@ namespace Winstreak.Profile
 		/// <returns>The team's "threat" score.</returns>
 		public double CalculateScore()
 		{
-			var sumFd = PlayersInTeam.Sum(x => x.BedwarsStats.FinalDeaths);
-			var sumFk = PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills);
-			var sumBeds = PlayersInTeam.Sum(x => x.BedwarsStats.BrokenBeds);
+			var sumFd = PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalDeaths);
+			var sumFk = PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
+			var sumBeds = PlayersInTeam.Sum(x => x.OverallBedwarsStats.BrokenBeds);
 
 			return PlayerCalculator.GetScore(
 				sumFd == 0
