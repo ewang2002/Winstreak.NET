@@ -6,6 +6,15 @@
     <ApplicationIcon>winstreak_logo.ico</ApplicationIcon>
     <NoWin32Manifest>true</NoWin32Manifest>
     <Nullable>disable</Nullable>
+    <Authors>Edward Wang</Authors>
+    <Company>ACHS Discord</Company>
+    <Description>Winstreak is a program that is designed to ensure you, the player, can maintain a winstreak in Hypixel's popular Bedwars game.</Description>
+    <Copyright>Edward Wang</Copyright>
+    <PackageProjectUrl>https://github.com/ewang2002/Winstreak.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ewang2002/Winstreak.NET</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageTags>minecraft, hypixel, hypixel-bedwars, bedwars</PackageTags>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -26,7 +35,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="WebApi\Plancke\Definition\" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

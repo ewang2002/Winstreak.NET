@@ -85,7 +85,7 @@ namespace Winstreak
 				Console.ResetColor();
 				return;
 			}
-
+			
 			await DirectoryWatcher.RunAsync(configurationFile);
 			Console.WriteLine("[INFO] Program has been terminated. Press ENTER to close this program.");
 			Console.ReadLine();

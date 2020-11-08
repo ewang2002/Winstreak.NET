@@ -5,10 +5,9 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Winstreak.Parsers.ImageParser;
+using Winstreak.Profile;
 using Winstreak.Utility.ConsoleTable;
-using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Plancke;
-using Winstreak.WebApi.Plancke.Checker;
 using static Winstreak.Utility.ConsoleTable.AnsiConstants;
 
 namespace Winstreak.DirectoryManager
@@ -27,12 +26,12 @@ namespace Winstreak.DirectoryManager
 			var reqTime = new Stopwatch();
 			reqTime.Start();
 			// req data from plancke 
-			var teamInfo = new List<TeamInfoResults>();
-			var people = new List<BedwarsData>();
+			var teamInfo = new List<TeamProfile>();
+			var people = new List<PlayerProfile>();
 
 			foreach (var (key, value) in teams)
 			{
-				var teamStats = new List<BedwarsData>();
+				var teamStats = new List<PlayerProfile>();
 				var nickedPlayers = new List<string>();
 
 				if (HypixelApi != null && ApiKeyValid)
@@ -45,35 +44,31 @@ namespace Winstreak.DirectoryManager
 
 					if (unableToSearch.Count != 0)
 					{
-						var planckeApiRequester = new PlanckeApiRequester(unableToSearch);
-						var teamData = await planckeApiRequester
-							.SendRequestsAsync();
-						var p = new ResponseParser(teamData);
-						teamStats.AddRange(p.GetPlayerDataFromMap());
-						people.AddRange(p.GetPlayerDataFromMap());
-						nickedPlayers.AddRange(p.ErroredPlayers);
+						var (profilePlancke, nickedPlancke) = await PlanckeApi
+							.GetMultipleProfilesFromPlancke(unableToSearch);
+						
+						teamStats.AddRange(profilePlancke);
+						people.AddRange(profilePlancke);
+						nickedPlayers.AddRange(nickedPlancke);
 					}
 				}
 				else
 				{
-					var planckeApiRequester = new PlanckeApiRequester(value);
-					// parse data
-					var nameData = await planckeApiRequester
-						.SendRequestsAsync();
-					var checker = new ResponseParser(nameData);
+					var (profilePlancke, nickedPlancke) = await PlanckeApi
+						.GetMultipleProfilesFromPlancke(value);
 
-					teamStats.AddRange(checker.GetPlayerDataFromMap());
-					people.AddRange(checker.GetPlayerDataFromMap());
-					nickedPlayers.AddRange(checker.ErroredPlayers);
+					teamStats.AddRange(profilePlancke);
+					people.AddRange(profilePlancke);
+					nickedPlayers.AddRange(nickedPlancke);
 				}
 
 				teamInfo.Add(
-					new TeamInfoResults(key, teamStats, nickedPlayers)
+					new TeamProfile(key.ToString(), teamStats, nickedPlayers)
 				);
 			}
 
 			// get all friends
-			var friendGroups = new List<IList<BedwarsData>>();
+			var friendGroups = new List<IList<PlayerProfile>>();
 			var friendErrored = new List<string>();
 
 			if (HypixelApi != null && ApiKeyValid && Config.CheckFriends)
@@ -99,7 +94,7 @@ namespace Winstreak.DirectoryManager
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
 				var result = teamInfo[i];
-				var ansiColorToUse = result.Color switch
+				var ansiColorToUse = result.TeamColor switch
 				{
 					"Blue" => TextBrightBlueAnsi,
 					"Yellow" => TextYellowAnsi,
@@ -112,27 +107,27 @@ namespace Winstreak.DirectoryManager
 					_ => ResetAnsi
 				};
 
-				var allAvailablePlayers = result.AvailablePlayers
+				var allAvailablePlayers = result.PlayersInTeam
 					.OrderByDescending(SortBySpecifiedType())
 					.ToArray();
 
-				var totalFinals = result.AvailablePlayers.Sum(x => x.FinalKills);
-				var totalDeaths = result.AvailablePlayers.Sum(x => x.FinalDeaths);
-				var totalLevel = result.AvailablePlayers
-					.Where(x => x.Level != -1)
-					.Sum(x => x.Level);
+				var totalFinals = result.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills);
+				var totalDeaths = result.PlayersInTeam.Sum(x => x.BedwarsStats.FinalDeaths);
+				var totalLevel = result.PlayersInTeam
+					.Where(x => x.BedwarsStats.BedwarsLevel != -1)
+					.Sum(x => x.BedwarsStats.BedwarsLevel);
 				table.AddRow(
 					rank,
 					totalLevel,
-					$"{ansiColorToUse}[{result.Color} Team]{ResetAnsi}",
-					result.AvailablePlayers.Sum(x => x.FinalKills),
-					result.AvailablePlayers.Sum(x => x.BrokenBeds),
+					$"{ansiColorToUse}[{result.TeamColor} Team]{ResetAnsi}",
+					result.PlayersInTeam.Sum(x => x.BedwarsStats.FinalKills),
+					result.PlayersInTeam.Sum(x => x.BedwarsStats.BrokenBeds),
 					totalDeaths == 0
 						? "N/A"
 						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
 					string.Empty,
-					Math.Round(result.Score, 2),
-					DetermineScoreMeaning(result.Score, true),
+					Math.Round(result.CalculateScore(), 2),
+					DetermineScoreMeaning(result.CalculateScore(), true),
 					string.Empty
 				);
 				table.AddSeparator();
@@ -140,25 +135,23 @@ namespace Winstreak.DirectoryManager
 				foreach (var teammate in allAvailablePlayers)
 				{
 					var groupNum = GetGroupIndex(friendGroups, friendErrored, teammate.Name);
+					var fkdr = teammate.BedwarsStats.GetFkdr();
 					table.AddRow(
 						string.Empty,
-						teammate.Level == -1 ? "N/A" : teammate.Level.ToString(),
+						teammate.BedwarsStats.BedwarsLevel == -1 ? "N/A" : teammate.BedwarsStats.BedwarsLevel.ToString(),
 						ansiColorToUse + (Config.DangerousPlayers.Contains(teammate.Name.ToLower())
 							? $"(!) {teammate.Name}"
 							: teammate.Name) + ResetAnsi,
-						teammate.FinalKills,
-						teammate.BrokenBeds,
-						teammate.FinalDeaths == 0
+						teammate.BedwarsStats.FinalKills,
+						teammate.BedwarsStats.BrokenBeds,
+						fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
+						teammate.BedwarsStats.Winstreak == -1
 							? "N/A"
-							: Math.Round((double) teammate.FinalKills / teammate.FinalDeaths, 2)
-								.ToString(CultureInfo.InvariantCulture),
-						teammate.Winstreak == -1
-							? "N/A"
-							: teammate.Winstreak.ToString(),
-						Math.Round(teammate.Score, 2),
-						teammate.FinalDeaths == 0
+							: teammate.BedwarsStats.Winstreak.ToString(),
+						Math.Round(teammate.BedwarsStats.GetScore(), 2),
+						teammate.BedwarsStats.FinalDeaths == 0
 							? BackgroundBrightRedAnsi + "Poss. Alt./Sus." + ResetAnsi
-							: DetermineScoreMeaning(teammate.Score, true),
+							: DetermineScoreMeaning(teammate.BedwarsStats.GetScore(), true),
 						groupNum switch
 						{
 							-2 => "E",
@@ -168,7 +161,7 @@ namespace Winstreak.DirectoryManager
 					);
 				}
 
-				foreach (var erroredPlayers in result.ErroredPlayers)
+				foreach (var erroredPlayers in result.NickedPlayers)
 				{
 					table.AddRow(
 						string.Empty,

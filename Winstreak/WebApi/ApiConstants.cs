@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Http;
-using Winstreak.WebApi.Definition;
+using Winstreak.Profile;
 using Winstreak.WebApi.Hypixel.Definitions;
 
 namespace Winstreak.WebApi
@@ -10,12 +10,12 @@ namespace Winstreak.WebApi
 		/// <summary>
 		/// Caching Names & UUID.
 		/// </summary>
-		public static ConcurrentDictionary<string, string> NameUuid = new ConcurrentDictionary<string, string>();
+		public static ConcurrentDictionary<string, string> NameUuid;
 
 		/// <summary>
 		/// The cached data.
 		/// </summary>
-		public static CacheDictionary<string, BedwarsData> CachedPlayerData;
+		public static CacheDictionary<string, PlayerProfile> CachedPlayerData;
 
 		/// <summary>
 		/// The cached friends data. K = Uuid, V = FriendsApiResponse
@@ -41,7 +41,7 @@ namespace Winstreak.WebApi
 			ApiClient.DefaultRequestHeaders.Add("User-Agent",
 				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
 
-			CachedPlayerData = new CacheDictionary<string, BedwarsData>();
+			CachedPlayerData = new CacheDictionary<string, PlayerProfile>();
 			CachedFriendsData = new CacheDictionary<string, FriendsApiResponse>();
 			CachedGuildData = new CacheDictionary<string, GuildsApiResponse>();
 			NameUuid = new ConcurrentDictionary<string, string>();

@@ -4,11 +4,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Winstreak.Utility.Calculations;
+using Winstreak.Profile;
+using Winstreak.Profile.Calculations;
 using Winstreak.Utility.ConsoleTable;
-using Winstreak.WebApi.Definition;
 using Winstreak.WebApi.Plancke;
-using Winstreak.WebApi.Plancke.Checker;
 using static Winstreak.WebApi.ApiConstants;
 using static Winstreak.Utility.ConsoleTable.AnsiConstants;
 
@@ -34,7 +33,7 @@ namespace Winstreak.DirectoryManager
 			var totalBrokenBeds = 0;
 			var levels = 0;
 
-			var nameResults = new List<BedwarsData>();
+			var nameResults = new List<PlayerProfile>();
 
 			// check hypixel api
 			if (HypixelApi != null && ApiKeyValid)
@@ -45,64 +44,58 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var resp in responses)
 				{
-					totalWins += resp.Wins;
-					totalLosses += resp.Losses;
-					totalBrokenBeds += resp.BrokenBeds;
-					totalFinalKills += resp.FinalKills;
-					totalFinalDeaths += resp.FinalDeaths;
-					levels += resp.Level;
+					totalWins += resp.BedwarsStats.Wins;
+					totalLosses += resp.BedwarsStats.Losses;
+					totalBrokenBeds += resp.BedwarsStats.BrokenBeds;
+					totalFinalKills += resp.BedwarsStats.FinalKills;
+					totalFinalDeaths += resp.BedwarsStats.FinalDeaths;
+					levels += resp.BedwarsStats.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(resp.Name, resp);
 					nameResults.Add(resp);
 				}
 
 				// request leftover data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(unableToSearch);
-				// parse data
-				var nameData = await planckeApiRequester
-					.SendRequestsAsync();
-				var checker = new ResponseParser(nameData);
+				var (profilesPlancke, nickedPlancke) = await PlanckeApi
+					.GetMultipleProfilesFromPlancke(unableToSearch);
 
-				foreach (var playerInfo in checker.GetPlayerDataFromMap())
+				foreach (var playerInfo in profilesPlancke)
 				{
-					totalFinalDeaths += playerInfo.FinalDeaths;
-					totalFinalKills += playerInfo.FinalKills;
-					totalBrokenBeds += playerInfo.BrokenBeds;
-					totalWins += playerInfo.Wins;
-					totalLosses += playerInfo.Losses;
-					if (playerInfo.Level != -1)
-						levels += playerInfo.Level;
+					totalFinalDeaths += playerInfo.BedwarsStats.FinalDeaths;
+					totalFinalKills += playerInfo.BedwarsStats.FinalKills;
+					totalBrokenBeds += playerInfo.BedwarsStats.BrokenBeds;
+					totalWins += playerInfo.BedwarsStats.Wins;
+					totalLosses += playerInfo.BedwarsStats.Losses;
+					if (playerInfo.BedwarsStats.BedwarsLevel != -1)
+						levels += playerInfo.BedwarsStats.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
-				nickedPlayers.AddRange(checker.ErroredPlayers);
+				nickedPlayers.AddRange(nickedPlancke);
 			}
 			else
 			{
 				// request data from plancke
-				var planckeApiRequester = new PlanckeApiRequester(names.ToList());
-				// parse data
-				var nameData = await planckeApiRequester
-					.SendRequestsAsync();
-				var checker = new ResponseParser(nameData);
+				var (profilesPlancke, nickedPlancke) = await PlanckeApi
+					.GetMultipleProfilesFromPlancke(names.ToList());
 
-				foreach (var playerInfo in checker.GetPlayerDataFromMap())
+				foreach (var playerInfo in profilesPlancke)
 				{
-					totalFinalDeaths += playerInfo.FinalDeaths;
-					totalFinalKills += playerInfo.FinalKills;
-					totalBrokenBeds += playerInfo.BrokenBeds;
-					totalWins += playerInfo.Wins;
-					totalLosses += playerInfo.Losses;
-					if (playerInfo.Level != -1)
-						levels += playerInfo.Level;
+					totalFinalDeaths += playerInfo.BedwarsStats.FinalDeaths;
+					totalFinalKills += playerInfo.BedwarsStats.FinalKills;
+					totalBrokenBeds += playerInfo.BedwarsStats.BrokenBeds;
+					totalWins += playerInfo.BedwarsStats.Wins;
+					totalLosses += playerInfo.BedwarsStats.Losses;
+					if (playerInfo.BedwarsStats.BedwarsLevel != -1)
+						levels += playerInfo.BedwarsStats.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
 				}
 
-				nickedPlayers.AddRange(checker.ErroredPlayers.ToList());
+				nickedPlayers.AddRange(nickedPlancke);
 			}
 
 			nameResults = nameResults
@@ -114,26 +107,27 @@ namespace Winstreak.DirectoryManager
 				.AddRow("LVL", $"{names.Count} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
 				.AddSeparator();
 
-			foreach (var playerInfo in nameResults) 
+			foreach (var playerInfo in nameResults)
+			{
+				var fkdr = playerInfo.BedwarsStats.GetFkdr();
+				var score = playerInfo.BedwarsStats.GetScore();
 				tableBuilder.AddRow(
-					playerInfo.Level == -1 ? "N/A" : playerInfo.Level.ToString(),
+					playerInfo.BedwarsStats.BedwarsLevel == -1
+						? "N/A"
+						: playerInfo.BedwarsStats.BedwarsLevel.ToString(),
 					Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
 						? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
 						: playerInfo.Name,
-					playerInfo.FinalKills,
-					playerInfo.BrokenBeds,
-					playerInfo.FinalDeaths == 0
+					playerInfo.BedwarsStats.FinalKills,
+					playerInfo.BedwarsStats.BrokenBeds,
+					fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
+					playerInfo.BedwarsStats.Winstreak == -1
 						? "N/A"
-						: Math.Round((double) playerInfo.FinalKills / playerInfo.FinalDeaths, 2)
-							.ToString(CultureInfo.InvariantCulture),
-					playerInfo.Winstreak == -1
-						? "N/A"
-						: playerInfo.Winstreak.ToString(),
-					Math.Round(playerInfo.Score, 2),
-					playerInfo.FinalDeaths == 0
-						? BackgroundBrightRedAnsi + "Poss. Alt./Sus." + ResetAnsi
-						: DetermineScoreMeaning(playerInfo.Score, true)
+						: playerInfo.BedwarsStats.Winstreak.ToString(),
+					Math.Round(score, 1),
+					DetermineScoreMeaning(score, true)
 				);
+			}
 
 			foreach (var nickedPlayer in nickedPlayers)
 				tableBuilder.AddRow(
@@ -148,8 +142,13 @@ namespace Winstreak.DirectoryManager
 				);
 
 			tableBuilder.AddSeparator();
-			var ttlScore = PlayerCalculator.CalculatePlayerThreatLevel(totalWins, totalLosses,
-				totalFinalKills, totalFinalDeaths, totalBrokenBeds);
+			var ttlScore = PlayerCalculator.GetScore(
+				totalFinalDeaths == 0
+					? (true, -1.0)
+					: (false, totalFinalKills / (double) totalFinalDeaths),
+				totalBrokenBeds
+			);
+
 			tableBuilder.AddRow(
 				levels,
 				"Total",
@@ -160,7 +159,7 @@ namespace Winstreak.DirectoryManager
 					: Math.Round((double) totalWins / totalLosses, 2)
 						.ToString(CultureInfo.InvariantCulture),
 				string.Empty,
-				Math.Round(ttlScore, 2),
+				Math.Round(ttlScore, 1),
 				DetermineScoreMeaning(ttlScore, false)
 			);
 
@@ -181,15 +180,13 @@ namespace Winstreak.DirectoryManager
 						var friendGroup = friendGroups[i];
 						foreach (var member in friendGroup)
 						{
+							var fkdr = member.BedwarsStats.GetFkdr();
 							friendTableBuilder.AddRow(
-								member.Level,
+								member.BedwarsStats.BedwarsLevel,
 								member.Name,
-								member.FinalDeaths == 0
-									? "N/A"
-									: Math.Round((double) member.FinalKills / member.FinalDeaths, 2)
-										.ToString(CultureInfo.InvariantCulture),
-								Math.Round(member.Score, 2),
-								DetermineScoreMeaning(member.Score, true)
+								fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
+								Math.Round(member.BedwarsStats.GetScore(), 2),
+								DetermineScoreMeaning(member.BedwarsStats.GetScore(), true)
 							);
 						}
 
@@ -218,6 +215,41 @@ namespace Winstreak.DirectoryManager
 			Console.WriteLine(tableBuilder.ToString());
 			if (friendTableBuilder != null)
 				Console.WriteLine(friendTableBuilder.ToString());
+
+			// check for potential "interesting" and/or suspicious accounts
+			var susAccountNotes = new Dictionary<string, string>();
+			foreach (var playerProfile in nameResults)
+			{
+				// check time
+				var notes = new HashSet<string>();
+				var joinedHypixel = DateTime.Now - playerProfile.FirstJoined;
+
+				// 30 days
+				if (joinedHypixel.TotalMilliseconds < 2.628e+9)
+					notes.Add($"First Login: {joinedHypixel.Days} Days Ago.");
+
+				if (playerProfile.Karma <= 150)
+					notes.Add($"Karma Amount: {playerProfile.Karma}");
+
+				if (playerProfile.NetworkLevel < 10)
+					notes.Add($"Network Level: {Math.Round(playerProfile.NetworkLevel, 1)}");
+
+				if (notes.Count == 0)
+					continue;
+
+				susAccountNotes.Add(playerProfile.Name, string.Join("\n", notes));
+			}
+
+			if (susAccountNotes.Count != 0)
+			{
+				var susTable = new Table(2)
+					.AddRow("Name", "Reason")
+					.AddSeparator();
+				foreach (var (name, reason) in susAccountNotes)
+					susTable.AddRowContainingNewLine(name, $"{reason}\n");
+
+				Console.WriteLine(susTable.ToString());
+			}
 
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalMilliseconds} Milliseconds.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
