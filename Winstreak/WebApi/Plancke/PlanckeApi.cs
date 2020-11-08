@@ -275,8 +275,7 @@ namespace Winstreak.WebApi.Plancke
 			statsArr[4] = solos + doubles + threes + fours;
 
 			return (playerName,
-				new PlayerProfile(playerName, networkLevel, karma, firstLogin, statsArr, bedwarsWinstreak,
-					bedwarsLevel));
+				new PlayerProfile(playerName, networkLevel, karma, firstLogin, statsArr, bedwarsLevel, bedwarsWinstreak));
 		}
 
 		/// <summary>
