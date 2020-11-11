@@ -35,7 +35,6 @@ namespace Winstreak
 			var configurationFile = new ConfigFile
 			{
 				HypixelApiKey = string.Empty,
-				GamemodeType = 34,
 				ClearConsole = false,
 				ExemptPlayers = new string[0],
 				RetryDelay = 250,
@@ -91,7 +90,7 @@ namespace Winstreak
 			Console.ReadLine();
 		}
 
-		public static string GetDefaultMinecraftFolderPath() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+		private static string GetDefaultMinecraftFolderPath() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
 			? Path.Join("C:", "Users", Environment.UserName, "AppData", "Roaming", ".minecraft")
 			: RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
 				? Path.Join("home", Environment.UserName, ".minecraft")

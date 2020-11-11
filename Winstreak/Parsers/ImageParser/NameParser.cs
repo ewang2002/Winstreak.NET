@@ -41,11 +41,6 @@ namespace Winstreak.Parsers.ImageParser
 		public Point EndingPoint { get; private set; }
 
 		/// <summary>
-		/// The Bedwars mode. Valid numbers are 12 (solos/doubles) or 4/4 (3v3v3v3s, 4v4v4v4s, 4v4s) or their direct dream equivalent(s). 
-		/// </summary>
-		public int Mode { get; private set; } = 34;
-
-		/// <summary>
 		/// Instantiates a new NameParser object with the specified Bitmap.
 		/// </summary>
 		/// <param name="image">The bitmap.</param>
@@ -56,18 +51,6 @@ namespace Winstreak.Parsers.ImageParser
 		/// </summary>
 		/// <param name="scale">The scale.</param>
 		public void SetGuiScale(int scale) => GuiWidth = scale;
-
-		/// <summary>
-		/// Sets the game mode for this parser. Selecting a mode will tell the parser to parse any in-game tab screenshots based on the selected mode (if you select Solos/Doubles, all 8 colors will be accounted for; if you select 3s/4s, only R/G/Y/B will be considered). 
-		/// </summary>
-		/// <param name="mode">The game mode for this parser. The game mode must be one of the following: 12 (Solos/Doubles), 34 (3v3v3v3 or 4v4v4v4 or 4v4s).</param>
-		public void SetGameMode(int mode)
-		{
-			if (mode != 12 && mode != 34)
-				throw new ArgumentOutOfRangeException(
-					$"Given mode \"{mode}\" is invalid. You must select one of the following modes: 12 (Solos/Doubles), 34 (3v3v3v3s/4v4v4v4s/4v4s).");
-			Mode = mode;
-		}
 
 		/// <summary>
 		/// Finds the starting and ending point of the image. 
@@ -120,7 +103,9 @@ namespace Winstreak.Parsers.ImageParser
 					var ttlBytes = new StringBuilder();
 					var tempX = x;
 
-					// gets one character 
+					// we only want to get one character
+					// see "ParseNames" for explanation of
+					// how this works 
 					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						var columnBytes = new StringBuilder();
@@ -148,7 +133,7 @@ namespace Winstreak.Parsers.ImageParser
 				}
 
 
-				// end for
+				// end for loop
 				if (realX != -1)
 					break;
 			}
@@ -167,66 +152,131 @@ namespace Winstreak.Parsers.ImageParser
 		public IDictionary<TeamColor, IList<string>> ParseNames(IList<string> exempt = null)
 		{
 			var isGameScreenshot = false;
-
 			exempt ??= new List<string>();
 			var currentColor = TeamColor.Unknown;
-
 			var names = new Dictionary<TeamColor, IList<string>>();
 			var tempNames = new Dictionary<TeamColor, IList<(string name, bool isRed)>>();
+			
+			// iterate over each name entry in the tab list
 			for (var y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
 				var isWhite = false;
 				var name = new StringBuilder();
 				var x = StartingPoint.X;
 				var isRed = false;
+
+				var determinedColor = new Color();
+				var colorDict = new Dictionary<Color, int>();
+
+				// go through each letter in the name until we reach the
+				// end of the name
 				while (true)
 				{
 					var ttlBytes = new StringBuilder();
 
+					// iterate over each letter in the name 
 					while (ttlBytes.Length == 0
-					       || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
+						   // "00000000" represents an empty vertical line that separates
+						   // a letter from another letter
+						   || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
 					{
 						var columnBytes = new StringBuilder();
+
+						// iterate over each pixel in a letter defined as GuiWidth
+						// go down until you reach the bottom of the letter, then 
+						// go back to the defined y-value and add to the x-coord
+						// to go through the next "column"
 						for (var dy = 0; dy < 8 * GuiWidth; dy += GuiWidth)
 						{
 							var color = Img[x, y + dy];
+
 							var isRankColor = IsValidRankColor(color);
 							var isTeamColor = IsValidTeamColor(color);
 							var isWhiteTemp = Color.White.IsRgbEqualTo(color);
+							var isDeterminedColor = determinedColor != default
+							                        && determinedColor.IsRgbEqualTo(color)
+							                        || determinedColor == color;
 
-							if (isRankColor || isWhiteTemp || isTeamColor)
+							// "determinedColor" is the "lock" color.
+							// basically, once we determine what the color of the
+							// first letter is, we can lock onto that color.
+							// in other words, once "determinedColor" is defined (i.e.
+							// not default), then we ONLY check and see if the pixel
+							// is equal to "isDeterminedColor"
+							var isPixelCorrect = determinedColor == default
+								? isRankColor || isWhiteTemp || isTeamColor
+								: isDeterminedColor;
+
+							// if we have a valid pixel
+							if (isPixelCorrect)
 							{
 								if (isWhiteTemp)
 									isWhite = true;
 								else if (RedTeamColor.IsRgbEqualTo(color))
 									isRed = true;
 
+								// if we didn't determine what the "lock" color will
+								// be, then let's add to the dictionary of encountered
+								// color values
+								if (determinedColor == default)
+								{
+									if (colorDict.ContainsKey(color))
+										colorDict[color]++;
+									else
+										colorDict.Add(color, 1);
+								}
+
+								// append a "1," indicating that the valid color was
+								// found at this pixel location
 								columnBytes.Append("1");
 							}
 							else
+								// append a "0," indicating that the valid color was 
+								// not found at this pixel location.
 								columnBytes.Append("0");
 						}
 
 						ttlBytes.Append(columnBytes.ToString());
+
+						// next "column"
 						x += GuiWidth;
 					}
 
+					// remove the 8 trailing 0s. we don't need those 0s. 
 					ttlBytes = new StringBuilder(ttlBytes.ToString()
 						.Substring(0, ttlBytes.Length - 8));
 
+					// check and see if we found a valid letter or not.
 					if (BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 					{
 						name.Append(BinaryToCharactersMap[ttlBytes.ToString()]);
+
+						// An empty space (predefined by me) at the beginning of the
+						// name means that we're in a game.
 						if (BinaryToCharactersMap[ttlBytes.ToString()][0] == ' ')
 							x += 5 * GuiWidth;
+
+						// if the determined color wasn't defined, define it. 
+						if (determinedColor != default) 
+							continue;
+						colorDict = colorDict.OrderByDescending(pair => pair.Value)
+							.ToDictionary(kv => kv.Key, kv => kv.Value);
+
+						var (mostOcc, _) = colorDict.First();
+						determinedColor = mostOcc;
 					}
 					else
+						// invalid character = we reached end of name.
 						break;
 				}
 
+				// this is our final name.
 				var finalName = name.ToString();
 
-				// no name, no go
+				// if the name string is empty 
+				// OR the color of the name is white
+				// but no space at beginning of name, then
+				// we have an invalid name
 				if (finalName.Trim() == string.Empty
 				    || isWhite && name.ToString()[0] != ' ')
 					continue;
@@ -241,9 +291,13 @@ namespace Winstreak.Parsers.ImageParser
 					isGameScreenshot = true;
 				}
 
+				// if we're not in-game and the name is in the list of exempt players
+				// we don't need to add that name
 				if (!isGameScreenshot && exempt.Contains(finalName.Trim().ToLower()))
 					continue;
 
+				// if the team color isn't in our dictionary,
+				// add the team color. 
 				if (!tempNames.ContainsKey(currentColor))
 					tempNames.Add(currentColor, new List<(string, bool)>());
 
@@ -257,8 +311,10 @@ namespace Winstreak.Parsers.ImageParser
 			}
 
 			IsLobby = !isGameScreenshot;
-			// if in lobby screenshot
-			// remove any red names
+
+			// if this is a lobby screenshot
+			// remove any red names as those names
+			// are generally not valid.
 			foreach (var (key, val) in tempNames)
 				names[key] = IsLobby
 					? val.Where(x => !x.isRed).Select(x => x.name).ToList()
@@ -303,7 +359,8 @@ namespace Winstreak.Parsers.ImageParser
 			                    || GreenTeamColor.IsRgbEqualTo(color)
 			                    || YellowTeamColor.IsRgbEqualTo(color)
 			                    || BlueTeamColor.IsRgbEqualTo(color)
-								// 1.14+
+								// 1.14+ colors
+								// 1.14+ screenshots use RGBA, not RGB. 
 			                    || RedTeamColor == color
 			                    || GreenTeamColor == color
 			                    || YellowTeamColor == color
@@ -319,9 +376,7 @@ namespace Winstreak.Parsers.ImageParser
 			                         || PinkTeamColor == color
 			                         || WhiteTeamColor == color; 
 
-			return Mode == 12
-				? generalColors || accountForOnesTwos
-				: generalColors;
+			return generalColors || accountForOnesTwos;
 		}
 
 		/// <summary>

@@ -44,12 +44,12 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var resp in responses)
 				{
-					totalWins += resp.BedwarsStats.Wins;
-					totalLosses += resp.BedwarsStats.Losses;
-					totalBrokenBeds += resp.BedwarsStats.BrokenBeds;
-					totalFinalKills += resp.BedwarsStats.FinalKills;
-					totalFinalDeaths += resp.BedwarsStats.FinalDeaths;
-					levels += resp.BedwarsStats.BedwarsLevel;
+					totalWins += resp.OverallBedwarsStats.Wins;
+					totalLosses += resp.OverallBedwarsStats.Losses;
+					totalBrokenBeds += resp.OverallBedwarsStats.BrokenBeds;
+					totalFinalKills += resp.OverallBedwarsStats.FinalKills;
+					totalFinalDeaths += resp.OverallBedwarsStats.FinalDeaths;
+					levels += resp.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(resp.Name, resp);
 					nameResults.Add(resp);
@@ -61,13 +61,13 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var playerInfo in profilesPlancke)
 				{
-					totalFinalDeaths += playerInfo.BedwarsStats.FinalDeaths;
-					totalFinalKills += playerInfo.BedwarsStats.FinalKills;
-					totalBrokenBeds += playerInfo.BedwarsStats.BrokenBeds;
-					totalWins += playerInfo.BedwarsStats.Wins;
-					totalLosses += playerInfo.BedwarsStats.Losses;
-					if (playerInfo.BedwarsStats.BedwarsLevel != -1)
-						levels += playerInfo.BedwarsStats.BedwarsLevel;
+					totalFinalDeaths += playerInfo.OverallBedwarsStats.FinalDeaths;
+					totalFinalKills += playerInfo.OverallBedwarsStats.FinalKills;
+					totalBrokenBeds += playerInfo.OverallBedwarsStats.BrokenBeds;
+					totalWins += playerInfo.OverallBedwarsStats.Wins;
+					totalLosses += playerInfo.OverallBedwarsStats.Losses;
+					if (playerInfo.BedwarsLevel != -1)
+						levels += playerInfo.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
@@ -83,13 +83,13 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var playerInfo in profilesPlancke)
 				{
-					totalFinalDeaths += playerInfo.BedwarsStats.FinalDeaths;
-					totalFinalKills += playerInfo.BedwarsStats.FinalKills;
-					totalBrokenBeds += playerInfo.BedwarsStats.BrokenBeds;
-					totalWins += playerInfo.BedwarsStats.Wins;
-					totalLosses += playerInfo.BedwarsStats.Losses;
-					if (playerInfo.BedwarsStats.BedwarsLevel != -1)
-						levels += playerInfo.BedwarsStats.BedwarsLevel;
+					totalFinalDeaths += playerInfo.OverallBedwarsStats.FinalDeaths;
+					totalFinalKills += playerInfo.OverallBedwarsStats.FinalKills;
+					totalBrokenBeds += playerInfo.OverallBedwarsStats.BrokenBeds;
+					totalWins += playerInfo.OverallBedwarsStats.Wins;
+					totalLosses += playerInfo.OverallBedwarsStats.Losses;
+					if (playerInfo.BedwarsLevel != -1)
+						levels += playerInfo.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(playerInfo.Name, playerInfo);
 					nameResults.Add(playerInfo);
@@ -109,21 +109,21 @@ namespace Winstreak.DirectoryManager
 
 			foreach (var playerInfo in nameResults)
 			{
-				var fkdr = playerInfo.BedwarsStats.GetFkdr();
-				var score = playerInfo.BedwarsStats.GetScore();
+				var fkdr = playerInfo.OverallBedwarsStats.GetFkdr();
+				var score = playerInfo.OverallBedwarsStats.GetScore();
 				tableBuilder.AddRow(
-					playerInfo.BedwarsStats.BedwarsLevel == -1
+					playerInfo.BedwarsLevel == -1
 						? "N/A"
-						: playerInfo.BedwarsStats.BedwarsLevel.ToString(),
+						: playerInfo.BedwarsLevel.ToString(),
 					Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
 						? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
 						: playerInfo.Name,
-					playerInfo.BedwarsStats.FinalKills,
-					playerInfo.BedwarsStats.BrokenBeds,
+					playerInfo.OverallBedwarsStats.FinalKills,
+					playerInfo.OverallBedwarsStats.BrokenBeds,
 					fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
-					playerInfo.BedwarsStats.Winstreak == -1
+					playerInfo.Winstreak == -1
 						? "N/A"
-						: playerInfo.BedwarsStats.Winstreak.ToString(),
+						: playerInfo.Winstreak.ToString(),
 					Math.Round(score, 1),
 					DetermineScoreMeaning(score, true)
 				);
@@ -180,13 +180,13 @@ namespace Winstreak.DirectoryManager
 						var friendGroup = friendGroups[i];
 						foreach (var member in friendGroup)
 						{
-							var fkdr = member.BedwarsStats.GetFkdr();
+							var fkdr = member.OverallBedwarsStats.GetFkdr();
 							friendTableBuilder.AddRow(
-								member.BedwarsStats.BedwarsLevel,
+								member.BedwarsLevel,
 								member.Name,
 								fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
-								Math.Round(member.BedwarsStats.GetScore(), 2),
-								DetermineScoreMeaning(member.BedwarsStats.GetScore(), true)
+								Math.Round(member.OverallBedwarsStats.GetScore(), 2),
+								DetermineScoreMeaning(member.OverallBedwarsStats.GetScore(), true)
 							);
 						}
 

@@ -7,7 +7,7 @@ namespace Winstreak.Profile.Calculations
 		// private constant fields, used for calculations
 		private const int EasyLevels = 4;
 		private const int EasyLevelsXp = 7000;
-		private const long XpPerPrestige = (long)96 * 5000 * EasyLevelsXp;
+		private const long XpPerPrestige = (long) 96 * 5000 * EasyLevelsXp;
 		private const int LevelsPerPrestige = 100;
 		private const int HighestPrestige = 10;
 
@@ -56,7 +56,7 @@ namespace Winstreak.Profile.Calculations
 		/// <returns>The corresponding Bedwars level.</returns>
 		public static int GetLevelFromExp(long exp)
 		{
-			var prestige = Math.Floor(exp / (double)XpPerPrestige);
+			var prestige = Math.Floor(exp / (double) XpPerPrestige);
 			var level = prestige * LevelsPerPrestige;
 			var expWithoutPrestige = exp - prestige * XpPerPrestige;
 
@@ -70,7 +70,7 @@ namespace Winstreak.Profile.Calculations
 				expWithoutPrestige -= expForEasyLevel;
 			}
 
-			return (int)(level + Math.Floor(expWithoutPrestige / 5000));
+			return (int) (level + Math.Floor(expWithoutPrestige / 5000));
 		}
 	}
 }
