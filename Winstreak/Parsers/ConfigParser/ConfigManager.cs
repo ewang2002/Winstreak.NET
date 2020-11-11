@@ -13,7 +13,6 @@ namespace Winstreak.Parsers.ConfigParser
 				ClearConsole = true,
 				DangerousPlayers = new string[0],
 				ExemptPlayers = new string[0],
-				GamemodeType = 34,
 				HypixelApiKey = string.Empty,
 				PathToMinecraftFolder = string.Empty,
 				RetryMax = 2,
@@ -74,13 +73,6 @@ namespace Winstreak.Parsers.ConfigParser
 								? 250
 								: v4
 							: 250;
-						break;
-					case "GAMEMODE_TYPE":
-						configFile.GamemodeType = int.TryParse(val, out var v5)
-							? v5 == 34 || v5 == 12
-								? v5
-								: 34
-							: 34;
 						break;
 					case "HYPIXEL_API_KEY":
 						configFile.HypixelApiKey = val;

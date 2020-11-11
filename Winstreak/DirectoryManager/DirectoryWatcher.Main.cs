@@ -32,7 +32,6 @@ namespace Winstreak.DirectoryManager
 			Config = file;
 			McScreenshotsPath = new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"));
 			ShouldClearBeforeCheck = file.ClearConsole;
-			Mode = file.GamemodeType;
 
 			if (file.HypixelApiKey != string.Empty)
 			{
@@ -112,7 +111,6 @@ namespace Winstreak.DirectoryManager
 							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
 							Console.WriteLine(
 								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
-							Console.WriteLine($"[INFO] Gamemode Set: {GamemodeIntToStr()}");
 							Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
 							Console.WriteLine($"[INFO] Checking Friends? {(ApiKeyValid && file.CheckFriends ? "Yes" : "No")}");
 							Console.WriteLine();
@@ -130,12 +128,6 @@ namespace Winstreak.DirectoryManager
 						case "-clear":
 						case "-c":
 							Console.Clear();
-							continue;
-						case "-gamemode":
-						case "-gm":
-							Mode = Mode == 34 ? 12 : 34;
-							Console.WriteLine($"[INFO] Set parser gamemode to: {GamemodeIntToStr()}");
-							Console.WriteLine(Divider);
 							continue;
 						case "-tc":
 							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
@@ -430,7 +422,6 @@ namespace Winstreak.DirectoryManager
 			try
 
 			{
-				parser.SetGameMode(Mode);
 				parser.SetGuiScale(GuiScale);
 				parser.InitPoints();
 				parser.FindStartOfName();

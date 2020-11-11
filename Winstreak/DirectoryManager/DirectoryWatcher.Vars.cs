@@ -21,8 +21,6 @@ namespace Winstreak.DirectoryManager
 			.AppendLine()
 			.Append("> -emptycache: Empties the cache.")
 			.AppendLine()
-			.Append("> -gamemode OR -gm: Switches the parser gamemode from solos/doubles to 3s/4s or vice versa.")
-			.AppendLine()
 			.Append(
 				"> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data. By default, this is set to the Score value.")
 			.AppendLine()
@@ -39,11 +37,9 @@ namespace Winstreak.DirectoryManager
 		public static bool ShouldClearBeforeCheck;
 
 		public static ConfigFile Config;
-		public static int Mode = 34;
 
 		public static HypixelApi HypixelApi;
 		public static bool ApiKeyValid;
-
 		public static SortType SortingType = SortType.Score;
 	}
 }

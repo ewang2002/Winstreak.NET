@@ -35,18 +35,6 @@ namespace Winstreak.DirectoryManager
 		}
 
 		/// <summary>
-		/// Gets the current gamemode as a string format that can be displayed.
-		/// </summary>
-		/// <returns>The current, written-out gamemode.</returns>
-		private static string GamemodeIntToStr()
-			=> Mode switch
-			{
-				12 => "Solos/Doubles",
-				34 => "3v3v3v3s/4v4v4v4s/4v4s",
-				_ => throw new ArgumentOutOfRangeException(nameof(Mode), "Gamemode must either be 34 or 12.")
-			};
-
-		/// <summary>
 		/// Returns a function that can be used to sort Bedwars stats.
 		/// </summary>
 		/// <returns>The function.</returns>

@@ -14,8 +14,8 @@
     <RepositoryUrl>https://github.com/ewang2002/Winstreak.NET</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>minecraft, hypixel, hypixel-bedwars, bedwars</PackageTags>
-    <Version>2.2.0</Version>
-    <AssemblyVersion>2.2.0</AssemblyVersion>
+    <Version>2.2.1</Version>
+    <AssemblyVersion>2.2.1</AssemblyVersion>
     <FileVersion>2.2.0</FileVersion>
   </PropertyGroup>
 
