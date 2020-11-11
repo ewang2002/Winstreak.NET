@@ -14,62 +14,62 @@ namespace Winstreak.Profile
 		/// <summary>
 		/// The name of this person.
 		/// </summary>
-		public string Name { get; private set; }
+		public string Name { get; }
 
 		/// <summary>
 		/// The Uuid of this person.
 		/// </summary>
-		public string Uuid { get; private set; }
+		public string Uuid { get; }
 
 		/// <summary>
 		/// When this person first joined Hypixel.
 		/// </summary>
-		public DateTime FirstJoined { get; private set; }
+		public DateTime FirstJoined { get; }
 
 		/// <summary>
 		/// The amount of karma the person has. 
 		/// </summary>
-		public long Karma { get; private set; }
+		public long Karma { get; }
 
 		/// <summary>
 		/// The person's network experience. 
 		/// </summary>
-		public double NetworkLevel { get; private set; }
+		public double NetworkLevel { get; }
 
 		/// <summary>
 		/// This person's overall Bedwars statistics. 
 		/// </summary>
-		public BedwarsStats OverallBedwarsStats { get; private set; }
+		public BedwarsStats OverallBedwarsStats { get; }
 
 		/// <summary>
 		/// Bedwars stats for solos.
 		/// </summary>
-		public BedwarsStats EightOneBedwarsStats { get; private set; }
+		public BedwarsStats EightOneBedwarsStats { get; }
 
 		/// <summary>
 		/// Bedwars stats for doubles.
 		/// </summary>
-		public BedwarsStats EightTwoBedwarsStats { get; private set; }
+		public BedwarsStats EightTwoBedwarsStats { get; }
 
 		/// <summary>
 		/// Bedwars stats for 3v3v3v3.
 		/// </summary>
-		public BedwarsStats FourThreeBedwarsStats { get; private set; }
+		public BedwarsStats FourThreeBedwarsStats { get; }
 
 		/// <summary>
 		/// Bedwars stats for 4v4v4v4.
 		/// </summary>
-		public BedwarsStats FourFourBedwarsStats { get; private set; }
+		public BedwarsStats FourFourBedwarsStats { get; }
 
 		/// <summary>
 		/// The person's Bedwars level. 
 		/// </summary>
-		public int BedwarsLevel { get; private set; }
+		public int BedwarsLevel { get; }
 
 		/// <summary>
 		/// The person's current Bedwars winstreak.
 		/// </summary>
-		public int Winstreak { get; private set; }
+		public int Winstreak { get; }
 
 		/// <summary>
 		/// A constructor that takes in the response object from Hypixel's API. 
