@@ -36,12 +36,12 @@ namespace Winstreak
 			{
 				HypixelApiKey = string.Empty,
 				ClearConsole = false,
-				ExemptPlayers = new string[0],
+				ExemptPlayers = Array.Empty<string>(),
 				RetryDelay = 250,
 				RetryMax = 2,
 				ScreenshotDelay = 250,
 				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
-				DangerousPlayers = new string[0],
+				DangerousPlayers = Array.Empty<string>(),
 				DeleteScreenshot = false,
 				CheckFriends = true
 			};

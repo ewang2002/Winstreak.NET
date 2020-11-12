@@ -106,7 +106,7 @@ namespace Winstreak.Parsers.ImageParser
 					// we only want to get one character
 					// see "ParseNames" for explanation of
 					// how this works 
-					while (ttlBytes.Length == 0 || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
+					while (ttlBytes.Length == 0 || ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000")
 					{
 						var columnBytes = new StringBuilder();
 						for (var dy = 0; dy < 8 * GuiWidth && tempX < EndingPoint.X; dy += GuiWidth)
@@ -119,7 +119,7 @@ namespace Winstreak.Parsers.ImageParser
 								: "0");
 						}
 
-						ttlBytes.Append(columnBytes.ToString());
+						ttlBytes.Append(columnBytes);
 						tempX += GuiWidth;
 					}
 
@@ -178,7 +178,7 @@ namespace Winstreak.Parsers.ImageParser
 					while (ttlBytes.Length == 0
 						   // "00000000" represents an empty vertical line that separates
 						   // a letter from another letter
-						   || ttlBytes.ToString().Substring(ttlBytes.Length - 8) != "00000000")
+						   || ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000")
 					{
 						var columnBytes = new StringBuilder();
 
@@ -228,15 +228,15 @@ namespace Winstreak.Parsers.ImageParser
 
 								// append a "1," indicating that the valid color was
 								// found at this pixel location
-								columnBytes.Append("1");
+								columnBytes.Append('1');
 							}
 							else
 								// append a "0," indicating that the valid color was 
 								// not found at this pixel location.
-								columnBytes.Append("0");
+								columnBytes.Append('0');
 						}
 
-						ttlBytes.Append(columnBytes.ToString());
+						ttlBytes.Append(columnBytes);
 
 						// next "column"
 						x += GuiWidth;
@@ -333,7 +333,7 @@ namespace Winstreak.Parsers.ImageParser
 		/// </summary>
 		/// <param name="color">The color to check.</param>
 		/// <returns>Whether the color is valid.</returns>
-		private bool IsValidRankColor(Color color)
+		private static bool IsValidRankColor(Color color)
 			=> MvpPlusPlus.IsRgbEqualTo(color)
 			   || MvpPlus.IsRgbEqualTo(color)
 			   || Mvp.IsRgbEqualTo(color)
@@ -353,7 +353,7 @@ namespace Winstreak.Parsers.ImageParser
 		/// </summary>
 		/// <param name="color">The team color.</param>
 		/// <returns>Whether the color is valid or not.</returns>
-		private bool IsValidTeamColor(Color color)
+		private static bool IsValidTeamColor(Color color)
 		{
 			var generalColors = RedTeamColor.IsRgbEqualTo(color)
 			                    || GreenTeamColor.IsRgbEqualTo(color)
