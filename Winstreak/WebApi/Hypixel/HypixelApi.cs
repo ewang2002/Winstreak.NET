@@ -16,12 +16,12 @@ namespace Winstreak.WebApi.Hypixel
 		/// <summary>
 		/// The maximum number of requests that can be made in "HypixelRateLimit"
 		/// </summary>
-		public static int MaximumRequestsInRateLimit = 120;
+		public static readonly int MaximumRequestsInRateLimit = 120;
 
 		/// <summary>
 		/// The amount of time before the rate limit is reset. 
 		/// </summary>
-		public static TimeSpan HypixelRateLimit = TimeSpan.FromMinutes(1);
+		public static readonly TimeSpan HypixelRateLimit = TimeSpan.FromMinutes(1);
 
 		/// <summary>
 		/// The timer.
@@ -52,14 +52,11 @@ namespace Winstreak.WebApi.Hypixel
 		}
 
 		/// <summary>
-		/// Validates the API key.
+		/// Checks and makes sure the API key is valid.
 		/// </summary>
-		/// <returns>Whether the API key is valid or not.</returns>
-		public async Task<bool> ValidateApiKeyAsync()
-		{
-			var resp = await SendRequestAsync<ValidateApiResponse>("key?");
-			return resp.Success;
-		}
+		/// <returns>Returns an object containing information about whether the API key is valid or not.</returns>
+		public async Task<ValidateApiResponse> ValidateApiKeyAsync()
+			=> await SendRequestAsync<ValidateApiResponse>("key?");
 
 		/// <summary>
 		/// Sends a request to Hypixel.

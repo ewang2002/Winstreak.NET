@@ -36,7 +36,12 @@ namespace Winstreak.DirectoryManager
 			if (file.HypixelApiKey != string.Empty)
 			{
 				HypixelApi = new HypixelApi(file.HypixelApiKey);
-				ApiKeyValid = await HypixelApi.ValidateApiKeyAsync();
+
+				var apiKeyValidationInfo = await HypixelApi.ValidateApiKeyAsync();
+				ApiKeyValid = apiKeyValidationInfo.Success && apiKeyValidationInfo.Record != null;
+				
+				if (ApiKeyValid)
+					HypixelApi.RequestsMade = apiKeyValidationInfo.Record!.QueriesInPastMin;
 			}
 
 			// Get gui scale

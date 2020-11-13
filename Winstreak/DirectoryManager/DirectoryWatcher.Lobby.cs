@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,16 +22,19 @@ namespace Winstreak.DirectoryManager
 		/// <param name="names">The names to check.</param>
 		/// <param name="timeTaken">The time taken for the screenshot to actually be processed.</param>
 		/// <returns>Nothing.</returns>
+		[SuppressMessage("Microsoft.Style", "IDE0042")]
 		private static async Task ProcessLobbyScreenshotAsync(IList<string> names, TimeSpan timeTaken)
 		{
 			var reqTime = new Stopwatch();
 			reqTime.Start();
 			var nickedPlayers = new List<string>();
+			/*
 			var totalWins = 0;
 			var totalLosses = 0;
 			var totalFinalKills = 0;
 			var totalFinalDeaths = 0;
-			var totalBrokenBeds = 0;
+			var totalBrokenBeds = 0;*/
+			var totalStats = new BedwarsStats();
 			var levels = 0;
 
 			var nameResults = new List<PlayerProfile>();
@@ -44,11 +48,7 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var resp in responses)
 				{
-					totalWins += resp.OverallBedwarsStats.Wins;
-					totalLosses += resp.OverallBedwarsStats.Losses;
-					totalBrokenBeds += resp.OverallBedwarsStats.BrokenBeds;
-					totalFinalKills += resp.OverallBedwarsStats.FinalKills;
-					totalFinalDeaths += resp.OverallBedwarsStats.FinalDeaths;
+					totalStats += resp.OverallBedwarsStats;
 					levels += resp.BedwarsLevel;
 
 					CachedPlayerData.TryAdd(resp.Name, resp);
@@ -61,11 +61,7 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var playerInfo in profilesPlancke)
 				{
-					totalFinalDeaths += playerInfo.OverallBedwarsStats.FinalDeaths;
-					totalFinalKills += playerInfo.OverallBedwarsStats.FinalKills;
-					totalBrokenBeds += playerInfo.OverallBedwarsStats.BrokenBeds;
-					totalWins += playerInfo.OverallBedwarsStats.Wins;
-					totalLosses += playerInfo.OverallBedwarsStats.Losses;
+					totalStats += playerInfo.OverallBedwarsStats;
 					if (playerInfo.BedwarsLevel != -1)
 						levels += playerInfo.BedwarsLevel;
 
@@ -83,11 +79,7 @@ namespace Winstreak.DirectoryManager
 
 				foreach (var playerInfo in profilesPlancke)
 				{
-					totalFinalDeaths += playerInfo.OverallBedwarsStats.FinalDeaths;
-					totalFinalKills += playerInfo.OverallBedwarsStats.FinalKills;
-					totalBrokenBeds += playerInfo.OverallBedwarsStats.BrokenBeds;
-					totalWins += playerInfo.OverallBedwarsStats.Wins;
-					totalLosses += playerInfo.OverallBedwarsStats.Losses;
+					totalStats += playerInfo.OverallBedwarsStats;
 					if (playerInfo.BedwarsLevel != -1)
 						levels += playerInfo.BedwarsLevel;
 
@@ -143,21 +135,19 @@ namespace Winstreak.DirectoryManager
 
 			tableBuilder.AddSeparator();
 			var ttlScore = PlayerCalculator.GetScore(
-				totalFinalDeaths == 0
-					? (true, -1.0)
-					: (false, totalFinalKills / (double) totalFinalDeaths),
-				totalBrokenBeds
+				totalStats.GetFkdr(),
+				totalStats.BrokenBeds
 			);
 
+			var totalWinLossRatio = totalStats.GetWinLossRatio();
 			tableBuilder.AddRow(
 				levels,
 				"Total",
-				totalFinalKills,
-				totalBrokenBeds,
-				totalLosses == 0
+				totalStats.FinalKills,
+				totalStats.BrokenBeds,
+				totalWinLossRatio.lZero
 					? "N/A"
-					: Math.Round((double) totalWins / totalLosses, 2)
-						.ToString(CultureInfo.InvariantCulture),
+					: Math.Round(totalWinLossRatio.wlr, 2) + "",
 				string.Empty,
 				Math.Round(ttlScore, 1),
 				DetermineScoreMeaning(ttlScore, false)

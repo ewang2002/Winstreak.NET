@@ -10,27 +10,27 @@ namespace Winstreak.WebApi
 		/// <summary>
 		/// Caching Names & UUID.
 		/// </summary>
-		public static ConcurrentDictionary<string, string> NameUuid;
+		public static readonly ConcurrentDictionary<string, string> NameUuid;
 
 		/// <summary>
 		/// The cached data.
 		/// </summary>
-		public static CacheDictionary<string, PlayerProfile> CachedPlayerData;
+		public static readonly CacheDictionary<string, PlayerProfile> CachedPlayerData;
 
 		/// <summary>
 		/// The cached friends data. K = Uuid, V = FriendsApiResponse
 		/// </summary>
-		public static CacheDictionary<string, FriendsApiResponse> CachedFriendsData;
+		public static readonly CacheDictionary<string, FriendsApiResponse> CachedFriendsData;
 
 		/// <summary>
 		/// The cached guild data. K = Uuid, V = FriendsApiResponse
 		/// </summary>
-		public static CacheDictionary<string, GuildsApiResponse> CachedGuildData; 
+		public static readonly CacheDictionary<string, GuildsApiResponse> CachedGuildData; 
 
 		/// <summary>
 		/// The API Client.
 		/// </summary>
-		public static HttpClient ApiClient;
+		public static readonly HttpClient ApiClient;
 
 		/// <summary>
 		/// The constructor for this method.
