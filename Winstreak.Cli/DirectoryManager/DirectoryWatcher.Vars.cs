@@ -43,8 +43,5 @@ namespace Winstreak.Cli.DirectoryManager
 		// API Key stuff
 		public static HypixelApi HypixelApi;
 		public static bool ApiKeyValid;
-
-		// Purely for statistics
-
 	}
 }
