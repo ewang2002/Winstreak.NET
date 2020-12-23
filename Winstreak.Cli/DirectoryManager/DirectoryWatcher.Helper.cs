@@ -81,7 +81,7 @@ namespace Winstreak.Cli.DirectoryManager
 		/// </summary>
 		/// <param name="nameResults">The names to check.</param>
 		/// <returns>A tuple containing two elements -- one element with all groups and the other element with names that couldn't be checked.</returns>
-		public static async Task<(IList<IList<PlayerProfile>> friendGroups, HashSet<string> nameFriendsUnable)>
+		private static async Task<(IList<IList<PlayerProfile>> friendGroups, HashSet<string> nameFriendsUnable)>
 			GetGroups(IList<PlayerProfile> nameResults)
 		{
 			var nameFriendsUnable = new HashSet<string>();

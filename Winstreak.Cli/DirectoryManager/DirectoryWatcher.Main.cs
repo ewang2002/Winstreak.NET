@@ -58,10 +58,13 @@ namespace Winstreak.Cli.DirectoryManager
 
 			var version = Assembly.GetEntryAssembly()?.GetName().Version;
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
-			Console.WriteLine("Winstreak For Hypixel Bedwars");
+			Console.WriteLine($"Winstreak For Hypixel Bedwars");
 			if (version != null)
 				Console.WriteLine($"Version: {version}");
 			Console.WriteLine("By CM19 & icicl");
+#if DEBUG
+			Console.WriteLine($"{AnsiConstants.TextBrightRedAnsi}Debug Mode!{AnsiConstants.ResetAnsi}");
+#endif
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
 
 			Console.WriteLine();
@@ -412,7 +415,7 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <param name="bitmap">The screenshot as a Bitmap.</param>
 		/// <param name="path">The path to the screenshot.</param>
 		/// <returns>Nothing.</returns>
-		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
+		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path, bool tryAgain = false)
 		{
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
@@ -423,7 +426,6 @@ namespace Winstreak.Cli.DirectoryManager
 			// parse time
 			using var parser = new NameParser(bitmap);
 			try
-
 			{
 				parser.SetGuiScale(GuiScale);
 				parser.InitPoints();

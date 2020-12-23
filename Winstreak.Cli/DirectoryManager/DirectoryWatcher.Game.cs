@@ -149,9 +149,7 @@ namespace Winstreak.Cli.DirectoryManager
 							? "N/A"
 							: teammate.Winstreak.ToString(),
 						Math.Round(teammate.OverallBedwarsStats.GetScore(), 2),
-						teammate.OverallBedwarsStats.FinalDeaths == 0
-							? BackgroundBrightRedAnsi + "Poss. Alt./Sus." + ResetAnsi
-							: DetermineScoreMeaning(teammate.OverallBedwarsStats.GetScore(), true),
+						DetermineScoreMeaning(teammate.OverallBedwarsStats.GetScore(), true),
 						groupNum switch
 						{
 							-2 => "E",

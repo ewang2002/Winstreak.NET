@@ -23,13 +23,13 @@ namespace Winstreak.Cli
 
 			var envPath = new DirectoryInfo(Environment.CurrentDirectory);
 			var configFileInfo = (from path in possiblePaths
-				where Directory.Exists(path)
-				select envPath.GetFiles()
-					.Where(x => x.Name.ToLower() == "wsconfig.txt")
-					.ToArray()
+								  where Directory.Exists(path)
+								  select envPath.GetFiles()
+									  .Where(x => x.Name.ToLower() == "wsconfig.txt")
+									  .ToArray()
 				into possConfigArr
-				where possConfigArr.Length != 0
-				select possConfigArr[0]).FirstOrDefault();
+								  where possConfigArr.Length != 0
+								  select possConfigArr[0]).FirstOrDefault();
 
 			// default values
 			var configurationFile = new ConfigFile
@@ -82,7 +82,7 @@ namespace Winstreak.Cli
 				Console.ResetColor();
 				return;
 			}
-			
+
 			await DirectoryWatcher.RunAsync(configurationFile);
 			Console.WriteLine("[INFO] Program has been terminated. Press ENTER to close this program.");
 			Console.ReadLine();

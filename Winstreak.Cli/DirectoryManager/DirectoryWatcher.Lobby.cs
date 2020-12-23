@@ -97,13 +97,18 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				var fkdr = playerInfo.OverallBedwarsStats.GetFkdr();
 				var score = playerInfo.OverallBedwarsStats.GetScore();
+				var playerName = Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
+					? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
+					: playerInfo.Name;
+
+				if ((DateTime.Now - playerInfo.FirstJoined).TotalDays < 7)
+					playerName = TextBrightBlackAnsi + playerName + ResetAnsi;
+
 				tableBuilder.AddRow(
 					playerInfo.BedwarsLevel == -1
 						? "N/A"
 						: playerInfo.BedwarsLevel.ToString(),
-					Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
-						? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
-						: playerInfo.Name,
+					playerName,
 					playerInfo.OverallBedwarsStats.FinalKills,
 					playerInfo.OverallBedwarsStats.BrokenBeds,
 					fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
@@ -114,7 +119,7 @@ namespace Winstreak.Cli.DirectoryManager
 					DetermineScoreMeaning(score, true)
 				);
 			}
-
+			
 			foreach (var nickedPlayer in nickedPlayers)
 				tableBuilder.AddRow(
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
@@ -177,7 +182,7 @@ namespace Winstreak.Cli.DirectoryManager
 						if (i + 1 != friendGroups.Count)
 							friendTableBuilder.AddSeparator();
 					}
-
+					
 					friendTableBuilder
 						.AddSeparator()
 						.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty,
@@ -199,41 +204,6 @@ namespace Winstreak.Cli.DirectoryManager
 			Console.WriteLine(tableBuilder.ToString());
 			if (friendTableBuilder != null)
 				Console.WriteLine(friendTableBuilder.ToString());
-
-			// check for potential "interesting" and/or suspicious accounts
-			var susAccountNotes = new Dictionary<string, string>();
-			foreach (var playerProfile in nameResults)
-			{
-				// check time
-				var notes = new HashSet<string>();
-				var joinedHypixel = DateTime.Now - playerProfile.FirstJoined;
-
-				// 30 days
-				if (joinedHypixel.TotalMilliseconds < 2.628e+9)
-					notes.Add($"First Login: {joinedHypixel.Days} Days Ago.");
-
-				if (playerProfile.Karma <= 150)
-					notes.Add($"Karma Amount: {playerProfile.Karma}");
-
-				if (playerProfile.NetworkLevel < 10)
-					notes.Add($"Network Level: {Math.Round(playerProfile.NetworkLevel, 1)}");
-
-				if (notes.Count == 0)
-					continue;
-
-				susAccountNotes.Add(playerProfile.Name, string.Join("\n", notes));
-			}
-
-			if (susAccountNotes.Count != 0)
-			{
-				var susTable = new Table(2)
-					.AddRow("Name", "Reason")
-					.AddSeparator();
-				foreach (var (name, reason) in susAccountNotes)
-					susTable.AddRowContainingNewLine(name, $"{reason}\n");
-
-				Console.WriteLine(susTable.ToString());
-			}
 
 			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalMilliseconds} Milliseconds.");
 			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");

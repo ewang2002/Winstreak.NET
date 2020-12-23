@@ -49,8 +49,6 @@ namespace Winstreak.Core.Profile
 		/// <param name="wins">The number of wins.</param>
 		/// <param name="losses">The number of deaths.</param>
 		/// <param name="beds">The number of beds broken.</param>
-		/// <param name="winstreak">Current winstreak across all games.</param>
-		/// <param name="level">Current bedwars level.</param>
 		public BedwarsStats(int kills, int deaths, int finalKills, int finalDeaths, int wins, int losses,
 			int beds)
 		{

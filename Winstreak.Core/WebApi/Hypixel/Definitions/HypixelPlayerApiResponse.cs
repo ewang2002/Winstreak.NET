@@ -52,6 +52,10 @@ namespace Winstreak.Core.WebApi.Hypixel.Definitions
 
         [JsonProperty("karma")]
         public long Karma { get; set; }
+        
+        // This can be "PARTY," "ALL" or "GUILD"
+        [JsonProperty("channel")]
+        public string Channel { get; set; }
     }
 
     public class Stats

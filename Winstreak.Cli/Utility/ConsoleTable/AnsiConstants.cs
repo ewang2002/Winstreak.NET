@@ -1,4 +1,7 @@
-﻿namespace Winstreak.Cli.Utility.ConsoleTable
+﻿using System;
+using System.Drawing;
+
+namespace Winstreak.Cli.Utility.ConsoleTable
 {
 	public static class AnsiConstants
 	{
