@@ -9,7 +9,7 @@ using Winstreak.Cli.DirectoryManager;
 
 namespace Winstreak.Cli
 {
-	public class Program
+	public static class Program
 	{
 		public static async Task Main()
 		{
@@ -41,7 +41,8 @@ namespace Winstreak.Cli
 				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
 				DangerousPlayers = Array.Empty<string>(),
 				DeleteScreenshot = false,
-				CheckFriends = true
+				CheckFriends = true,
+				SuppressErrorMessages = false
 			};
 
 			if (configFileInfo != null)

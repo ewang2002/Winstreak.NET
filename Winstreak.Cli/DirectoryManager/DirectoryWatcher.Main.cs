@@ -39,7 +39,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 				var apiKeyValidationInfo = await HypixelApi.ValidateApiKeyAsync();
 				ApiKeyValid = apiKeyValidationInfo.Success && apiKeyValidationInfo.Record != null;
-				
+
 				if (ApiKeyValid)
 					HypixelApi.RequestsMade = apiKeyValidationInfo.Record!.QueriesInPastMin;
 			}
@@ -69,7 +69,8 @@ namespace Winstreak.Cli.DirectoryManager
 
 			Console.WriteLine();
 			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}.");
-			Console.WriteLine($"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Length} Exempt Players Set.");
+			Console.WriteLine(
+				$"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Length} Exempt Players Set.");
 			Console.WriteLine();
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
@@ -115,13 +116,17 @@ namespace Winstreak.Cli.DirectoryManager
 					{
 						case "-config":
 							Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
-							Console.WriteLine($"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
+							Console.WriteLine(
+								$"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
 							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
 							Console.WriteLine(
 								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
 							Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
-							Console.WriteLine($"[INFO] Checking Friends? {(ApiKeyValid && file.CheckFriends ? "Yes" : "No")}");
+							Console.WriteLine(
+								$"[INFO] Checking Friends? {(ApiKeyValid && file.CheckFriends ? "Yes" : "No")}");
 							Console.WriteLine();
+							Console.WriteLine(
+								$"[INFO] Suppress Error Messages: {(Config.SuppressErrorMessages ? "Yes" : "No")}");
 							Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
 							Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
 							Console.WriteLine(Divider);
@@ -197,7 +202,7 @@ namespace Winstreak.Cli.DirectoryManager
 				checkTime.Start();
 				var (profiles, nicked) = await PlanckeApi
 					.GetMultipleProfilesFromPlancke(ignsToCheck);
-				
+
 				if (profiles.Count == 1)
 				{
 					Console.ForegroundColor = ConsoleColor.Green;
@@ -321,12 +326,16 @@ namespace Winstreak.Cli.DirectoryManager
 							bedwarsData.Name,
 							bedwarsData.OverallBedwarsStats.FinalDeaths == 0
 								? "N/A"
-								: Math.Round((double) bedwarsData.OverallBedwarsStats.FinalKills / bedwarsData.OverallBedwarsStats.FinalDeaths, 2)
+								: Math.Round(
+										(double) bedwarsData.OverallBedwarsStats.FinalKills /
+										bedwarsData.OverallBedwarsStats.FinalDeaths, 2)
 									.ToString(CultureInfo.InvariantCulture),
 							bedwarsData.OverallBedwarsStats.BrokenBeds,
 							bedwarsData.OverallBedwarsStats.Losses == 0
 								? "N/A"
-								: Math.Round((double) bedwarsData.OverallBedwarsStats.Wins / bedwarsData.OverallBedwarsStats.Losses, 2)
+								: Math.Round(
+										(double) bedwarsData.OverallBedwarsStats.Wins /
+										bedwarsData.OverallBedwarsStats.Losses, 2)
 									.ToString(CultureInfo.InvariantCulture),
 							bedwarsData.Winstreak
 						);
@@ -415,7 +424,7 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <param name="bitmap">The screenshot as a Bitmap.</param>
 		/// <param name="path">The path to the screenshot.</param>
 		/// <returns>Nothing.</returns>
-		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path, bool tryAgain = false)
+		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
 		{
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
@@ -443,6 +452,11 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			var allNames = parser.ParseNames(Config.ExemptPlayers);
+			if (allNames.Count == 0)
+			{
+				Console.WriteLine("[INFO] No parseable names found. Skipping.");
+				return;
+			}
 
 			// end parse
 			processingTime.Stop();
@@ -463,8 +477,10 @@ namespace Winstreak.Cli.DirectoryManager
 			else
 				await ProcessInGameScreenshotAsync(allNames, timeTaken);
 
+#if !DEBUG
 			if (Config.DeleteScreenshot)
 				File.Delete(path);
+#endif
 		}
 	}
 }

@@ -23,7 +23,8 @@ namespace Winstreak.Cli.Configuration
 				PathToMinecraftFolder = string.Empty,
 				ScreenshotDelay = 250,
 				DeleteScreenshot = false,
-				CheckFriends = true
+				CheckFriends = true,
+				SuppressErrorMessages = false 
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
@@ -75,6 +76,9 @@ namespace Winstreak.Cli.Configuration
 						break;
 					case "CHECK_FRIENDS":
 						configFile.CheckFriends = int.TryParse(val, out var v7) && v7 == 1;
+						break;
+					case "SUPPRESS_ERROR_MSGS":
+						configFile.SuppressErrorMessages = int.TryParse(val, out var v8) && v8 == 1;
 						break;
 				}
 			}

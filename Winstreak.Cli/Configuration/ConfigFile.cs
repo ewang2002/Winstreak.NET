@@ -2,13 +2,14 @@
 {
 	public struct ConfigFile
 	{
-		public string PathToMinecraftFolder;
-		public string[] ExemptPlayers;
-		public bool ClearConsole;
-		public int ScreenshotDelay;
-		public string HypixelApiKey;
-		public string[] DangerousPlayers;
-		public bool DeleteScreenshot;
-		public bool CheckFriends;
+		public string PathToMinecraftFolder { get; set; }
+		public string[] ExemptPlayers { get; set; }
+		public bool ClearConsole { get; set; }
+		public int ScreenshotDelay { get; set; }
+		public string HypixelApiKey { get; set; }
+		public string[] DangerousPlayers { get; set; }
+		public bool DeleteScreenshot { get; set; }
+		public bool CheckFriends { get; set; }
+		public bool SuppressErrorMessages { get; set; }
 	}
 }

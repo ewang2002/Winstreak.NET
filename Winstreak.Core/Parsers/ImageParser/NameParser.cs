@@ -53,7 +53,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 		public void SetGuiScale(int scale) => GuiWidth = scale;
 
 		/// <summary>
-		/// Finds the starting and ending point of the image. 
+		/// Creates the starting and ending bounds in which to check the image.
 		/// </summary>
 		public void InitPoints()
 		{
@@ -83,14 +83,14 @@ namespace Winstreak.Core.Parsers.ImageParser
 						var p1 = Img[x + 1, y + dy];
 						var p2 = Img[x + 2, y + dy];
 						if (!IsValidRankColor(p0)
-						    && !IsValidTeamColor(p0)
-						    && (!Color.White.IsRgbEqualTo(p0)
-						        || !IsValidRankColor(p1)
-						        && !IsValidTeamColor(p1)
-						        && !Color.White.IsRgbEqualTo(p1)
-						        && !IsValidRankColor(p2)
-						        && !IsValidTeamColor(p2)
-						        && !Color.White.IsRgbEqualTo(p2)))
+							&& !IsValidTeamColor(p0)
+							&& (!Color.White.IsRgbEqualTo(p0)
+								|| !IsValidRankColor(p1)
+								&& !IsValidTeamColor(p1)
+								&& !Color.White.IsRgbEqualTo(p1)
+								&& !IsValidRankColor(p2)
+								&& !IsValidTeamColor(p2)
+								&& !Color.White.IsRgbEqualTo(p2)))
 							continue;
 
 						foundValidColor = true;
@@ -113,8 +113,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 						{
 							var pixel = Img[tempX, y + dy];
 							columnBytes.Append(IsValidRankColor(pixel)
-							                   || IsValidTeamColor(pixel)
-							                   || Color.White.IsRgbEqualTo(pixel)
+											   || IsValidTeamColor(pixel)
+											   || Color.White.IsRgbEqualTo(pixel)
 								? "1"
 								: "0");
 						}
@@ -156,7 +156,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var currentColor = TeamColor.Unknown;
 			var names = new Dictionary<TeamColor, IList<string>>();
 			var tempNames = new Dictionary<TeamColor, IList<(string name, bool isRed)>>();
-			
+
 			// iterate over each name entry in the tab list
 			for (var y = StartingPoint.Y; y <= EndingPoint.Y; y += 9 * GuiWidth)
 			{
@@ -194,8 +194,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 							var isTeamColor = IsValidTeamColor(color);
 							var isWhiteTemp = Color.White.IsRgbEqualTo(color);
 							var isDeterminedColor = determinedColor != default
-							                        && determinedColor.IsRgbEqualTo(color)
-							                        || determinedColor == color;
+													&& determinedColor.IsRgbEqualTo(color)
+													|| determinedColor == color;
 
 							// "determinedColor" is the "lock" color.
 							// basically, once we determine what the color of the
@@ -257,7 +257,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 							x += 5 * GuiWidth;
 
 						// if the determined color wasn't defined, define it. 
-						if (determinedColor != default) 
+						if (determinedColor != default)
 							continue;
 						colorDict = colorDict.OrderByDescending(pair => pair.Value)
 							.ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -278,7 +278,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 				// but no space at beginning of name, then
 				// we have an invalid name
 				if (finalName.Trim() == string.Empty
-				    || isWhite && name.ToString()[0] != ' ')
+					|| isWhite && name.ToString()[0] != ' ')
 					continue;
 
 				// team screenshots are in the format
@@ -356,25 +356,25 @@ namespace Winstreak.Core.Parsers.ImageParser
 		private static bool IsValidTeamColor(Color color)
 		{
 			var generalColors = RedTeamColor.IsRgbEqualTo(color)
-			                    || GreenTeamColor.IsRgbEqualTo(color)
-			                    || YellowTeamColor.IsRgbEqualTo(color)
-			                    || BlueTeamColor.IsRgbEqualTo(color)
+								|| GreenTeamColor.IsRgbEqualTo(color)
+								|| YellowTeamColor.IsRgbEqualTo(color)
+								|| BlueTeamColor.IsRgbEqualTo(color)
 								// 1.14+ colors
 								// 1.14+ screenshots use RGBA, not RGB. 
-			                    || RedTeamColor == color
-			                    || GreenTeamColor == color
-			                    || YellowTeamColor == color
-			                    || BlueTeamColor == color;
+								|| RedTeamColor == color
+								|| GreenTeamColor == color
+								|| YellowTeamColor == color
+								|| BlueTeamColor == color;
 
 			var accountForOnesTwos = GreyTeamColor.IsRgbEqualTo(color)
-			                         || AquaTeamColor.IsRgbEqualTo(color)
-			                         || PinkTeamColor.IsRgbEqualTo(color)
-			                         || WhiteTeamColor.IsRgbEqualTo(color)
+									 || AquaTeamColor.IsRgbEqualTo(color)
+									 || PinkTeamColor.IsRgbEqualTo(color)
+									 || WhiteTeamColor.IsRgbEqualTo(color)
 									 // 1.14+
-			                         || GreyTeamColor == color
-			                         || AquaTeamColor == color
-			                         || PinkTeamColor == color
-			                         || WhiteTeamColor == color; 
+									 || GreyTeamColor == color
+									 || AquaTeamColor == color
+									 || PinkTeamColor == color
+									 || WhiteTeamColor == color;
 
 			return generalColors || accountForOnesTwos;
 		}
