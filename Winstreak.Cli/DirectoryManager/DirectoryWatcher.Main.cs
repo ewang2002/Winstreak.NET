@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
 using Winstreak.Cli.Utility.ConsoleTable;
@@ -419,7 +420,7 @@ namespace Winstreak.Cli.DirectoryManager
 				return;
 			}
 
-			await ProcessScreenshotAsync(bitmap, e.FullPath);
+			await ProcessScreenshotAsync(bitmap, e.Name);
 			bitmap.Dispose();
 		}
 
@@ -427,14 +428,14 @@ namespace Winstreak.Cli.DirectoryManager
 		/// Processes the screenshot that was provided.
 		/// </summary>
 		/// <param name="bitmap">The screenshot as a Bitmap.</param>
-		/// <param name="path">The path to the screenshot.</param>
+		/// <param name="name">The name of the screenshot.</param>
 		/// <returns>Nothing.</returns>
-		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
+		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string name)
 		{
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
 
-			Console.WriteLine($"[INFO] Checking Screenshot: {path}");
+			Console.WriteLine($"[INFO] Checking Screenshot: {name}");
 			var processingTime = new Stopwatch();
 			processingTime.Start();
 			// parse time
@@ -447,13 +448,21 @@ namespace Winstreak.Cli.DirectoryManager
 			if (allNames.Count == 0)
 			{
 				Console.WriteLine("[INFO] No parseable names found. Skipping.");
+				Console.WriteLine(Divider);
 				return;
 			}
 
 			// end parse
 			processingTime.Stop();
 			var timeTaken = processingTime.Elapsed;
-			Console.WriteLine($"[INFO] Determined Screenshot Type: {(parser.IsLobby ? "Lobby" : "Game")}");
+			var parsedPeople = allNames.Sum(x => x.Value.Count);
+			var basicInfoSb = new StringBuilder()
+				.Append("[INFO] Screenshot Parse Summary:").AppendLine()
+				.Append($"\t- Type: {(parser.IsLobby ? "Lobby" : "Game")}").AppendLine()
+				.Append($"\t- Players: {parsedPeople}").AppendLine()
+				.Append($"\t- Groups: {allNames.Count}");
+			Console.WriteLine(basicInfoSb);
+			
 			if (parser.IsLobby)
 			{
 				if (allNames.ContainsKey(TeamColor.Unknown))
@@ -462,7 +471,7 @@ namespace Winstreak.Cli.DirectoryManager
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
 					Console.WriteLine(
-						"[ERROR] An error occurred with the result of the parsing. Please take another screenshot.");
+						"[ERROR] An error occurred with the parse results. Please take another screenshot.");
 					Console.ResetColor();
 				}
 			}

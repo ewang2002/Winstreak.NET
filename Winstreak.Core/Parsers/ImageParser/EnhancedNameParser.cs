@@ -159,7 +159,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var tempNames = new Dictionary<TeamColor, List<(string name, bool isRed)>>();
 			var hasCompletedOneIteration = false; 
 			
-			// iterate over each name entry in the tab list
+			// iterate over each column 
 			while (FindStartOfName())
 			{
 				var innerTemp = new Dictionary<TeamColor, IList<(string name, bool isRed)>>();

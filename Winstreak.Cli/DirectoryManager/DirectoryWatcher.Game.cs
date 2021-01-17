@@ -20,7 +20,7 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <param name="teams">The teams.</param>
 		/// <param name="timeTaken">The time taken for the screenshot to actually be processed.</param>
 		/// <returns>Nothing.</returns>
-		public static async Task ProcessInGameScreenshotAsync(IDictionary<TeamColor, IList<string>> teams,
+		private static async Task ProcessInGameScreenshotAsync(IDictionary<TeamColor, IList<string>> teams,
 			TimeSpan timeTaken)
 		{
 			var reqTime = new Stopwatch();
@@ -88,8 +88,10 @@ namespace Winstreak.Cli.DirectoryManager
 			// start parsing the data
 			var rank = 1;
 
+			var totalPeople = teamInfo.Sum(x => x.PlayersInTeam.Count + x.NickedPlayers.Count);
 			var table = new Table(10);
-			table.AddRow("Rank", "LVL", "Username", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment", "G")
+			table.AddRow("Rank", "LVL", $"{totalPeople} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment", 
+					"G")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
