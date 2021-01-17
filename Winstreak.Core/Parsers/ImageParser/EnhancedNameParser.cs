@@ -67,7 +67,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var startX = _startingPoint.X + 1;
 			var endX = _calledBefore
 				? startX + 150 * _guiWidth
-				: _img.Width - 4;
+				: _endPoint.X;
 
 			if (!_calledBefore)
 				_calledBefore = true;
@@ -75,7 +75,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			_iterations++;
 			for (; y <= _endPoint.Y; y += 9 * _guiWidth)
 			{
-				for (var x = startX; x < endX && x < _img.Width - 4; x++)
+				for (var x = startX; x < endX && x < _endPoint.X; x++)
 				{
 					var foundValidColor = false;
 					for (var dy = 0; dy < 8 * _guiWidth; dy += _guiWidth)
@@ -157,6 +157,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var names = new Dictionary<TeamColor, IList<string>>();
 			var longestX = -1;
 			var tempNames = new Dictionary<TeamColor, List<(string name, bool isRed)>>();
+			var hasCompletedOneIteration = false; 
 			
 			// iterate over each name entry in the tab list
 			while (FindStartOfName())
@@ -164,7 +165,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 				var innerTemp = new Dictionary<TeamColor, IList<(string name, bool isRed)>>();
 				// Name parsing
 				var numEmpty = 0;
-				for (var y = _startingPoint.Y; y <= _endPoint.Y; y += 9 * _guiWidth)
+				var y = _startingPoint.Y;
+				for (; y <= _endPoint.Y; y += 9 * _guiWidth)
 				{
 					var isWhite = false;
 					var name = new StringBuilder();
@@ -284,6 +286,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 						numEmpty++;
 						if (numEmpty > 5)
 							break;
+						
 						continue;
 					}
 
@@ -341,6 +344,12 @@ namespace Winstreak.Core.Parsers.ImageParser
 					}
 
 				// Result
+				if (!hasCompletedOneIteration)
+				{
+					hasCompletedOneIteration = true;
+					_endPoint = new Point(_img.Width - _startingPoint.X, y + 9 * _guiWidth);
+				}
+				
 				_startingPoint = new Point(longestX, 20 * _guiWidth);
 			} // end of outer while loop 
 
