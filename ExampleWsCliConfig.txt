@@ -1,0 +1,62 @@
+# Configuration file for Winstreak.NET
+# Please fill out before use. Once the program is in use, you will have to restart the program in order to make changes to this file.
+# Rename this file to "wsconfig.txt" when finished. 
+
+# Path to the Minecraft folder.
+# Fill this out to override the default folder of .minecraft.
+# Default Value=
+# Example=C:\Path\To\Minecraft\Folder
+PATH_TO_MC_FOLDER=C:\Users\ewang\AppData\Roaming\.minecraftold
+
+
+# List of players to not check.
+# Separate multiple entries with a comma. Capitalization matters.
+# Default Value= 
+# Example=Epic,Test,EpicGamer123
+EXEMPT_PLAYERS=CM19, Fredae, stanner321, icicl, Sichrylan, hedwig10, supma, awhmily, Trev_L, whoslisa, ktvn, TheNewGJD
+
+
+# People to automatically flag as dangerous.
+# These can be for reasons like "extremely annoying"
+# or "extreme tryhard" or "alt of a tryhard." 
+DANGEROUS_PLAYERS=
+
+
+# Automatically clear console when a screenshot is provided. 1 = true, 0 = false 
+# Default Value=0
+CLEAR_CONSOLE=0
+
+
+# Delay between screenshot taken + check time.
+# When a screenshot is taken, the program recognizes that a screenshot was taken but your computer usually needs to wait a bit before fully writing it to disk.
+# In milliseconds (MS).
+# Default Value=250
+# Minimum=250
+SCREENSHOT_DELAY=250
+
+
+# Hypixel API Key
+# If specified and valid, the program will send requests to Hypixel
+# Instead of using Plancke. Note that Plancke will still be used
+# in case of rate limit.
+# To get an API key, run this command in the lobby: /api new 
+HYPIXEL_API_KEY=
+
+
+# Whether to delete the screenshot after processing or not.
+# 1 = true (Delete); 0 = false (Keep)
+# Default Value=0
+DELETE_SCREENSHOT=0
+
+
+# Whether to check friends or not. You must use Hypixel's API (input
+# a valid API key under HYPIXEL_API_KEY) in order to use this feature.
+# This will send more API requests so be wary!
+# 1 = true (Enable); 0 = false (Disable)
+# Default Value=1
+CHECK_FRIENDS=1
+
+
+# Whether to suppress error messages or not. 
+# Default Value=0
+SUPPRESS_ERROR_MSGS=0
