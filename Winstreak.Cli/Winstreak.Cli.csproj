@@ -16,11 +16,11 @@
     <PackageTags>minecraft, hypixel, hypixel-bedwars, bedwars</PackageTags>
     <Version>3.1.0</Version>
     <AssemblyVersion>3.1.0</AssemblyVersion>
-    <FileVersion>3.0.0</FileVersion>
+    <FileVersion>3.1.0</FileVersion>
     <RootNamespace>Winstreak.Cli</RootNamespace>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <PackageVersion>3.0.1</PackageVersion>
+    <PackageVersion>3.1.0</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

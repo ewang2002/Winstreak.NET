@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define TEST_NEW_PARSER
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
@@ -30,7 +31,10 @@ namespace Winstreak.Cli.DirectoryManager
 		{
 			// init vars
 			Config = file;
-			McScreenshotsPath = new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"));
+			var pathToScreenshots = Path.Join(Config.PathToMinecraftFolder, "screenshots");
+			McScreenshotsPath = Directory.Exists(pathToScreenshots)
+				? new DirectoryInfo(Path.Join(Config.PathToMinecraftFolder, "screenshots"))
+				: Directory.CreateDirectory(pathToScreenshots);
 			ShouldClearBeforeCheck = file.ClearConsole;
 
 			if (file.HypixelApiKey != string.Empty)
@@ -391,15 +395,16 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				bitmap = new Bitmap(ImageHelper.FromFile(e.FullPath));
 			}
-			catch (IOException ex)
+			catch (IOException)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"[ERROR] An IOException occurred. Error Information:\n{ex}");
-				Console.WriteLine(init ? "\tTrying Again." : "\tNo Longer Trying Again.");
-				Console.ResetColor();
-				Console.WriteLine(Divider);
 				if (!init)
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("[ERROR] Unable to read the image.");
+					Console.ResetColor();
+					Console.WriteLine(Divider);
 					return;
+				}
 				await Task.Delay(Config.ScreenshotDelay);
 				await OnChangeFileAsync(e, false);
 				return;
@@ -433,24 +438,11 @@ namespace Winstreak.Cli.DirectoryManager
 			var processingTime = new Stopwatch();
 			processingTime.Start();
 			// parse time
-			using var parser = new NameParser(bitmap);
-			try
-			{
-				parser.SetGuiScale(GuiScale);
-				parser.InitPoints();
-				parser.FindStartOfName();
-			}
-			catch (Exception e)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(
-					$"[ERROR] An error occurred when trying to parse the image. Exception Info Below.\n{e}");
-				Console.ResetColor();
-				Console.WriteLine(Divider);
-				processingTime.Stop();
-				return;
-			}
-
+#if TEST_NEW_PARSER
+			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale);
+#else
+			using INameParser parser = new NameParser(bitmap, GuiScale);
+#endif
 			var allNames = parser.ParseNames(Config.ExemptPlayers);
 			if (allNames.Count == 0)
 			{

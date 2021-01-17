@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using Winstreak.Core.Extensions;
 using Winstreak.Core.Parsers.ImageParser.Imaging;
-using Winstreak.Core.Parsers.ImageParser.ImgExcept;
 using static Winstreak.Core.Parsers.ImageParser.Constants;
 
 namespace Winstreak.Core.Parsers.ImageParser
@@ -13,7 +11,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 	/// <summary>
 	/// Parses a screenshot containing the member tab list.
 	/// </summary>
-	public sealed class NameParser : IDisposable
+	public sealed class NameParser : INameParser
 	{
 		/// <summary>
 		/// The image.
@@ -28,7 +26,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <summary>
 		/// Minecraft's GUI width.
 		/// </summary>
-		public int GuiWidth { get; private set; }
+		public int GuiWidth { get; private set; } 
 
 		/// <summary>
 		/// The starting point; i.e., where the first name is located.
@@ -38,25 +36,17 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <summary>
 		/// The ending point.
 		/// </summary>
-		public Point EndingPoint { get; private set; }
+		public Point EndingPoint { get; }
 
 		/// <summary>
 		/// Instantiates a new NameParser object with the specified Bitmap.
 		/// </summary>
 		/// <param name="image">The bitmap.</param>
-		public NameParser(Bitmap image) => Img = UnmanagedImage.FromManagedImage(image);
-
-		/// <summary>
-		/// Sets the Gui scale.
-		/// </summary>
-		/// <param name="scale">The scale.</param>
-		public void SetGuiScale(int scale) => GuiWidth = scale;
-
-		/// <summary>
-		/// Creates the starting and ending bounds in which to check the image.
-		/// </summary>
-		public void InitPoints()
+		/// <param name="guiScale">The GUI scale.</param>
+		public NameParser(Bitmap image, int guiScale = 2)
 		{
+			Img = UnmanagedImage.FromManagedImage(image);
+			GuiWidth = guiScale;
 			StartingPoint = new Point(Img.Width / 4, 20 * GuiWidth);
 			EndingPoint = new Point(Img.Width - Img.Width / 4, Img.Height / 2);
 		}
@@ -65,7 +55,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// Finds the start of the name.
 		/// </summary>
 		/// <returns></returns>
-		public void FindStartOfName()
+		private bool FindStartOfName()
 		{
 			var y = StartingPoint.Y;
 			var realX = -1;
@@ -113,8 +103,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 						{
 							var pixel = Img[tempX, y + dy];
 							columnBytes.Append(IsValidRankColor(pixel)
-											   || IsValidTeamColor(pixel)
-											   || Color.White.IsRgbEqualTo(pixel)
+							                   || IsValidTeamColor(pixel)
+							                   || Color.White.IsRgbEqualTo(pixel)
 								? "1"
 								: "0");
 						}
@@ -139,9 +129,10 @@ namespace Winstreak.Core.Parsers.ImageParser
 			}
 
 			if (realX == -1)
-				throw new InvalidImageException("Couldn't find any Minecraft characters.");
+				return false; 
 
 			StartingPoint = new Point(realX, y);
+			return true; 
 		}
 
 		/// <summary>
@@ -151,6 +142,9 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <returns>The parsed names.</returns>
 		public IDictionary<TeamColor, IList<string>> ParseNames(IList<string> exempt = null)
 		{
+			if (!FindStartOfName())
+				return new Dictionary<TeamColor, IList<string>>();
+			
 			var isGameScreenshot = false;
 			exempt ??= new List<string>();
 			var currentColor = TeamColor.Unknown;

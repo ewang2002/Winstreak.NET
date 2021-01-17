@@ -29,7 +29,7 @@ namespace Winstreak.Core.WebApi.Mojang
 		/// <summary>
 		/// The number of requests made. 
 		/// </summary>
-		public static int RequestsMade = 0;
+		public static int RequestsMade;
 
 		/// <summary>
 		/// The static constructor for this static class. 

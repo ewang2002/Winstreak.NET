@@ -139,6 +139,6 @@ namespace Winstreak.Core.WebApi
 		/// </summary>
 		/// <param name="key">The key to check.</param>
 		/// <returns>Whether the key exists.</returns>
-		public bool Contains(TK key) => _dict.ContainsKey(key);
+		public bool Contains(TK key) => key != null && _dict.ContainsKey(key);
 	}
 }
