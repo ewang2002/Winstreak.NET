@@ -1,4 +1,4 @@
-﻿#define TEST_NEW_PARSER
+﻿#define USE_NEW_PARSER
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -420,7 +420,7 @@ namespace Winstreak.Cli.DirectoryManager
 				return;
 			}
 
-			await ProcessScreenshotAsync(bitmap, e.Name);
+			await ProcessScreenshotAsync(bitmap, e.FullPath);
 			bitmap.Dispose();
 		}
 
@@ -428,18 +428,19 @@ namespace Winstreak.Cli.DirectoryManager
 		/// Processes the screenshot that was provided.
 		/// </summary>
 		/// <param name="bitmap">The screenshot as a Bitmap.</param>
-		/// <param name="name">The name of the screenshot.</param>
+		/// <param name="path">The name of the screenshot.</param>
 		/// <returns>Nothing.</returns>
-		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string name)
+		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
 		{
+			var fileInfo = new FileInfo(path); 
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
 
-			Console.WriteLine($"[INFO] Checking Screenshot: {name}");
+			Console.WriteLine($"[INFO] Checking Screenshot: {fileInfo.Name}");
 			var processingTime = new Stopwatch();
 			processingTime.Start();
 			// parse time
-#if TEST_NEW_PARSER
+#if USE_NEW_PARSER
 			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale);
 #else
 			using INameParser parser = new NameParser(bitmap, GuiScale);
@@ -480,7 +481,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 #if !DEBUG
 			if (Config.DeleteScreenshot)
-				File.Delete(path);
+				fileInfo.Delete();
 #endif
 		}
 	}
