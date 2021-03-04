@@ -3,4 +3,8 @@ This directory represents the "Core" of Winstreak. That is, everything that is n
 
 ## Projects Using Winstreak.Core
 - **Winstreak.Cli**: Winstreak in the command line.
-- **Winstreak.Gui**: Winstreak with a graphical user interface.
+
+## License 
+Everything except for the `Parsers/ImageParser/Imaging` directory is licensed under MIT. 
+
+All code in the `Parsers/ImageParser/Imaging` directory is licensed under the GNU Lesser General Public License.
