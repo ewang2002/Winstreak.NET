@@ -45,7 +45,7 @@ namespace Winstreak.Cli.DirectoryManager
 					if (unableToSearch.Count != 0)
 					{
 						var (profilePlancke, nickedPlancke) = await PlanckeApi
-							.GetMultipleProfilesFromPlancke(unableToSearch);
+							.GetMultipleProfilesFromPlanckeAsync(unableToSearch);
 						
 						teamStats.AddRange(profilePlancke);
 						people.AddRange(profilePlancke);
@@ -55,7 +55,7 @@ namespace Winstreak.Cli.DirectoryManager
 				else
 				{
 					var (profilePlancke, nickedPlancke) = await PlanckeApi
-						.GetMultipleProfilesFromPlancke(value);
+						.GetMultipleProfilesFromPlanckeAsync(value);
 
 					teamStats.AddRange(profilePlancke);
 					people.AddRange(profilePlancke);

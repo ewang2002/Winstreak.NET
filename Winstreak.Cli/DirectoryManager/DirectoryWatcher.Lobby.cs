@@ -51,7 +51,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 				// request leftover data from plancke
 				var (profilesPlancke, nickedPlancke) = await PlanckeApi
-					.GetMultipleProfilesFromPlancke(unableToSearch);
+					.GetMultipleProfilesFromPlanckeAsync(unableToSearch);
 
 				foreach (var playerInfo in profilesPlancke)
 				{
@@ -69,7 +69,7 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				// request data from plancke
 				var (profilesPlancke, nickedPlancke) = await PlanckeApi
-					.GetMultipleProfilesFromPlancke(names.ToList());
+					.GetMultipleProfilesFromPlanckeAsync(names.ToList());
 
 				foreach (var playerInfo in profilesPlancke)
 				{

@@ -206,7 +206,7 @@ namespace Winstreak.Cli.DirectoryManager
 				var checkTime = new Stopwatch();
 				checkTime.Start();
 				var (profiles, nicked) = await PlanckeApi
-					.GetMultipleProfilesFromPlancke(ignsToCheck);
+					.GetMultipleProfilesFromPlanckeAsync(ignsToCheck);
 
 				if (profiles.Count == 1)
 				{
