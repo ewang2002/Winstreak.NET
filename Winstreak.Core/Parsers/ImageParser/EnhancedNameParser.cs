@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -263,6 +264,11 @@ namespace Winstreak.Core.Parsers.ImageParser
 							// name means that we're in a game.
 							if (BinaryToCharactersMap[ttlBytes.ToString()][0] == ' ')
 								x += 5 * _guiWidth;
+							else if (BinaryToCharactersMap[ttlBytes.ToString()] == "]")
+							{
+								name.Append(' ');
+								x += 4 * _guiWidth;
+							}
 
 							// if the determined color wasn't defined, define it. 
 							if (determinedColor != default)
@@ -280,6 +286,10 @@ namespace Winstreak.Core.Parsers.ImageParser
 
 					// this is our final name.
 					var finalName = name.ToString();
+#if DEBUG
+					Console.WriteLine(finalName);
+#endif
+
 					// if the name string is empty, then it's invalid
 					if (finalName.Trim() == string.Empty)
 					{

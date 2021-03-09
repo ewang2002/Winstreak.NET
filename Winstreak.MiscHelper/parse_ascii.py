@@ -23,12 +23,12 @@ def main():
     width, height = img.size
 
     all_parsed_chars = {}
-    # We start at 24, which is the level that starts with "0" in the screenshot.
-    cur_y = 24
-    # We only care about all letters and numbers and some symbols, so setting iterations to "5"
-    # effectively means that we will go through every line between the one that starts with "0"
+    # We start at 16, which is the level that starts with the "!" in the screenshot.
+    cur_y = 2 * 8
+    # We only care about all letters and numbers and some symbols, so setting iterations to "6"
+    # effectively means that we will go through every line between the one that starts with "!"
     # and the one that starts with "p" (both inclusive).
-    iterations = 5
+    iterations = 6
     # While iterations is > 0 (because iterations = 0 implies false)
     while iterations:
         cur_x = 0
@@ -54,6 +54,8 @@ def main():
     print(f"{len(all_parsed_chars)} Items Found.")
     for item in all_parsed_chars:
         print(f"{item} => {all_parsed_chars[item]}")
+    # Wait for user input.
+    input()
 
 
 main()

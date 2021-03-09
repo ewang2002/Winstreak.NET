@@ -253,6 +253,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 						// if the determined color wasn't defined, define it. 
 						if (determinedColor != default)
 							continue;
+						
 						colorDict = colorDict.OrderByDescending(pair => pair.Value)
 							.ToDictionary(kv => kv.Key, kv => kv.Value);
 
