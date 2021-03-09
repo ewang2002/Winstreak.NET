@@ -1,5 +1,6 @@
 ﻿#define USE_NEW_PARSER
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
@@ -446,7 +447,36 @@ namespace Winstreak.Cli.DirectoryManager
 			using INameParser parser = new NameParser(bitmap, GuiScale);
 #endif
 			var allNames = parser.ParseNames(Config.ExemptPlayers);
-			if (allNames.Count == 0)
+			// Remove all '[ ]'
+			var parsedNames = new Dictionary<TeamColor, IList<string>>();
+			foreach (var (color, names) in allNames)
+			{
+				parsedNames.Add(color, new List<string>());
+				foreach (var name in names)
+				{
+					if (!name.Contains('[') && !name.Contains(']'))
+					{
+						parsedNames[color].Add(name);
+						continue;
+					}
+
+					// If it contains [ or ] but not both, then it's defective. 
+					if (name.Contains('[') ^ name.Contains(']'))
+						continue;
+					
+					var nameNoTag = name.Split("]")[1];
+					if (nameNoTag.Contains("["))
+						nameNoTag = nameNoTag.Split("[")[0];
+
+					nameNoTag = nameNoTag.Trim();
+					if (nameNoTag == string.Empty)
+						continue;
+					
+					parsedNames[color].Add(nameNoTag);
+				}	
+			}
+			
+			if (parsedNames.Count == 0)
 			{
 				Console.WriteLine("[INFO] No parseable names found. Skipping.");
 				Console.WriteLine(Divider);
@@ -456,18 +486,18 @@ namespace Winstreak.Cli.DirectoryManager
 			// end parse
 			processingTime.Stop();
 			var timeTaken = processingTime.Elapsed;
-			var parsedPeople = allNames.Sum(x => x.Value.Count);
+			var parsedPeople = parsedNames.Sum(x => x.Value.Count);
 			var basicInfoSb = new StringBuilder()
 				.Append("[INFO] Screenshot Parse Summary:").AppendLine()
 				.Append($"\t- Type: {(parser.IsLobby ? "Lobby" : "Game")}").AppendLine()
 				.Append($"\t- Players: {parsedPeople}").AppendLine()
-				.Append($"\t- Groups: {allNames.Count}");
+				.Append($"\t- Groups: {parsedNames.Count}");
 			Console.WriteLine(basicInfoSb);
 			
 			if (parser.IsLobby)
 			{
-				if (allNames.ContainsKey(TeamColor.Unknown))
-					await ProcessLobbyScreenshotAsync(allNames[TeamColor.Unknown], timeTaken);
+				if (parsedNames.ContainsKey(TeamColor.Unknown))
+					await ProcessLobbyScreenshotAsync(parsedNames[TeamColor.Unknown], timeTaken);
 				else
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
@@ -477,7 +507,7 @@ namespace Winstreak.Cli.DirectoryManager
 				}
 			}
 			else
-				await ProcessInGameScreenshotAsync(allNames, timeTaken);
+				await ProcessInGameScreenshotAsync(parsedNames, timeTaken);
 
 #if !DEBUG
 			if (Config.DeleteScreenshot)
