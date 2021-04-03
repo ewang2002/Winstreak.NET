@@ -309,7 +309,7 @@ namespace Winstreak.Core.WebApi.Plancke
 			var nicked = new HashSet<string>();
 			foreach (var (name, profile) in profileData)
 			{
-				if (profile == null)
+				if (profile is null)
 				{
 					nicked.Add(name);
 					continue;

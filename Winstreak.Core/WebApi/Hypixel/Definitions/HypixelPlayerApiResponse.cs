@@ -10,6 +10,9 @@ namespace Winstreak.Core.WebApi.Hypixel.Definitions
 #nullable enable
 	    [JsonProperty("player")]
         public Player? Player { get; set; }
+
+		[JsonProperty("cause")]
+		public string? Cause { get; set; }
 #nullable disable
 	}
 

@@ -13,6 +13,8 @@ namespace Winstreak.Core.WebApi.Hypixel
 {
 	public class HypixelApi
 	{
+		private const string LookedNameUpRecentlyCause = "You have already looked up this name recently";
+
 		/// <summary>
 		/// The maximum number of requests that can be made in "HypixelRateLimit"
 		/// </summary>
@@ -33,6 +35,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// </summary>
 		public int RequestsMade { get; set; }
 
+		// The API key. 
 		private readonly string _apiKey;
 
 		/// <summary>
@@ -167,7 +170,6 @@ namespace Winstreak.Core.WebApi.Hypixel
 					continue;
 
 				responses.Add((actualUuidToLookUp[i], finishedReq));
-				// TODO is this the correct way to do it? 
 				CachedFriendsData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromMinutes(45));
 			}
 			return (responses, unableToSearch);
@@ -271,16 +273,27 @@ namespace Winstreak.Core.WebApi.Hypixel
 			for (var i = 0; i < completedRequests.Length; i++)
 			{
 				var finishedReq = completedRequests[i];
+				// Case 1: Did we search this person up more times than is allowed?
+				// Hypixel has a rate limit where if you send >1 request per minute or so for the
+				// same person, you will not get that data.
+				if (!finishedReq.Success && finishedReq.Cause != null && finishedReq.Cause == LookedNameUpRecentlyCause)
+				{
+					unableToSearch.Add(actualNamesToLookUp[i]);
+					continue;
+				}
+
+				// Case 2: We did find a name.
 				if (finishedReq.Success && finishedReq.Player != null)
 				{
 					responses.Add(new PlayerProfile(finishedReq));
 					CachedPlayerData.TryAdd(finishedReq.Player.DisplayName, new PlayerProfile(finishedReq));
 					NameUuid.TryAdd(finishedReq.Player.DisplayName, finishedReq.Player.Uuid);
 				}
+				// Case 3: Nicked.
 				else
 					nicked.Add(actualNamesToLookUp[i]);
 			}
-
+			
 			return (responses, nicked, unableToSearch);
 		}
 	}

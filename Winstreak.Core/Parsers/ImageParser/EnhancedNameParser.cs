@@ -79,8 +79,19 @@ namespace Winstreak.Core.Parsers.ImageParser
 				for (var x = startX; x < endX && x < _endPoint.X; x++)
 				{
 					var foundValidColor = false;
+#if LUNAR
+					var isLunar = false;
+#endif
 					for (var dy = 0; dy < 8 * _guiWidth; dy += _guiWidth)
 					{
+#if LUNAR
+						if (IsLunar(x, y))
+						{
+							Console.WriteLine($"Lunar @ {x}, {y}");
+							isLunar = true;
+							break;
+						}
+#endif
 						var p0 = _img[x, y + dy];
 						var p1 = _img[x + 1, y + dy];
 						var p2 = _img[x + 2, y + dy];
@@ -99,11 +110,20 @@ namespace Winstreak.Core.Parsers.ImageParser
 						break;
 					}
 
-					if (!foundValidColor)
+#if LUNAR
+					if (!(foundValidColor || isLunar))
 						continue;
+#else
+					if (!foundValidColor)
+						continue; 
+#endif
+					
 
 					var ttlBytes = new StringBuilder();
 					var tempX = x;
+#if LUNAR
+					if (isLunar) tempX += 9 * _guiWidth;
+#endif
 
 					do
 					{
@@ -128,8 +148,11 @@ namespace Winstreak.Core.Parsers.ImageParser
 					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 					if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 						continue;
-
+#if LUNAR
+					realX = isLunar ? x - 9 * _guiWidth : x;
+#else
 					realX = x;
+#endif
 					break;
 				}
 
@@ -141,6 +164,9 @@ namespace Winstreak.Core.Parsers.ImageParser
 			if (realX == -1)
 				return false;
 
+#if LUNAR
+			Console.WriteLine(realX);
+#endif
 			_startingPoint = new Point(realX, y);
 			return true;
 		}
@@ -158,8 +184,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var names = new Dictionary<TeamColor, IList<string>>();
 			var longestX = -1;
 			var tempNames = new Dictionary<TeamColor, List<(string name, bool isRed)>>();
-			var hasCompletedOneIteration = false; 
-			
+			var hasCompletedOneIteration = false;
+
 			// iterate over each column 
 			while (FindStartOfName())
 			{
@@ -173,6 +199,14 @@ namespace Winstreak.Core.Parsers.ImageParser
 					var name = new StringBuilder();
 					var x = _startingPoint.X;
 					var isRed = false;
+
+#if LUNAR
+					if (IsLunar(x, y))
+					{
+						Console.WriteLine($"Lunar @ {x}, {y}");
+						x += 10 * _guiWidth; 
+					}			
+#endif
 
 					var determinedColor = new Color();
 					var colorDict = new Dictionary<Color, int>();
@@ -296,7 +330,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 						numEmpty++;
 						if (numEmpty > 5)
 							break;
-						
+
 						continue;
 					}
 
@@ -359,7 +393,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 					hasCompletedOneIteration = true;
 					_endPoint = new Point(_img.Width - _startingPoint.X, y + 9 * _guiWidth);
 				}
-				
+
 				_startingPoint = new Point(longestX, 20 * _guiWidth);
 			} // end of outer while loop 
 
@@ -380,6 +414,33 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// Disposes the image.
 		/// </summary>
 		public void Dispose() => _img?.Dispose();
+
+		/// <summary>
+		/// Checks whether the pixel specified has the Lunar logo. 
+		/// </summary>
+		/// <param name="x">The x-coordinate.</param>
+		/// <param name="y">The y-coordinate.</param>
+		/// <returns>Whether the Lunar logo is in that same line as specified by the coordinates.</returns>
+		public bool IsLunar(int x, int y)
+		{
+			if (x + 4 * _guiWidth > _img.Width || y + 6 * _guiWidth > _img.Height)
+				return false;
+
+			return _img[x + _guiWidth, y + 2 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + _guiWidth, y + 3 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + _guiWidth, y + 4 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + _guiWidth, y + 5 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 2 * _guiWidth, y + 3 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 2 * _guiWidth, y + 4 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 2 * _guiWidth, y + 6 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 2 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 4 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 5 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 6 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 4 * _guiWidth, y + 5 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 4 * _guiWidth, y + 6 * _guiWidth].IsRgbEqualTo(Color.White);
+		}
 
 		/// <summary>
 		/// Whether the color specified is a valid color.
