@@ -7,7 +7,6 @@ namespace Winstreak.Core.LogReader
 {
 	/// <summary>
 	/// The MinecraftLogReader is designed to provide an easy way to continuously read the Minecraft log file.
-	/// Taken from https://stackoverflow.com/questions/6740679/capturing-standard-out-from-tail-f-follow.
 	/// </summary>
 	public class MinecraftLogReader : IDisposable
 	{
@@ -42,6 +41,7 @@ namespace Winstreak.Core.LogReader
 			_stream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 			_stream.Seek(0, SeekOrigin.End);
 
+			// Check the log file every 100 ms.
 			_timer = new Timer
 			{
 				Interval = 100,
@@ -96,6 +96,7 @@ namespace Winstreak.Core.LogReader
 		}
 
 #nullable enable
+		// https://stackoverflow.com/questions/6740679/capturing-standard-out-from-tail-f-follow.
 		private void CheckForUpdates(Encoding? encoding = null)
 		{
 			encoding ??= Encoding.Default;
@@ -105,7 +106,7 @@ namespace Winstreak.Core.LogReader
 			while ((read = _stream.Read(bytes, 0, bytes.Length)) > 0)
 				tail.Append(encoding.GetString(bytes, 0, read));
 
-			if (tail.Length > 0) OnLogUpdate.Invoke(null, tail.ToString());
+			if (tail.Length > 0) OnLogUpdate.Invoke(null, tail.ToString().Trim());
 			else _stream.Seek(0, SeekOrigin.End);
 		}
 #nullable disable
