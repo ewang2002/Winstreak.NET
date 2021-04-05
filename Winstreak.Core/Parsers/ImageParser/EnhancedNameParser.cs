@@ -57,9 +57,11 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <returns></returns>
 		private bool FindStartOfName()
 		{
-			if (_iterations > 10)
+			// Because there can never be more than 10 columns. 
+			if (_iterations++ > 10)
 				return false;
 
+			// To prevent potential out-of-bounds errors. 
 			if (_startingPoint.X + 1 > _img.Width)
 				return false;
 
@@ -73,25 +75,13 @@ namespace Winstreak.Core.Parsers.ImageParser
 			if (!_calledBefore)
 				_calledBefore = true;
 
-			_iterations++;
 			for (; y <= _endPoint.Y; y += 9 * _guiWidth)
 			{
 				for (var x = startX; x < endX && x < _endPoint.X; x++)
 				{
 					var foundValidColor = false;
-#if LUNAR
-					var isLunar = false;
-#endif
 					for (var dy = 0; dy < 8 * _guiWidth; dy += _guiWidth)
 					{
-#if LUNAR
-						if (IsLunar(x, y))
-						{
-							Console.WriteLine($"Lunar @ {x}, {y}");
-							isLunar = true;
-							break;
-						}
-#endif
 						var p0 = _img[x, y + dy];
 						var p1 = _img[x + 1, y + dy];
 						var p2 = _img[x + 2, y + dy];
@@ -110,20 +100,11 @@ namespace Winstreak.Core.Parsers.ImageParser
 						break;
 					}
 
-#if LUNAR
-					if (!(foundValidColor || isLunar))
-						continue;
-#else
 					if (!foundValidColor)
-						continue; 
-#endif
-					
+						continue;
 
 					var ttlBytes = new StringBuilder();
 					var tempX = x;
-#if LUNAR
-					if (isLunar) tempX += 9 * _guiWidth;
-#endif
 
 					do
 					{
@@ -148,11 +129,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
 					if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 						continue;
-#if LUNAR
-					realX = isLunar ? x - 9 * _guiWidth : x;
-#else
 					realX = x;
-#endif
 					break;
 				}
 
@@ -164,9 +141,6 @@ namespace Winstreak.Core.Parsers.ImageParser
 			if (realX == -1)
 				return false;
 
-#if LUNAR
-			Console.WriteLine(realX);
-#endif
 			_startingPoint = new Point(realX, y);
 			return true;
 		}
@@ -199,14 +173,6 @@ namespace Winstreak.Core.Parsers.ImageParser
 					var name = new StringBuilder();
 					var x = _startingPoint.X;
 					var isRed = false;
-
-#if LUNAR
-					if (IsLunar(x, y))
-					{
-						Console.WriteLine($"Lunar @ {x}, {y}");
-						x += 10 * _guiWidth; 
-					}			
-#endif
 
 					var determinedColor = new Color();
 					var colorDict = new Dictionary<Color, int>();

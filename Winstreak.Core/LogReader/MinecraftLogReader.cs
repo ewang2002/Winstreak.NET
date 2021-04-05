@@ -1,0 +1,113 @@
+﻿using System;
+using System.IO;
+using System.Text;
+using System.Timers;
+
+namespace Winstreak.Core.LogReader
+{
+	/// <summary>
+	/// The MinecraftLogReader is designed to provide an easy way to continuously read the Minecraft log file.
+	/// Taken from https://stackoverflow.com/questions/6740679/capturing-standard-out-from-tail-f-follow.
+	/// </summary>
+	public class MinecraftLogReader : IDisposable
+	{
+		private bool _isStarted;
+		private bool _disposed;
+
+		private FileStream _stream;
+		private readonly Timer _timer;
+
+		public EventHandler<string> OnLogUpdate;
+
+		/// <summary>
+		/// Creates a new MinecraftLogReader instance. This is intended to provide an easy way to continuously read the
+		/// Minecraft log file.
+		/// </summary>
+		/// <param name="pathToMcDir">The path to the Minecraft folder.</param>
+		/// <exception cref="DirectoryNotFoundException">If the Minecraft folder is invalid.</exception>
+		public MinecraftLogReader(string pathToMcDir)
+		{
+			if (!Directory.Exists(Path.Join(pathToMcDir, "logs")))
+				throw new DirectoryNotFoundException("Log folder not found.");
+
+			if (!File.Exists(Path.Join(pathToMcDir, "logs", "latest.log")))
+				File.Create("latest.log");
+
+			_isStarted = false;
+			_disposed = false;
+
+			var logFile = Path.Join(pathToMcDir, "logs", "latest.log");
+
+			// Start a new stream and put it at the end.
+			_stream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			_stream.Seek(0, SeekOrigin.End);
+
+			_timer = new Timer
+			{
+				Interval = 100,
+				AutoReset = true,
+				Enabled = false
+			};
+
+			_timer.Elapsed += (_, __) => CheckForUpdates();
+		}
+
+		/// <summary>
+		/// The destructor for this object.
+		/// </summary>
+		~MinecraftLogReader() => Dispose(false);
+
+		/// <summary>
+		/// Starts the MinecraftLogReader.
+		/// </summary>
+		public void Start()
+		{
+			if (_isStarted) return;
+			_isStarted = true;
+			_timer.Start();
+		}
+
+		/// <summary>
+		/// Stops the MinecraftLogReader.
+		/// </summary>
+		public void Stop()
+		{
+			if (!_isStarted) return;
+			_isStarted = false;
+			_timer.Stop();
+		}
+
+		/// <summary>
+		/// Disposes this MinecraftLogReader.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (_disposed) return;
+			Stop();
+			_stream.Dispose();
+			_timer.Dispose();
+			_disposed = true;
+		}
+
+#nullable enable
+		private void CheckForUpdates(Encoding? encoding = null)
+		{
+			encoding ??= Encoding.Default;
+			var tail = new StringBuilder();
+			int read;
+			var bytes = new byte[1024];
+			while ((read = _stream.Read(bytes, 0, bytes.Length)) > 0)
+				tail.Append(encoding.GetString(bytes, 0, read));
+
+			if (tail.Length > 0) OnLogUpdate.Invoke(null, tail.ToString());
+			else _stream.Seek(0, SeekOrigin.End);
+		}
+#nullable disable
+	}
+}
