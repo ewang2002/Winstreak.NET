@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace Winstreak.Cli.Configuration
 			{
 				ClearConsole = true,
 				DangerousPlayers = Array.Empty<string>(),
-				ExemptPlayers = Array.Empty<string>(),
+				ExemptPlayers = new List<string>(),
 				HypixelApiKey = string.Empty,
 				PathToMinecraftFolder = string.Empty,
 				ScreenshotDelay = 250,
@@ -53,7 +54,7 @@ namespace Winstreak.Cli.Configuration
 						configFile.PathToMinecraftFolder = val;
 						break;
 					case "EXEMPT_PLAYERS":
-						configFile.ExemptPlayers = val.Split(",").Select(x => x.Trim()).ToArray();
+						configFile.ExemptPlayers = val.Split(",").Select(x => x.Trim()).ToList();
 						break;
 					case "CLEAR_CONSOLE":
 						configFile.ClearConsole = int.TryParse(val, out var v3) && v3 == 1;

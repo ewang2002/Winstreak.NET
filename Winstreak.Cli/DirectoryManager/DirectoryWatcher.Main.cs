@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
 using Winstreak.Cli.Utility.ConsoleTable;
 using Winstreak.Core.Extensions;
+using Winstreak.Core.LogReader;
 using Winstreak.Core.Parsers.ImageParser;
 using Winstreak.Core.Parsers.ImageParser.Imaging;
 using static Winstreak.Core.WebApi.CachedData;
@@ -76,7 +77,7 @@ namespace Winstreak.Cli.DirectoryManager
 			Console.WriteLine();
 			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}.");
 			Console.WriteLine(
-				$"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Length} Exempt Players Set.");
+				$"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Count} Exempt Players Set.");
 			Console.WriteLine();
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
@@ -86,7 +87,8 @@ namespace Winstreak.Cli.DirectoryManager
 			// make all lowercase for ease of comparison 
 			Config.ExemptPlayers = Config.ExemptPlayers
 				.Select(x => x.ToLower())
-				.ToArray();
+				.ToList();
+			NamesInExempt = Config.ExemptPlayers.ToArray();
 			Config.DangerousPlayers = Config.DangerousPlayers
 				.Select(x => x.ToLower())
 				.ToArray();
@@ -104,6 +106,11 @@ namespace Winstreak.Cli.DirectoryManager
 				EnableRaisingEvents = true
 			};
 			watcher.Created += OnChangedAsync;
+
+			// Log time
+			LogReader = new MinecraftLogReader(McScreenshotsPath.Parent!.FullName);
+			LogReader.OnLogUpdate += LogUpdate;
+			LogReader.Start();
 
 			// infinite loop for command processing
 			while (true)
@@ -165,6 +172,7 @@ namespace Winstreak.Cli.DirectoryManager
 							Console.WriteLine($"[INFO] Sort Mode: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
+						case "-clearcache":
 						case "-emptycache":
 							Console.WriteLine("[INFO] Cache has been cleared.");
 							CachedPlayerData.Empty();
@@ -374,6 +382,103 @@ namespace Winstreak.Cli.DirectoryManager
 		}
 
 		/// <summary>
+		/// The method that is responsible for interpreting the Minecraft log messages.
+		/// </summary>
+		/// <param name="source">The source.</param>
+		/// <param name="text">The text.</param>
+		private static async void LogUpdate(object source, string text)
+		{
+			if (!text.Contains("[CHAT]")) return;
+#if DEBUG && PRINT
+			Console.WriteLine(text);
+			Console.WriteLine("========");
+#endif
+
+			// Handle various cases.
+			// Joined the party
+			if (text.Contains(JoinedParty))
+			{
+				Console.WriteLine(text);
+				var name = text
+					.Split(JoinedParty)[0]
+					.Split(" ")[^1]
+					.Trim();
+				Config.ExemptPlayers.Add(name);
+				Console.WriteLine($"[INFO] \"{name}\" has been added to your exempt list.");
+				Console.WriteLine(Divider);
+				return;
+			}
+
+			// Removed from party.
+			if (text.Contains(RemovedFromParty))
+			{
+				var name = text
+					.Split(RemovedFromParty)[0]
+					.Split(" ")[^1]
+					.Trim();
+				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
+					return;
+
+				Config.ExemptPlayers.Remove(name);
+				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
+				Console.WriteLine(Divider);
+				return;
+			}
+
+			// You left the party.
+			if (text.Contains(YouLeftParty))
+			{
+			}
+
+			// Left the party.
+			if (text.Contains(TheyLeftParty))
+			{
+				var name = text
+					.Split(TheyLeftParty)[0]
+					.Split(" ")[^1]
+					.Trim();
+				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
+					return;
+
+				Config.ExemptPlayers.Remove(name);
+				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
+				Console.WriteLine(Divider);
+				return;
+			}
+
+			// /who command used.
+			var idxOfComma = text.IndexOf("ONLINE: ", StringComparison.Ordinal);
+			if (text.Contains(OnlinePrefix) && text[idxOfComma..].Contains(','))
+			{
+				var names = text.Split(OnlinePrefix)[1]
+					.Split(", ")
+					.Select(x => x.Trim())
+					.Where(x => x.Length > 0)
+					.Where(name => !Config.ExemptPlayers.Contains(name.ToLower()))
+					.ToList();
+
+				if (names.Count == 0) return;
+				Console.WriteLine("[INFO] Received /who Command Output.");
+				await ProcessLobbyScreenshotAsync(names, TimeSpan.FromMinutes(0));
+				return;
+			}
+
+			// Custom MC commands.
+			if (text.Contains(CantFindPlayer))
+			{
+				var commandUnparsed = text
+					.Split(CantFindPlayerAp)[1]
+					.Split('\'')[0];
+
+				if (!commandUnparsed.StartsWith('.')) return;
+				var command = commandUnparsed[1..];
+#if DEBUG
+				Console.WriteLine($"Command used: {command}");
+#endif
+			}
+		}
+
+		/// <summary>
 		/// Method that is to be executed when a file is created.
 		/// </summary>
 		/// <param name="source">The source.</param>
@@ -407,6 +512,7 @@ namespace Winstreak.Cli.DirectoryManager
 					Console.WriteLine(Divider);
 					return;
 				}
+
 				await Task.Delay(Config.ScreenshotDelay);
 				await OnChangeFileAsync(e, false);
 				return;
@@ -433,7 +539,7 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <returns>Nothing.</returns>
 		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
 		{
-			var fileInfo = new FileInfo(path); 
+			var fileInfo = new FileInfo(path);
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
 
@@ -463,7 +569,7 @@ namespace Winstreak.Cli.DirectoryManager
 					// If it contains [ or ] but not both, then it's defective. 
 					if (name.Contains('[') ^ name.Contains(']'))
 						continue;
-					
+
 					var nameNoTag = name.Split("]")[1];
 					if (nameNoTag.Contains("["))
 						nameNoTag = nameNoTag.Split("[")[0];
@@ -471,11 +577,11 @@ namespace Winstreak.Cli.DirectoryManager
 					nameNoTag = nameNoTag.Trim();
 					if (nameNoTag == string.Empty)
 						continue;
-					
+
 					parsedNames[color].Add(nameNoTag);
-				}	
+				}
 			}
-			
+
 			if (parsedNames.Count == 0)
 			{
 				Console.WriteLine("[INFO] No parseable names found. Skipping.");
@@ -493,7 +599,7 @@ namespace Winstreak.Cli.DirectoryManager
 				.Append($"\t- Players: {parsedPeople}").AppendLine()
 				.Append($"\t- Groups: {parsedNames.Count}");
 			Console.WriteLine(basicInfoSb);
-			
+
 			if (parser.IsLobby)
 			{
 				if (parsedNames.ContainsKey(TeamColor.Unknown))
@@ -504,6 +610,7 @@ namespace Winstreak.Cli.DirectoryManager
 					Console.WriteLine(
 						"[ERROR] An error occurred with the parse results. Please take another screenshot.");
 					Console.ResetColor();
+					Console.WriteLine(Divider);
 				}
 			}
 			else

@@ -1,9 +1,11 @@
-﻿namespace Winstreak.Cli.Configuration
+﻿using System.Collections.Generic;
+
+namespace Winstreak.Cli.Configuration
 {
 	public struct ConfigFile
 	{
 		public string PathToMinecraftFolder { get; set; }
-		public string[] ExemptPlayers { get; set; }
+		public List<string> ExemptPlayers { get; set; }
 		public bool ClearConsole { get; set; }
 		public int ScreenshotDelay { get; set; }
 		public string HypixelApiKey { get; set; }

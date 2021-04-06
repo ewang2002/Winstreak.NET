@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define OVERRIDE_DEBUG
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -286,7 +287,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 
 					// this is our final name.
 					var finalName = name.ToString();
-#if DEBUG
+#if DEBUG && !OVERRIDE_DEBUG
 					Console.WriteLine(finalName);
 #endif
 

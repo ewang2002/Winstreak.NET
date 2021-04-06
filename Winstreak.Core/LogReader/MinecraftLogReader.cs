@@ -10,10 +10,10 @@ namespace Winstreak.Core.LogReader
 	/// </summary>
 	public class MinecraftLogReader : IDisposable
 	{
-		private bool _isStarted;
+		public bool _isStarted;
 		private bool _disposed;
 
-		private FileStream _stream;
+		private readonly FileStream _stream;
 		private readonly Timer _timer;
 
 		public EventHandler<string> OnLogUpdate;

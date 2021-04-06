@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,7 +37,7 @@ namespace Winstreak.Cli
 			{
 				HypixelApiKey = string.Empty,
 				ClearConsole = false,
-				ExemptPlayers = Array.Empty<string>(),
+				ExemptPlayers = new List<string>(),
 				ScreenshotDelay = 250,
 				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
 				DangerousPlayers = Array.Empty<string>(),
