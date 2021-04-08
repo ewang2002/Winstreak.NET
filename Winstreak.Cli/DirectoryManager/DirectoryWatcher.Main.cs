@@ -8,7 +8,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
 using Winstreak.Cli.Utility.ConsoleTable;
@@ -388,18 +387,18 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <param name="text">The text.</param>
 		private static async void LogUpdate(object source, string text)
 		{
-			if (!text.Contains("[CHAT]")) return;
-#if DEBUG && PRINT
-			Console.WriteLine(text);
-			Console.WriteLine("========");
-#endif
+			// Determine if the message is legit.
+			if (!IsValidLogMessage(text, out var logImp))
+				return;
+
+			Console.WriteLine(logImp);
 
 			// Handle various cases.
 			// Joined the party
-			if (text.Contains(JoinedParty))
+			if (!logImp.Contains(":") && logImp.Contains(JoinedParty))
 			{
 				Console.WriteLine(text);
-				var name = text
+				var name = logImp
 					.Split(JoinedParty)[0]
 					.Split(" ")[^1]
 					.Trim();
@@ -410,9 +409,9 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			// Removed from party.
-			if (text.Contains(RemovedFromParty))
+			if (!logImp.Contains(":") && logImp.Contains(RemovedFromParty))
 			{
-				var name = text
+				var name = logImp
 					.Split(RemovedFromParty)[0]
 					.Split(" ")[^1]
 					.Trim();
@@ -426,14 +425,14 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			// You left the party.
-			if (text.Contains(YouLeftParty))
+			if (!logImp.Contains(":") && logImp.Contains(YouLeftParty))
 			{
 			}
 
 			// Left the party.
-			if (text.Contains(TheyLeftParty))
+			if (!logImp.Contains(":") && logImp.Contains(TheyLeftParty))
 			{
-				var name = text
+				var name = logImp
 					.Split(TheyLeftParty)[0]
 					.Split(" ")[^1]
 					.Trim();
@@ -448,9 +447,11 @@ namespace Winstreak.Cli.DirectoryManager
 
 			// /who command used.
 			var idxOfComma = text.IndexOf("ONLINE: ", StringComparison.Ordinal);
-			if (text.Contains(OnlinePrefix) && text[idxOfComma..].Contains(','))
+			if (logImp.Count(x => x == ':') == 1 
+			    && logImp.Contains(OnlinePrefix) 
+			    && logImp[idxOfComma..].Contains(','))
 			{
-				var names = text.Split(OnlinePrefix)[1]
+				var names = logImp.Split(OnlinePrefix)[1]
 					.Split(", ")
 					.Select(x => x.Trim())
 					.Where(x => x.Length > 0)
@@ -463,10 +464,39 @@ namespace Winstreak.Cli.DirectoryManager
 				return;
 			}
 
-			// Custom MC commands.
-			if (text.Contains(CantFindPlayer))
+			// /p list used.
+			if (logImp.Contains("Party Members") && logImp.Contains("Party Leader"))
 			{
-				var commandUnparsed = text
+				var allPeople = logImp.Split(Environment.NewLine)
+					.Where(x => x != "-----------------------------")
+					.Where(x => x.Contains("Party Leader") 
+					            || x.Contains("Party Moderator") 
+					            || x.Contains("Patty Members"))
+					.SelectMany(x => x.Split(":")[^1].Trim()
+						.Split("?")
+						.Select(y => y.Trim())
+						.Where(z => z.Length != 0)
+						.ToArray())
+					.ToArray();
+				foreach (var player in allPeople)
+				{
+					var parsedName = player.Contains(']') 
+						? player.Split("]")[1].Trim() 
+						: player;
+					if (Config.ExemptPlayers.Contains(parsedName.ToLower()))
+						continue;
+
+					Config.ExemptPlayers.Add(parsedName.ToLower());
+					Console.WriteLine($"[INFO] \"{parsedName}\" has been added to your exempt list.");
+				}
+
+				return;
+			}
+
+			// Custom MC commands.
+			if (!logImp.Contains(":") && logImp.Contains(CantFindPlayer))
+			{
+				var commandUnparsed = logImp
 					.Split(CantFindPlayerAp)[1]
 					.Split('\'')[0];
 
@@ -593,12 +623,12 @@ namespace Winstreak.Cli.DirectoryManager
 			processingTime.Stop();
 			var timeTaken = processingTime.Elapsed;
 			var parsedPeople = parsedNames.Sum(x => x.Value.Count);
-			var basicInfoSb = new StringBuilder()
-				.Append("[INFO] Screenshot Parse Summary:").AppendLine()
-				.Append($"\t- Type: {(parser.IsLobby ? "Lobby" : "Game")}").AppendLine()
-				.Append($"\t- Players: {parsedPeople}").AppendLine()
-				.Append($"\t- Groups: {parsedNames.Count}");
-			Console.WriteLine(basicInfoSb);
+			var entries = new[]
+			{
+				$"Type: {(parser.IsLobby ? "Lobby" : "Game")}",
+				$"Players: {parsedPeople}"
+			};
+			Console.WriteLine("[" + string.Join(", ", entries) + "]");
 
 			if (parser.IsLobby)
 			{

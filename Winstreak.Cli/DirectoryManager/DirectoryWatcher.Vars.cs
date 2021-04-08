@@ -21,7 +21,7 @@ namespace Winstreak.Cli.DirectoryManager
 			.AppendLine()
 			.Append("> -config: Views current configuration.")
 			.AppendLine()
-			.Append("> -emptycache: Empties the cache.")
+			.Append("> -emptycache OR -clearcache: Empties the cache.")
 			.AppendLine()
 			.Append(
 				"> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data. By default, this is set to the Score value.")
@@ -39,8 +39,6 @@ namespace Winstreak.Cli.DirectoryManager
 		public static readonly string OnlinePrefix = "ONLINE: ";
 		public static readonly string CantFindPlayer = "Can't find a player by the name of";
 		public static readonly string CantFindPlayerAp = CantFindPlayer + " '";
-
-
 
 		// Configuration files
 		public static ConfigFile Config;

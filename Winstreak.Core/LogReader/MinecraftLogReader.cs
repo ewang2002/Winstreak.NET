@@ -10,7 +10,7 @@ namespace Winstreak.Core.LogReader
 	/// </summary>
 	public class MinecraftLogReader : IDisposable
 	{
-		public bool _isStarted;
+		public bool IsStarted;
 		private bool _disposed;
 
 		private readonly FileStream _stream;
@@ -32,7 +32,7 @@ namespace Winstreak.Core.LogReader
 			if (!File.Exists(Path.Join(pathToMcDir, "logs", "latest.log")))
 				File.Create("latest.log");
 
-			_isStarted = false;
+			IsStarted = false;
 			_disposed = false;
 
 			var logFile = Path.Join(pathToMcDir, "logs", "latest.log");
@@ -62,8 +62,8 @@ namespace Winstreak.Core.LogReader
 		/// </summary>
 		public void Start()
 		{
-			if (_isStarted) return;
-			_isStarted = true;
+			if (IsStarted) return;
+			IsStarted = true;
 			_timer.Start();
 		}
 
@@ -72,8 +72,8 @@ namespace Winstreak.Core.LogReader
 		/// </summary>
 		public void Stop()
 		{
-			if (!_isStarted) return;
-			_isStarted = false;
+			if (!IsStarted) return;
+			IsStarted = false;
 			_timer.Stop();
 		}
 

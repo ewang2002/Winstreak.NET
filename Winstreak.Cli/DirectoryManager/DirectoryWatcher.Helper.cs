@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Utility;
 using Winstreak.Core.Profile;
@@ -44,8 +45,8 @@ namespace Winstreak.Cli.DirectoryManager
 				SortType.Beds => data => data.OverallBedwarsStats.BrokenBeds,
 				SortType.Finals => data => data.OverallBedwarsStats.FinalKills,
 				SortType.Fkdr => data =>
-					data.OverallBedwarsStats.FinalDeaths == 0 
-						? data.OverallBedwarsStats.FinalKills 
+					data.OverallBedwarsStats.FinalDeaths == 0
+						? data.OverallBedwarsStats.FinalKills
 						: data.OverallBedwarsStats.FinalKills / (double) data.OverallBedwarsStats.FinalDeaths,
 				SortType.Score => data => data.OverallBedwarsStats.GetScore(),
 				SortType.Winstreak => data => data.Winstreak,
@@ -214,6 +215,68 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			return -1;
+		}
+
+		/// <summary>
+		/// Checks if a Minecraft log message is valid.
+		/// </summary>
+		/// <param name="text">The unparsed text.</param>
+		/// <param name="res">The parsed text.</param>
+		/// <returns>Whether the log message is valid.</returns>
+		private static bool IsValidLogMessage(string text, out string res)
+		{
+			res = null;
+			if (!text.Contains("[CHAT]")) return false;
+#if DEBUG && PRINT
+			Console.WriteLine(text);
+			Console.WriteLine("========");
+#endif
+
+			var ranges = new[]
+			{
+				// [Client thread/INFO]:
+				(11, 11 + 21),
+				// [main/INFO]:
+				(11, 11 + 12)
+			};
+
+			(int min, int max) minMax = (-1, -1);
+			var targetStr = string.Empty;
+
+			foreach (var (min, max) in ranges)
+			{
+				if (text.Length < max || !text[min..max].EndsWith("/INFO]:"))
+					continue;
+				minMax = (min, max);
+				targetStr = text[min..max];
+				break;
+			}
+
+			if (minMax.max == -1 && minMax.min == -1)
+				return false;
+
+			var fullyParsedStr = new StringBuilder();
+			var isValid = false;
+			foreach (var line in text.Split(Environment.NewLine))
+			{
+				var parsedLine = line;
+				if (parsedLine[minMax.min..minMax.max] == targetStr)
+					parsedLine = parsedLine[minMax.max..].Trim();
+				if (parsedLine.StartsWith("[CHAT]"))
+				{
+					fullyParsedStr.Append(parsedLine[6..].Trim()).AppendLine();
+					isValid = true;
+					continue;
+				}
+
+				fullyParsedStr.Append(parsedLine).AppendLine();
+			}
+
+			if (!isValid)
+				return false;
+
+			res = fullyParsedStr.ToString().Trim();
+			return true;
 		}
 	}
 }
