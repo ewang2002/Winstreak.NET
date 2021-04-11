@@ -195,6 +195,12 @@ namespace Winstreak.Cli.DirectoryManager
 							Console.WriteLine($"[INFO] Sorting By: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
+						case "-party":
+							Console.WriteLine(PartySession.Count > 0
+								? $"[INFO] Party Members: {string.Join(", ", PartySession.Values)}"
+								: "[INFO] Party Members: N/A");
+							Console.WriteLine(Divider);
+							continue;
 					}
 
 					Console.WriteLine(HelpInfo);
@@ -391,19 +397,25 @@ namespace Winstreak.Cli.DirectoryManager
 			if (!IsValidLogMessage(text, out var logImp))
 				return;
 
-			Console.WriteLine(logImp);
-
 			// Handle various cases.
 			// Joined the party
 			if (!logImp.Contains(":") && logImp.Contains(JoinedParty))
 			{
-				Console.WriteLine(text);
 				var name = logImp
 					.Split(JoinedParty)[0]
 					.Split(" ")[^1]
 					.Trim();
-				Config.ExemptPlayers.Add(name);
-				Console.WriteLine($"[INFO] \"{name}\" has been added to your exempt list.");
+				Console.WriteLine($"[INFO] {name} has joined the party.");
+
+				if (!PartySession.ContainsKey(name.ToLower()))
+					PartySession.Add(name.ToLower(), name);
+
+				if (Config.ExemptPlayers.Contains(name.ToLower()))
+				{
+					Config.ExemptPlayers.Add(name);
+					Console.WriteLine($"[INFO] \"{name}\" has been added to your exempt list.");
+				}
+
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -415,6 +427,11 @@ namespace Winstreak.Cli.DirectoryManager
 					.Split(RemovedFromParty)[0]
 					.Split(" ")[^1]
 					.Trim();
+				Console.WriteLine($"[INFO] {name} has been removed from the party.");
+
+				if (PartySession.ContainsKey(name.ToLower()))
+					PartySession.Remove(name.ToLower());
+
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
 					return;
 
@@ -427,6 +444,19 @@ namespace Winstreak.Cli.DirectoryManager
 			// You left the party.
 			if (!logImp.Contains(":") && logImp.Contains(YouLeftParty))
 			{
+				Console.WriteLine("[INFO] You left your current party!");
+				foreach (var (lowerName, name) in PartySession)
+				{
+					if (NamesInExempt.Contains(lowerName))
+						continue;
+
+					Config.ExemptPlayers.Remove(lowerName);
+					Console.WriteLine($"\t- {name} has been removed from your exempt list.");
+				}
+
+				PartySession.Clear();
+				Console.WriteLine(Divider);
+				return;
 			}
 
 			// Left the party.
@@ -436,6 +466,8 @@ namespace Winstreak.Cli.DirectoryManager
 					.Split(TheyLeftParty)[0]
 					.Split(" ")[^1]
 					.Trim();
+				Console.WriteLine($"[INFO] {name} has left the party!");
+
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
 					return;
 
@@ -447,8 +479,8 @@ namespace Winstreak.Cli.DirectoryManager
 
 			// /who command used.
 			var idxOfComma = text.IndexOf("ONLINE: ", StringComparison.Ordinal);
-			if (logImp.Count(x => x == ':') == 1 
-			    && logImp.Contains(OnlinePrefix) 
+			if (logImp.Count(x => x == ':') == 1
+			    && logImp.Contains(OnlinePrefix)
 			    && logImp[idxOfComma..].Contains(','))
 			{
 				var names = logImp.Split(OnlinePrefix)[1]
@@ -465,24 +497,31 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			// /p list used.
-			if (logImp.Contains("Party Members") && logImp.Contains("Party Leader"))
+			// Guaranteed to have a party leader.
+			if (logImp.Contains("Party Leader") && logImp.Contains("Party Members (")
+			                                    && logImp[..30].Trim() == "-----------------------------")
 			{
+				Console.WriteLine("[INFO] Party List Output Received.");
 				var allPeople = logImp.Split(Environment.NewLine)
 					.Where(x => x != "-----------------------------")
-					.Where(x => x.Contains("Party Leader") 
-					            || x.Contains("Party Moderator") 
-					            || x.Contains("Patty Members"))
+					.Where(x => (x.Contains("Party Leader")
+					             || x.Contains("Party Moderator")
+					             || x.Contains("Party Members")) && !x.Contains("Party Members ("))
 					.SelectMany(x => x.Split(":")[^1].Trim()
 						.Split("?")
 						.Select(y => y.Trim())
 						.Where(z => z.Length != 0)
 						.ToArray())
 					.ToArray();
+				Console.WriteLine(string.Join(", ", allPeople));
 				foreach (var player in allPeople)
 				{
-					var parsedName = player.Contains(']') 
-						? player.Split("]")[1].Trim() 
+					var parsedName = player.Contains(']')
+						? player.Split("]")[^1].Trim()
 						: player;
+					if (!PartySession.ContainsKey(parsedName.ToLower()))
+						PartySession.Add(parsedName.ToLower(), parsedName);
+
 					if (Config.ExemptPlayers.Contains(parsedName.ToLower()))
 						continue;
 
@@ -490,6 +529,7 @@ namespace Winstreak.Cli.DirectoryManager
 					Console.WriteLine($"[INFO] \"{parsedName}\" has been added to your exempt list.");
 				}
 
+				Console.WriteLine(Divider);
 				return;
 			}
 
@@ -503,7 +543,7 @@ namespace Winstreak.Cli.DirectoryManager
 				if (!commandUnparsed.StartsWith('.')) return;
 				var command = commandUnparsed[1..];
 #if DEBUG
-				Console.WriteLine($"Command used: {command}");
+				Console.WriteLine($"Command Used: {command}");
 #endif
 			}
 		}

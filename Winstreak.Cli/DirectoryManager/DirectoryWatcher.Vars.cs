@@ -53,7 +53,7 @@ namespace Winstreak.Cli.DirectoryManager
 		public static string[] NamesInExempt;
 		public static MinecraftLogReader LogReader;
 		// Keep in mind that the user can only be in one party at any given time.
-		public static List<string> PartySession = new();
+		public static Dictionary<string, string> PartySession = new();
 		
 		// API Key stuff
 		public static HypixelApi HypixelApi;

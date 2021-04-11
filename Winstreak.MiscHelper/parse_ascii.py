@@ -10,6 +10,7 @@ def main():
     path = input("Location to MC ASCII image? ")
     if not os.path.exists(path):
         print("Path not found.")
+        return
 
     # open the image so we can begin
     try:
@@ -17,7 +18,7 @@ def main():
     except UnidentifiedImageError:
         print("Is this a valid image?")
         return
-    
+
     # Load the image.
     px = img.load()
     width, height = img.size

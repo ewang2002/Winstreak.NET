@@ -32,6 +32,14 @@ namespace Winstreak.Core.Parsers.ImageParser
 
 		#endregion
 
+		#region Constant Fields
+
+		private static readonly Predicate<Color>[] ColorFunctions = {
+			IsValidRankColor,
+			IsValidTeamColor,
+		};
+
+		#endregion
 
 		/// <summary>
 		/// Whether the screenshot represents a lobby.
@@ -51,13 +59,16 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var maxY = 20 * _guiWidth + 9 * _guiWidth * 22;
 			_endPoint = new Point(_img.Width - 4, maxY > _img.Height - 4 ? _img.Height - 4 : maxY);
 		}
-
+		
 		/// <summary>
-		/// Finds the start of the name.
+		/// Finds the start of a name.
 		/// </summary>
-		/// <returns></returns>
-		private bool FindStartOfName()
+		/// <param name="func">The function that can be used for this.</param>
+		/// <returns>Whether there is a name that can be parsed.</returns>
+		private bool FindStartOfName(out Predicate<Color> func)
 		{
+			func = color => false;
+			
 			// Because there can never be more than 10 columns. 
 			if (_iterations++ > 10)
 				return false;
@@ -66,8 +77,6 @@ namespace Winstreak.Core.Parsers.ImageParser
 			if (_startingPoint.X + 1 > _img.Width)
 				return false;
 
-			var y = _startingPoint.Y;
-			var realX = -1;
 			var startX = _startingPoint.X + 1;
 			var endX = _calledBefore
 				? startX + 150 * _guiWidth
@@ -76,75 +85,83 @@ namespace Winstreak.Core.Parsers.ImageParser
 			if (!_calledBefore)
 				_calledBefore = true;
 
-			for (; y <= _endPoint.Y; y += 9 * _guiWidth)
+			foreach (var colorFunc in ColorFunctions)
 			{
-				for (var x = startX; x < endX && x < _endPoint.X; x++)
+				var y = _startingPoint.Y;
+				var realX = -1;
+				for (; y <= _endPoint.Y; y += 9 * _guiWidth)
 				{
-					var foundValidColor = false;
-					for (var dy = 0; dy < 8 * _guiWidth; dy += _guiWidth)
+					for (var x = startX; x < endX && x < _endPoint.X; x++)
 					{
-						var p0 = _img[x, y + dy];
-						var p1 = _img[x + 1, y + dy];
-						var p2 = _img[x + 2, y + dy];
-						if (!IsValidRankColor(p0)
-						    && !IsValidTeamColor(p0)
-						    && (!Color.White.IsRgbEqualTo(p0)
-						        || !IsValidRankColor(p1)
-						        && !IsValidTeamColor(p1)
-						        && !Color.White.IsRgbEqualTo(p1)
-						        && !IsValidRankColor(p2)
-						        && !IsValidTeamColor(p2)
-						        && !Color.White.IsRgbEqualTo(p2)))
+						var foundValidColor = false;
+						for (var dy = 0; dy < 8 * _guiWidth; dy += _guiWidth)
+						{
+							var p0 = _img[x, y + dy];
+							var p1 = _img[x + 1, y + dy];
+							var p2 = _img[x + 2, y + dy];
+							if (!IsValidRankColor(p0)
+							    && !IsValidTeamColor(p0)
+							    && (!Color.White.IsRgbEqualTo(p0)
+							        || !IsValidRankColor(p1)
+							        && !IsValidTeamColor(p1)
+							        && !Color.White.IsRgbEqualTo(p1)
+							        && !IsValidRankColor(p2)
+							        && !IsValidTeamColor(p2)
+							        && !Color.White.IsRgbEqualTo(p2)))
+								continue;
+
+							foundValidColor = true;
+							break;
+						}
+
+						if (!foundValidColor)
 							continue;
 
-						foundValidColor = true;
+						var ttlBytes = new StringBuilder();
+						var tempX = x;
+
+						do
+						{
+							var columnBytes = new StringBuilder();
+							for (var dy = 0; dy < 8 * _guiWidth && tempX < _endPoint.X; dy += _guiWidth)
+							{
+								var pixel = _img[tempX, y + dy];
+								columnBytes.Append(colorFunc(pixel) || Color.White.IsRgbEqualTo(pixel)
+									? "1"
+									: "0");
+							}
+
+							ttlBytes.Append(columnBytes);
+							tempX += _guiWidth;
+
+							if (tempX >= _img.Width)
+								return false;
+						} while (ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000");
+
+						ttlBytes = new StringBuilder(ttlBytes.ToString()[..(ttlBytes.Length - 8)]);
+						if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
+							continue;
+						
+						realX = x;
 						break;
 					}
 
-					if (!foundValidColor)
-						continue;
-
-					var ttlBytes = new StringBuilder();
-					var tempX = x;
-
-					do
-					{
-						var columnBytes = new StringBuilder();
-						for (var dy = 0; dy < 8 * _guiWidth && tempX < _endPoint.X; dy += _guiWidth)
-						{
-							var pixel = _img[tempX, y + dy];
-							columnBytes.Append(IsValidRankColor(pixel)
-							                   || IsValidTeamColor(pixel)
-							                   || Color.White.IsRgbEqualTo(pixel)
-								? "1"
-								: "0");
-						}
-
-						ttlBytes.Append(columnBytes);
-						tempX += _guiWidth;
-
-						if (tempX >= _img.Width)
-							return false;
-					} while (ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000");
-
-					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
-					if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
-						continue;
-					realX = x;
-					break;
+					// end for loop
+					if (realX != -1)
+						break;
 				}
-
-				// end for loop
-				if (realX != -1)
-					break;
+				
+				if (realX == -1)
+					continue;
+				
+				_startingPoint = new Point(realX, y);
+				func = colorFunc;
+				return true;
 			}
-
-			if (realX == -1)
-				return false;
-
-			_startingPoint = new Point(realX, y);
-			return true;
+			
+			return false;
 		}
+
 
 		/// <summary>
 		/// Parses the names from a screenshot. If the screenshot is a lobby screenshot, then there will only be one key: "Unknown."
@@ -162,7 +179,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var hasCompletedOneIteration = false;
 
 			// iterate over each column 
-			while (FindStartOfName())
+			while (FindStartOfName(out var func))
 			{
 				var innerTemp = new Dictionary<TeamColor, IList<(string name, bool isRed)>>();
 				// Name parsing
@@ -196,13 +213,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 							for (var dy = 0; dy < 8 * _guiWidth; dy += _guiWidth)
 							{
 								var color = _img[x, y + dy];
-
-								var isRankColor = IsValidRankColor(color);
-								var isTeamColor = IsValidTeamColor(color);
 								var isWhiteTemp = Color.White.IsRgbEqualTo(color);
-								var isDeterminedColor = determinedColor != default
-								                        && determinedColor.IsRgbEqualTo(color)
-								                        || determinedColor == color;
 
 								// "determinedColor" is the "lock" color.
 								// basically, once we determine what the color of the
@@ -211,8 +222,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 								// not default), then we ONLY check and see if the pixel
 								// is equal to "isDeterminedColor"
 								var isPixelCorrect = determinedColor == default
-									? isRankColor || isWhiteTemp || isTeamColor
-									: isDeterminedColor;
+									? func(color) || isWhiteTemp 
+									: determinedColor.IsRgbEqualTo(color);
 
 								// if we have a valid pixel
 								if (isPixelCorrect)
