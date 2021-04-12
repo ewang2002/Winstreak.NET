@@ -3,6 +3,7 @@
 using System;
 #endif
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -24,7 +25,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 		private readonly UnmanagedImage _img;
 		private readonly int _guiWidth;
 
-		private bool _calledBefore;
+		private bool _calledFindNameBefore;
+		private bool _calledFindFunc;
 
 		// We set the max iterations to 10
 		// Theoretically, there will be 4 (8 if in-game) columns possible of player names. 
@@ -33,8 +35,10 @@ namespace Winstreak.Core.Parsers.ImageParser
 		private Point _startingPoint;
 		private Point _endPoint;
 
+		private Predicate<Color> _colorFunc;
+
 		#endregion
-		
+
 		/// <summary>
 		/// Whether the screenshot represents a lobby.
 		/// </summary>
@@ -43,15 +47,70 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <summary>
 		/// Instantiates a new EnhancedNameParser object with the specified Bitmap and GUI scale.
 		/// </summary>
-		/// <param name="image">The bitmap.</param>
-		/// <param name="guiScale">The GUI scale.</param>
-		public EnhancedNameParser(Bitmap image, int guiScale = 2)
+		/// <param name="image">The bitmap. This is the screenshot that will be parsed.</param>
+		/// <param name="guiScale">The GUI scale. By default, this is set to 2, which is the normal display.</param>
+		/// <param name="strict">Whether to find a specific color function before processing. If false, (which is the
+		/// default), then this will normally parse an image, considering all possible colors at once. However, if
+		/// true, then a specific set of colors will be used instead to parse an image. This will increase accuracy
+		/// of the parse results at the expense of a performance decrease (which can be up to 20x slower).</param>
+		public EnhancedNameParser(Bitmap image, int guiScale = 2, bool strict = false)
 		{
 			_img = UnmanagedImage.FromManagedImage(image);
 			_guiWidth = guiScale;
 			_startingPoint = new Point(4, 20 * _guiWidth);
+			
 			var maxY = 20 * _guiWidth + 9 * _guiWidth * 22;
 			_endPoint = new Point(_img.Width - 4, maxY > _img.Height - 4 ? _img.Height - 4 : maxY);
+			_colorFunc = c => IsValidRankColor(c) || IsValidTeamColor(c);
+
+			if (strict) DetermineFunction();
+		}
+
+		/// <summary>
+		/// Attempts to find the best color identifier function to use. 
+		/// </summary>
+		private void DetermineFunction()
+		{
+			if (_calledFindFunc) return;
+			_calledFindFunc = true;
+
+			var teamColor = 0;
+			var rankColor = 0;
+
+			for (var y = _startingPoint.Y; y < _endPoint.Y; y += 9 * _guiWidth)
+			for (var x = _startingPoint.X; x < _endPoint.X; x += _guiWidth)
+			{
+				var ttlBytes = new StringBuilder();
+				var tempX = x;
+				do
+				{
+					var columnBytes = new StringBuilder();
+					for (var dy = 0; dy < 8 * _guiWidth && tempX < _endPoint.X; dy += _guiWidth)
+					{
+						var pixel = _img[tempX, y + dy];
+						columnBytes.Append(_colorFunc(pixel) || Color.White.IsRgbEqualTo(pixel)
+							? "1"
+							: "0");
+					}
+
+					ttlBytes.Append(columnBytes);
+					tempX += _guiWidth;
+
+					if (tempX >= _img.Width)
+						break;
+				} while (ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000");
+
+				ttlBytes = new StringBuilder(ttlBytes.ToString()[..(ttlBytes.Length - 8)]);
+				if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
+					continue;
+
+				var color = _img[x, y];
+				if (IsValidRankColor(color)) rankColor++;
+				if (IsValidTeamColor(color)) teamColor++;
+			}
+
+			if (rankColor > teamColor) _colorFunc = IsValidRankColor;
+			else if (teamColor > rankColor) _colorFunc = IsValidTeamColor;
 		}
 
 		/// <summary>
@@ -71,12 +130,12 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var y = _startingPoint.Y;
 			var realX = -1;
 			var startX = _startingPoint.X + 1;
-			var endX = _calledBefore
+			var endX = _calledFindNameBefore
 				? startX + 150 * _guiWidth
 				: _endPoint.X;
 
-			if (!_calledBefore)
-				_calledBefore = true;
+			if (!_calledFindNameBefore)
+				_calledFindNameBefore = true;
 
 			for (; y <= _endPoint.Y; y += 9 * _guiWidth)
 			{
@@ -115,9 +174,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 						for (var dy = 0; dy < 8 * _guiWidth && tempX < _endPoint.X; dy += _guiWidth)
 						{
 							var pixel = _img[tempX, y + dy];
-							columnBytes.Append(IsValidRankColor(pixel)
-							                   || IsValidTeamColor(pixel)
-							                   || Color.White.IsRgbEqualTo(pixel)
+							columnBytes.Append(_colorFunc(pixel) || Color.White.IsRgbEqualTo(pixel)
 								? "1"
 								: "0");
 						}
@@ -129,7 +186,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 							return false;
 					} while (ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000");
 
-					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
+					ttlBytes = new StringBuilder(ttlBytes.ToString()[..(ttlBytes.Length - 8)]);
 					if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 						continue;
 					realX = x;
@@ -199,8 +256,6 @@ namespace Winstreak.Core.Parsers.ImageParser
 							{
 								var color = _img[x, y + dy];
 
-								var isRankColor = IsValidRankColor(color);
-								var isTeamColor = IsValidTeamColor(color);
 								var isWhiteTemp = Color.White.IsRgbEqualTo(color);
 								var isDeterminedColor = determinedColor != default
 								                        && determinedColor.IsRgbEqualTo(color)
@@ -213,7 +268,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 								// not default), then we ONLY check and see if the pixel
 								// is equal to "isDeterminedColor"
 								var isPixelCorrect = determinedColor == default
-									? isRankColor || isWhiteTemp || isTeamColor
+									? _colorFunc(color) || isWhiteTemp
 									: isDeterminedColor;
 
 								// if we have a valid pixel

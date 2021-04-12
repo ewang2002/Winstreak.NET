@@ -618,7 +618,7 @@ namespace Winstreak.Cli.DirectoryManager
 			processingTime.Start();
 			// parse time
 #if USE_NEW_PARSER
-			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale);
+			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale, true);
 #else
 			using INameParser parser = new NameParser(bitmap, GuiScale);
 #endif
