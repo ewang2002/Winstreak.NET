@@ -40,10 +40,11 @@ namespace Winstreak.Cli
 				ExemptPlayers = new List<string>(),
 				ScreenshotDelay = 250,
 				PathToMinecraftFolder = GetDefaultMinecraftFolderPath(),
-				DangerousPlayers = Array.Empty<string>(),
+				PathToLogsFolder = Path.Join(GetDefaultMinecraftFolderPath(), "logs"),
 				DeleteScreenshot = false,
 				CheckFriends = true,
-				SuppressErrorMessages = false
+				SuppressErrorMessages = false,
+				StrictParser = false
 			};
 
 			if (configFileInfo != null)
@@ -74,6 +75,8 @@ namespace Winstreak.Cli
 
 			if (string.IsNullOrEmpty(configurationFile.PathToMinecraftFolder))
 				configurationFile.PathToMinecraftFolder = GetDefaultMinecraftFolderPath();
+			if (string.IsNullOrEmpty(configurationFile.PathToLogsFolder))
+				configurationFile.PathToLogsFolder = Path.Join(GetDefaultMinecraftFolderPath(), "logs");
 
 			// check once more
 			if (!Directory.Exists(configurationFile.PathToMinecraftFolder))

@@ -97,11 +97,9 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				var fkdr = playerInfo.OverallBedwarsStats.GetFkdr();
 				var score = playerInfo.OverallBedwarsStats.GetScore();
-				var playerName = Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
-					? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
-					: playerInfo.Name;
+				var playerName = playerInfo.Name;
 
-				if ((DateTime.Now - playerInfo.FirstJoined).TotalDays < 7)
+				if ((DateTime.Now - playerInfo.FirstJoined).TotalDays <= 7)
 					playerName = TextBrightBlackAnsi + playerName + ResetAnsi;
 
 				tableBuilder.AddRow(

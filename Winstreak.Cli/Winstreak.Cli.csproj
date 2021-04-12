@@ -16,13 +16,13 @@
     <RepositoryType>Github</RepositoryType>
     <PackageTags>minecraft, hypixel, hypixel-bedwars, bedwars</PackageTags>
     <Version>3.2.0</Version>
-    <AssemblyVersion>3.2.0</AssemblyVersion>
-    <FileVersion>3.2.0</FileVersion>
+    <AssemblyVersion>4.0.0</AssemblyVersion>
+    <FileVersion>4.0.0</FileVersion>
     <RootNamespace>Winstreak.Cli</RootNamespace>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <PackageVersion>3.1.0</PackageVersion>
-    <Product>Win  treak.Cli</Product>
+    <Product>Winstreak.Cli</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -141,9 +141,7 @@ namespace Winstreak.Cli.DirectoryManager
 					table.AddRow(
 						string.Empty,
 						teammate.BedwarsLevel == -1 ? "N/A" : teammate.BedwarsLevel.ToString(),
-						ansiColorToUse + (Config.DangerousPlayers.Contains(teammate.Name.ToLower())
-							? $"(!) {teammate.Name}"
-							: teammate.Name) + ResetAnsi,
+						ansiColorToUse + teammate.Name + ResetAnsi,
 						teammate.OverallBedwarsStats.FinalKills,
 						teammate.OverallBedwarsStats.BrokenBeds,
 						fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),

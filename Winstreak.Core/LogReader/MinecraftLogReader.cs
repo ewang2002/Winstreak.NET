@@ -22,20 +22,20 @@ namespace Winstreak.Core.LogReader
 		/// Creates a new MinecraftLogReader instance. This is intended to provide an easy way to continuously read the
 		/// Minecraft log file.
 		/// </summary>
-		/// <param name="pathToMcDir">The path to the Minecraft folder.</param>
+		/// <param name="pathToLogs">The path to the logs folder.</param>
 		/// <exception cref="DirectoryNotFoundException">If the Minecraft folder is invalid.</exception>
-		public MinecraftLogReader(string pathToMcDir)
+		public MinecraftLogReader(string pathToLogs)
 		{
-			if (!Directory.Exists(Path.Join(pathToMcDir, "logs")))
+			if (!Directory.Exists(pathToLogs))
 				throw new DirectoryNotFoundException("Log folder not found.");
 
-			if (!File.Exists(Path.Join(pathToMcDir, "logs", "latest.log")))
+			if (!File.Exists(Path.Join(pathToLogs, "latest.log")))
 				File.Create("latest.log");
 
 			IsStarted = false;
 			_disposed = false;
 
-			var logFile = Path.Join(pathToMcDir, "logs", "latest.log");
+			var logFile = Path.Join(pathToLogs, "latest.log");
 
 			// Start a new stream and put it at the end.
 			_stream = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);

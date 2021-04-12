@@ -89,7 +89,7 @@ namespace Winstreak.Cli.DirectoryManager
 			// groups of friends
 			var friendGroups = new List<IList<PlayerProfile>>();
 
-			if (HypixelApi == null || !ApiKeyValid)
+			if (HypixelApi is null || !ApiKeyValid)
 				return (friendGroups, nameFriendsUnable);
 
 			var friendsData = new List<(string uuid, FriendsApiResponse friends)>();

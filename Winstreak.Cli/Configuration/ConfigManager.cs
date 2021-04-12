@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,14 +17,15 @@ namespace Winstreak.Cli.Configuration
 			var configFile = new ConfigFile
 			{
 				ClearConsole = true,
-				DangerousPlayers = Array.Empty<string>(),
+				PathToLogsFolder = string.Empty,
 				ExemptPlayers = new List<string>(),
 				HypixelApiKey = string.Empty,
 				PathToMinecraftFolder = string.Empty,
 				ScreenshotDelay = 250,
 				DeleteScreenshot = false,
 				CheckFriends = true,
-				SuppressErrorMessages = false 
+				SuppressErrorMessages = false,
+				StrictParser = false
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
@@ -53,6 +53,9 @@ namespace Winstreak.Cli.Configuration
 					case "PATH_TO_MC_FOLDER" when Directory.Exists(val):
 						configFile.PathToMinecraftFolder = val;
 						break;
+					case "PATH_TO_LOGS_FOLDER" when Directory.Exists(val):
+						configFile.PathToLogsFolder = val;
+						break;
 					case "EXEMPT_PLAYERS":
 						configFile.ExemptPlayers = val.Split(",").Select(x => x.Trim()).ToList();
 						break;
@@ -69,9 +72,6 @@ namespace Winstreak.Cli.Configuration
 					case "HYPIXEL_API_KEY":
 						configFile.HypixelApiKey = val;
 						break;
-					case "DANGEROUS_PLAYERS":
-						configFile.DangerousPlayers = val.Split(",").Select(x => x.Trim()).ToArray();
-						break;
 					case "DELETE_SCREENSHOT":
 						configFile.DeleteScreenshot = int.TryParse(val, out var v6) && v6 == 1;
 						break;
@@ -80,6 +80,9 @@ namespace Winstreak.Cli.Configuration
 						break;
 					case "SUPPRESS_ERROR_MSGS":
 						configFile.SuppressErrorMessages = int.TryParse(val, out var v8) && v8 == 1;
+						break;
+					case "PARSER_STRICT":
+						configFile.StrictParser = int.TryParse(val, out var v9) && v9 == 1;
 						break;
 				}
 			}

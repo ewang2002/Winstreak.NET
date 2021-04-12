@@ -72,11 +72,10 @@ namespace Winstreak.Cli.DirectoryManager
 			Console.WriteLine($"{AnsiConstants.TextBrightRedAnsi}Debug Mode!{AnsiConstants.ResetAnsi}");
 #endif
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
-
-			Console.WriteLine();
-			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}.");
+			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+			Console.WriteLine($"[INFO] Logs Folder Set: {Config.PathToLogsFolder}");
 			Console.WriteLine(
-				$"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Count} Exempt Players Set.");
+				$"[INFO] {Config.ExemptPlayers.Count} Exempt Players Set.");
 			Console.WriteLine();
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
@@ -88,9 +87,6 @@ namespace Winstreak.Cli.DirectoryManager
 				.Select(x => x.ToLower())
 				.ToList();
 			NamesInExempt = Config.ExemptPlayers.ToArray();
-			Config.DangerousPlayers = Config.DangerousPlayers
-				.Select(x => x.ToLower())
-				.ToArray();
 
 			// init watcher
 			using var watcher = new FileSystemWatcher
@@ -107,7 +103,7 @@ namespace Winstreak.Cli.DirectoryManager
 			watcher.Created += OnChangedAsync;
 
 			// Log time
-			LogReader = new MinecraftLogReader(McScreenshotsPath.Parent!.FullName);
+			LogReader = new MinecraftLogReader(Config.PathToLogsFolder);
 			LogReader.OnLogUpdate += LogUpdate;
 			LogReader.Start();
 
@@ -128,8 +124,6 @@ namespace Winstreak.Cli.DirectoryManager
 					{
 						case "-config":
 							Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
-							Console.WriteLine(
-								$"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
 							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
 							Console.WriteLine(
 								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
@@ -618,7 +612,7 @@ namespace Winstreak.Cli.DirectoryManager
 			processingTime.Start();
 			// parse time
 #if USE_NEW_PARSER
-			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale, true);
+			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale, Config.StrictParser);
 #else
 			using INameParser parser = new NameParser(bitmap, GuiScale);
 #endif
