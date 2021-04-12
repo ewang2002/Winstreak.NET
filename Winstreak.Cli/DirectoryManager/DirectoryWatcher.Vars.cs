@@ -31,7 +31,7 @@ namespace Winstreak.Cli.DirectoryManager
 			.Append("> -quit OR -q: Quits the program.")
 			.ToString();
 
-		public static readonly string Divider = "=====================================";
+		public static readonly string Divider = "===================================";
 		public static readonly string JoinedParty = " joined the party.";
 		public static readonly string RemovedFromParty = " has been removed from the party.";
 		public static readonly string YouLeftParty = "You left the party.";

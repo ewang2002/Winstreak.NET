@@ -67,7 +67,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// <typeparam name="T">The class to deserialize the JSON to.</typeparam>
 		/// <param name="urlInfo">Any arguments; for example, "player?name=name</param>
 		/// <returns>The .NET object corresponding to type "T".</returns>
-		public async Task<T> SendRequestAsync<T>(string urlInfo)
+		private async Task<T> SendRequestAsync<T>(string urlInfo)
 		{
 			if (RequestsMade + 1 > MaximumRequestsInRateLimit)
 				throw new Exception("You have hit the rate limit.");
@@ -79,7 +79,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 			};
 
 			using var resp = await ApiClient.SendAsync(reqMsgInfo);
-
+			
 			// start timer
 			if (!RateLimitTimer.Enabled)
 			{

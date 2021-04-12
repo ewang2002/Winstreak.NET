@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Utility;
 using Winstreak.Core.Profile;
+using Winstreak.Core.WebApi.Hypixel;
 using static Winstreak.Core.WebApi.CachedData;
 using Winstreak.Core.WebApi.Hypixel.Definitions;
 using Winstreak.Core.WebApi.Mojang;
@@ -215,6 +216,35 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			return -1;
+		}
+
+		/// <summary>
+		/// Validates the API key.
+		/// </summary>
+		/// <param name="key">The API key.</param>
+		/// <returns>Whether the API key is valid.</returns>
+		public static async Task<bool> ValidateApiKey(string key)
+		{
+			if (key == string.Empty)
+				return false;
+
+			try
+			{
+				HypixelApi = new HypixelApi(key);
+
+				var apiKeyValidationInfo = await HypixelApi.ValidateApiKeyAsync();
+				ApiKeyValid = apiKeyValidationInfo.Success && apiKeyValidationInfo.Record != null;
+
+				if (!ApiKeyValid)
+					return false;
+
+				HypixelApi.RequestsMade = apiKeyValidationInfo.Record!.QueriesInPastMin;
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 
 		/// <summary>

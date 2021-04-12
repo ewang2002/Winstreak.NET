@@ -39,17 +39,6 @@ namespace Winstreak.Cli.DirectoryManager
 				: Directory.CreateDirectory(pathToScreenshots);
 			ShouldClearBeforeCheck = file.ClearConsole;
 
-			if (file.HypixelApiKey != string.Empty)
-			{
-				HypixelApi = new HypixelApi(file.HypixelApiKey);
-
-				var apiKeyValidationInfo = await HypixelApi.ValidateApiKeyAsync();
-				ApiKeyValid = apiKeyValidationInfo.Success && apiKeyValidationInfo.Record != null;
-
-				if (ApiKeyValid)
-					HypixelApi.RequestsMade = apiKeyValidationInfo.Record!.QueriesInPastMin;
-			}
-
 			// Get gui scale
 			GuiScale = ParserHelper.GetGuiScale(Config.PathToMinecraftFolder);
 
@@ -72,6 +61,15 @@ namespace Winstreak.Cli.DirectoryManager
 			Console.WriteLine($"{AnsiConstants.TextBrightRedAnsi}Debug Mode!{AnsiConstants.ResetAnsi}");
 #endif
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
+			
+			Console.WriteLine("[INFO] Attempting to connect to Hypixel's API...");
+			var res = await ValidateApiKey(file.HypixelApiKey);
+			Console.WriteLine(res 
+				? "[INFO] Connected to Hypixel's API." 
+				: "[INFO] Unable to connect to Hypixel's API. Using Plancke.");
+			Console.WriteLine("[INFO] Ready.");
+			Console.WriteLine(Divider);
+			
 			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
 			Console.WriteLine($"[INFO] Logs Folder Set: {Config.PathToLogsFolder}");
 			Console.WriteLine(
@@ -80,7 +78,7 @@ namespace Winstreak.Cli.DirectoryManager
 			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
 			Console.WriteLine("[INFO] Need help? Type -h in here!");
 			Console.WriteLine("[INFO] To view current configuration, type -config in here!");
-			Console.WriteLine("=========================");
+			Console.WriteLine(Divider);
 
 			// make all lowercase for ease of comparison 
 			Config.ExemptPlayers = Config.ExemptPlayers
