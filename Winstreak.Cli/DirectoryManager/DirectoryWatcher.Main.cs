@@ -396,8 +396,9 @@ namespace Winstreak.Cli.DirectoryManager
 			if (!logImp.Contains(":") && logImp.Contains(JoinedParty))
 			{
 				var name = logImp
+					.Replace("-----------------------------", string.Empty)
+					.Trim()
 					.Split(JoinedParty)[0]
-					.Split(" ")[^1]
 					.Trim();
 				Console.WriteLine($"[INFO] {name} has joined the party.");
 
@@ -418,8 +419,9 @@ namespace Winstreak.Cli.DirectoryManager
 			if (!logImp.Contains(":") && logImp.Contains(RemovedFromParty))
 			{
 				var name = logImp
+					.Replace("-----------------------------", string.Empty)
+					.Trim()
 					.Split(RemovedFromParty)[0]
-					.Split(" ")[^1]
 					.Trim();
 				Console.WriteLine($"[INFO] {name} has been removed from the party.");
 
@@ -455,8 +457,9 @@ namespace Winstreak.Cli.DirectoryManager
 			if (!logImp.Contains(":") && logImp.Contains(TheyLeftParty))
 			{
 				var name = logImp
+					.Replace("-----------------------------", string.Empty)
+					.Trim()
 					.Split(TheyLeftParty)[0]
-					.Split(" ")[^1]
 					.Trim();
 				Console.WriteLine($"[INFO] {name} has left the party!");
 

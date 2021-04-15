@@ -78,7 +78,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var rankColor = 0;
 
 			for (var y = _startingPoint.Y; y < _endPoint.Y; y += 9 * _guiWidth)
-			for (var x = _startingPoint.X; x < _endPoint.X; x += _guiWidth)
+			for (var x = _startingPoint.X; x < _endPoint.X; x++)
 			{
 				var ttlBytes = new StringBuilder();
 				var tempX = x;
