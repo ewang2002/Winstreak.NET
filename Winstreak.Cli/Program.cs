@@ -76,7 +76,7 @@ namespace Winstreak.Cli
 			if (string.IsNullOrEmpty(configurationFile.PathToMinecraftFolder))
 				configurationFile.PathToMinecraftFolder = GetDefaultMinecraftFolderPath();
 			if (string.IsNullOrEmpty(configurationFile.PathToLogsFolder))
-				configurationFile.PathToLogsFolder = Path.Join(GetDefaultMinecraftFolderPath(), "logs");
+				configurationFile.PathToLogsFolder = Path.Join(configurationFile.PathToMinecraftFolder, "logs");
 
 			// check once more
 			if (!Directory.Exists(configurationFile.PathToMinecraftFolder))

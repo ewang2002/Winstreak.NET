@@ -122,6 +122,7 @@ namespace Winstreak.Cli.DirectoryManager
 					{
 						case "-config":
 							Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+							Console.WriteLine($"[INFO] Minecraft Logs Folder Set: {Config.PathToLogsFolder}");
 							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
 							Console.WriteLine(
 								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
@@ -133,6 +134,7 @@ namespace Winstreak.Cli.DirectoryManager
 								$"[INFO] Suppress Error Messages: {(Config.SuppressErrorMessages ? "Yes" : "No")}");
 							Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
 							Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
+							Console.WriteLine($"[INFO] Strict Parser? {(Config.StrictParser ? "Yes" : "No")}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-help":
@@ -402,9 +404,9 @@ namespace Winstreak.Cli.DirectoryManager
 				if (!PartySession.ContainsKey(name.ToLower()))
 					PartySession.Add(name.ToLower(), name);
 
-				if (Config.ExemptPlayers.Contains(name.ToLower()))
+				if (!Config.ExemptPlayers.Contains(name.ToLower()))
 				{
-					Config.ExemptPlayers.Add(name);
+					Config.ExemptPlayers.Add(name.ToLower());
 					Console.WriteLine($"[INFO] \"{name}\" has been added to your exempt list.");
 				}
 
@@ -421,20 +423,18 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim();
 				Console.WriteLine($"[INFO] {name} has been removed from the party.");
 
-				if (PartySession.ContainsKey(name.ToLower()))
-					PartySession.Remove(name.ToLower());
-
+				PartySession.Remove(name.ToLower());
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
 					return;
 
-				Config.ExemptPlayers.Remove(name);
+				Config.ExemptPlayers.Remove(name.ToLower());
 				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
 				Console.WriteLine(Divider);
 				return;
 			}
 
 			// You left the party.
-			if (!logImp.Contains(":") && logImp.Contains(YouLeftParty))
+			if (!logImp.Contains(":") && (logImp.Contains(YouLeftParty) || logImp.Contains(DisbandParty)))
 			{
 				Console.WriteLine("[INFO] You left your current party!");
 				foreach (var (lowerName, name) in PartySession)
@@ -443,14 +443,14 @@ namespace Winstreak.Cli.DirectoryManager
 						continue;
 
 					Config.ExemptPlayers.Remove(lowerName);
-					Console.WriteLine($"\t- {name} has been removed from your exempt list.");
+					Console.WriteLine($"\t- \"{name}\" has been removed from your exempt list.");
 				}
 
 				PartySession.Clear();
 				Console.WriteLine(Divider);
 				return;
 			}
-
+			
 			// Left the party.
 			if (!logImp.Contains(":") && logImp.Contains(TheyLeftParty))
 			{
@@ -462,10 +462,28 @@ namespace Winstreak.Cli.DirectoryManager
 
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
 					return;
-
-				Config.ExemptPlayers.Remove(name);
+				
+				PartySession.Remove(name.ToLower());
+				Config.ExemptPlayers.Remove(name.ToLower());
 				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
 				Console.WriteLine(Divider);
+				return;
+			}
+			
+			// Disband
+			if (!logImp.Contains(':') && logImp.Contains(DisbandAlert))
+			{
+				Console.WriteLine("[INFO] The party was disbanded!");
+				foreach (var (lowerName, name) in PartySession)
+				{
+					if (NamesInExempt.Contains(lowerName))
+						continue;
+
+					Config.ExemptPlayers.Remove(lowerName);
+					Console.WriteLine($"\t- \"{name}\" has been removed from your exempt list.");
+				}
+				
+				PartySession.Clear();
 				return;
 			}
 
@@ -487,7 +505,7 @@ namespace Winstreak.Cli.DirectoryManager
 				await ProcessLobbyScreenshotAsync(names, TimeSpan.FromMinutes(0));
 				return;
 			}
-
+			
 			// /p list used.
 			// Guaranteed to have a party leader.
 			if (logImp.Contains("Party Leader") && logImp.Contains("Party Members (")
@@ -505,12 +523,13 @@ namespace Winstreak.Cli.DirectoryManager
 						.Where(z => z.Length != 0)
 						.ToArray())
 					.ToArray();
-				Console.WriteLine(string.Join(", ", allPeople));
+				Console.WriteLine($"[INFO] Parsed Members: {string.Join(", ", allPeople)}");
 				foreach (var player in allPeople)
 				{
 					var parsedName = player.Contains(']')
 						? player.Split("]")[^1].Trim()
 						: player;
+					
 					if (!PartySession.ContainsKey(parsedName.ToLower()))
 						PartySession.Add(parsedName.ToLower(), parsedName);
 
@@ -518,9 +537,22 @@ namespace Winstreak.Cli.DirectoryManager
 						continue;
 
 					Config.ExemptPlayers.Add(parsedName.ToLower());
-					Console.WriteLine($"[INFO] \"{parsedName}\" has been added to your exempt list.");
+					Console.WriteLine($"\t- \"{parsedName}\" has been added to your exempt list.");
 				}
 
+				Console.WriteLine(Divider);
+				return;
+			}
+
+			// API key
+			if (!logImp.Contains(":") && logImp.StartsWith(ApiKeyInfo))
+			{
+				Config.HypixelApiKey = logImp.Split(ApiKeyInfo)[1].Trim();
+				Console.WriteLine("[INFO] Received new API key. Attempting to connect...");
+				var res = await ValidateApiKey(Config.HypixelApiKey);
+				Console.WriteLine(res 
+					? "[INFO] Connected to Hypixel's API." 
+					: "[INFO] Unable to connect to Hypixel's API. Using Plancke.");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -662,6 +694,16 @@ namespace Winstreak.Cli.DirectoryManager
 			};
 			Console.WriteLine("[" + string.Join(", ", entries) + "]");
 
+			if (HypixelApi is not null && ApiKeyValid)
+			{
+				var res = await HypixelApi.ValidateApiKeyAsync();
+				if (!res.Success)
+				{
+					HypixelApi = null;
+					ApiKeyValid = false;
+				}
+			}
+			
 			if (parser.IsLobby)
 			{
 				if (parsedNames.ContainsKey(TeamColor.Unknown))

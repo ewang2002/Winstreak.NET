@@ -39,6 +39,10 @@ namespace Winstreak.Cli.DirectoryManager
 		public static readonly string OnlinePrefix = "ONLINE: ";
 		public static readonly string CantFindPlayer = "Can't find a player by the name of";
 		public static readonly string CantFindPlayerAp = CantFindPlayer + " '";
+		public static readonly string ApiKeyInfo = "Your new API key is ";
+		public static readonly string DisbandParty = "has disbanded the party!";
+		public static readonly string DisbandAlert = "The party was disbanded because all invited expired and the " +
+		                                             "party was empty";
 
 		// Configuration files
 		public static ConfigFile Config;
