@@ -9,32 +9,12 @@ using Winstreak.Core.WebApi.Hypixel;
 using static Winstreak.Core.WebApi.CachedData;
 using Winstreak.Core.WebApi.Hypixel.Definitions;
 using Winstreak.Core.WebApi.Mojang;
-using static Winstreak.Cli.Utility.ConsoleTable.AnsiConstants;
 
 namespace Winstreak.Cli.DirectoryManager
 {
 	public static partial class DirectoryWatcher
 	{
 		#region Minor Stuff
-
-		/// <summary>
-		/// Determines what the score means in the context of the situation.
-		/// </summary>
-		/// <param name="score">The score.</param>
-		/// <param name="isPlayer">Whether the score is referring to a player or the lobby.</param>
-		/// <returns>What the score means in the situation.</returns>
-		private static string DetermineScoreMeaning(double score, bool isPlayer)
-		{
-			if (score <= 20)
-				return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
-			if (score > 20 && score <= 40)
-				return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
-			if (score > 40 && score <= 60)
-				return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
-			if (score > 60 && score <= 80)
-				return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
-			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
-		}
 
 		/// <summary>
 		/// Returns a function that can be used to sort Bedwars stats.
@@ -49,7 +29,6 @@ namespace Winstreak.Cli.DirectoryManager
 					data.OverallBedwarsStats.FinalDeaths == 0
 						? data.OverallBedwarsStats.FinalKills
 						: data.OverallBedwarsStats.FinalKills / (double) data.OverallBedwarsStats.FinalDeaths,
-				SortType.Score => data => data.OverallBedwarsStats.GetScore(),
 				SortType.Winstreak => data => data.Winstreak,
 				SortType.Level => data => data.BedwarsLevel,
 				_ => throw new ArgumentOutOfRangeException()
@@ -70,7 +49,6 @@ namespace Winstreak.Cli.DirectoryManager
 					var fk = data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
 					return fd == 0 ? fk : fk / (double) fd;
 				},
-				SortType.Score => data => data.CalculateScore(),
 				SortType.Winstreak => data => data.PlayersInTeam.Sum(x => x.Winstreak),
 				SortType.Level => data => data.PlayersInTeam.Sum(x => x.BedwarsLevel),
 				_ => throw new ArgumentOutOfRangeException()

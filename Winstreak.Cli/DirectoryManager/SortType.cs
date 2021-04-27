@@ -3,7 +3,6 @@
 	public enum SortType
 	{
 		Winstreak,
-		Score,
 		Beds,
 		Finals,
 		Fkdr,

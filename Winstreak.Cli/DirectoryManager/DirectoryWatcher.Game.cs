@@ -89,9 +89,8 @@ namespace Winstreak.Cli.DirectoryManager
 			var rank = 1;
 
 			var totalPeople = teamInfo.Sum(x => x.PlayersInTeam.Count + x.NickedPlayers.Count);
-			var table = new Table(10);
-			table.AddRow("Rank", "LVL", $"{totalPeople} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment", 
-					"G")
+			var table = new Table(8);
+			table.AddRow("Rank", "LVL", $"{totalPeople} Players", "Finals", "Beds", "FKDR", "WS", "G")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
 			{
@@ -128,8 +127,6 @@ namespace Winstreak.Cli.DirectoryManager
 						? "N/A"
 						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
 					string.Empty,
-					Math.Round(result.CalculateScore(), 2),
-					DetermineScoreMeaning(result.CalculateScore(), true),
 					string.Empty
 				);
 				table.AddSeparator();
@@ -148,8 +145,6 @@ namespace Winstreak.Cli.DirectoryManager
 						teammate.Winstreak == -1
 							? "N/A"
 							: teammate.Winstreak.ToString(),
-						Math.Round(teammate.OverallBedwarsStats.GetScore(), 2),
-						DetermineScoreMeaning(teammate.OverallBedwarsStats.GetScore(), true),
 						groupNum switch
 						{
 							-2 => "E",
@@ -165,8 +160,6 @@ namespace Winstreak.Cli.DirectoryManager
 						string.Empty,
 						"N/A",
 						ansiColorToUse + erroredPlayers + ResetAnsi,
-						string.Empty,
-						string.Empty,
 						string.Empty,
 						string.Empty,
 						string.Empty,

@@ -1,6 +1,4 @@
-﻿using Winstreak.Core.Profile.Calculations;
-
-namespace Winstreak.Core.Profile
+﻿namespace Winstreak.Core.Profile
 {
 	public readonly struct BedwarsStats
 	{
@@ -77,7 +75,7 @@ namespace Winstreak.Core.Profile
 		public (bool dZero, double kdr) GetKdr() => Deaths == 0
 			// to avoid getting exception
 			? (true, -1)
-			: (false, Kills / (double)Deaths);
+			: (false, Kills / (double) Deaths);
 
 		/// <summary>
 		/// Gets the person's FKDR. 
@@ -89,20 +87,13 @@ namespace Winstreak.Core.Profile
 			: (false, FinalKills / (double) FinalDeaths);
 
 		/// <summary>
-		/// Gets the person's "perceived" danger score. 
-		/// </summary>
-		/// <returns>The person's "perceived" danger score.</returns>
-		public double GetScore()
-			=> PlayerCalculator.GetScore(GetFkdr(), BrokenBeds);
-
-		/// <summary>
 		/// Adds two BedwarsInformation objects.
 		/// </summary>
 		/// <param name="b1">The first object.</param>
 		/// <param name="b2">The second object.</param>
 		/// <returns>The new object.</returns>
 		public static BedwarsStats operator +(BedwarsStats b1, BedwarsStats b2)
-			=> new BedwarsStats(
+			=> new(
 				b1.Kills + b2.Kills,
 				b1.Deaths + b2.Deaths,
 				b1.FinalKills + b2.FinalKills,

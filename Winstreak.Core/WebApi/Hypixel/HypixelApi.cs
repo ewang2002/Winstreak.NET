@@ -1,4 +1,5 @@
-﻿using System;
+﻿// TODO need to look into adjusting requests to account for 503 errors, rate limits, etc.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -69,7 +70,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// <returns>The .NET object corresponding to type "T".</returns>
 		private async Task<T> SendRequestAsync<T>(string urlInfo)
 		{
-			if (RequestsMade + 1 > MaximumRequestsInRateLimit)
+			if (RequestsMade + 3 > MaximumRequestsInRateLimit)
 				throw new Exception("You have hit the rate limit.");
 
 			using var reqMsgInfo = new HttpRequestMessage
@@ -79,17 +80,18 @@ namespace Winstreak.Core.WebApi.Hypixel
 			};
 
 			using var resp = await ApiClient.SendAsync(reqMsgInfo);
-			
+
 			// start timer
 			if (!RateLimitTimer.Enabled)
 			{
 				RateLimitTimer.Start();
-				RateLimitTimer.Elapsed += (sender, args) =>
+				RateLimitTimer.Elapsed += (_, _) =>
 				{
 					RateLimitTimer.Stop();
 					RequestsMade = 0;
 				};
 			}
+
 			RequestsMade++;
 
 			var str = await resp.Content.ReadAsStringAsync();
@@ -104,7 +106,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// </summary>
 		/// <param name="name">The name to look up.</param>
 		/// <returns>The results.</returns>
-		public async Task<HypixelPlayerApiResponse> GetPlayerInfoAsync(string name) 
+		public async Task<HypixelPlayerApiResponse> GetPlayerInfoAsync(string name)
 			=> await SendRequestAsync<HypixelPlayerApiResponse>($"player?name={name}&");
 
 		/// <summary>
@@ -128,7 +130,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// </summary>
 		/// <param name="uuids">The Uuids to look up.</param>
 		/// <returns>A tuple containing all responses and list of uuids that couldn't be processed due to rate limit issues.</returns>
-		public async Task<(IList<(string uuid, FriendsApiResponse friends)> responses, 
+		public async Task<(IList<(string uuid, FriendsApiResponse friends)> responses,
 				IList<string> unableToSearch)>
 			GetAllFriendsAsync(IList<string> uuids)
 		{
@@ -172,6 +174,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 				responses.Add((actualUuidToLookUp[i], finishedReq));
 				CachedFriendsData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromMinutes(45));
 			}
+
 			return (responses, unableToSearch);
 		}
 
@@ -218,12 +221,13 @@ namespace Winstreak.Core.WebApi.Hypixel
 			for (var i = 0; i < completedRequests.Length; i++)
 			{
 				var finishedReq = completedRequests[i];
-				if (!finishedReq.Success || finishedReq.Guild == null) 
+				if (!finishedReq.Success || finishedReq.Guild == null)
 					continue;
 
 				responses.Add(finishedReq);
 				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromHours(1));
 			}
+
 			return (responses, unableToSearch);
 		}
 
@@ -262,7 +266,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 				actualNamesToLookUp.Add(name);
 			}
 
-			if (actualNamesToLookUp.Count == 0) 
+			if (actualNamesToLookUp.Count == 0)
 				return (responses, nicked, unableToSearch);
 
 			var requests = actualNamesToLookUp
@@ -293,7 +297,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 				else
 					nicked.Add(actualNamesToLookUp[i]);
 			}
-			
+
 			return (responses, nicked, unableToSearch);
 		}
 	}

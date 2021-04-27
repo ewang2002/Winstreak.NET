@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Winstreak.Cli.Utility.ConsoleTable;
 using Winstreak.Core.Profile;
-using Winstreak.Core.Profile.Calculations;
 using Winstreak.Core.WebApi.Plancke;
 using static Winstreak.Cli.Utility.ConsoleTable.AnsiConstants;
 using static Winstreak.Core.WebApi.CachedData;
@@ -89,14 +88,13 @@ namespace Winstreak.Cli.DirectoryManager
 				.ToList();
 
 			// start parsing the data
-			var tableBuilder = new Table(8)
-				.AddRow("LVL", $"{names.Count} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment")
+			var tableBuilder = new Table(6)
+				.AddRow("LVL", $"{names.Count} Players", "Finals", "Beds", "FKDR", "WS")
 				.AddSeparator();
 
 			foreach (var playerInfo in nameResults)
 			{
 				var fkdr = playerInfo.OverallBedwarsStats.GetFkdr();
-				var score = playerInfo.OverallBedwarsStats.GetScore();
 				var playerName = playerInfo.Name;
 
 				if ((DateTime.Now - playerInfo.FirstJoined).TotalDays <= 7)
@@ -112,9 +110,7 @@ namespace Winstreak.Cli.DirectoryManager
 					fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
 					playerInfo.Winstreak == -1
 						? "N/A"
-						: playerInfo.Winstreak.ToString(),
-					Math.Round(score, 1),
-					DetermineScoreMeaning(score, true)
+						: playerInfo.Winstreak.ToString()
 				);
 			}
 			
@@ -124,17 +120,11 @@ namespace Winstreak.Cli.DirectoryManager
 					BackgroundRedAnsi + nickedPlayer + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
-					BackgroundRedAnsi + "N/A" + ResetAnsi,
-					BackgroundRedAnsi + "N/A" + ResetAnsi,
-					BackgroundRedAnsi + "N/A" + ResetAnsi,
-					BackgroundRedAnsi + "Nicked!" + ResetAnsi
+					BackgroundRedAnsi + "Nicked!" + ResetAnsi,
+					BackgroundRedAnsi + "N/A" + ResetAnsi
 				);
 
 			tableBuilder.AddSeparator();
-			var ttlScore = PlayerCalculator.GetScore(
-				totalStats.GetFkdr(),
-				totalStats.BrokenBeds
-			);
 
 			var totalWinLossRatio = totalStats.GetWinLossRatio();
 			tableBuilder.AddRow(
@@ -145,9 +135,7 @@ namespace Winstreak.Cli.DirectoryManager
 				totalWinLossRatio.lZero
 					? "N/A"
 					: Math.Round(totalWinLossRatio.wlr, 2) + "",
-				string.Empty,
-				Math.Round(ttlScore, 1),
-				DetermineScoreMeaning(ttlScore, false)
+				string.Empty
 			);
 
 			// check friends
@@ -158,8 +146,8 @@ namespace Winstreak.Cli.DirectoryManager
 
 				if (friendGroups.Count != 0)
 				{
-					friendTableBuilder = new Table(5)
-						.AddRow("LVL", $"{friendGroups.Count} Friend Groups", "FKDR", "Score", "Assessment")
+					friendTableBuilder = new Table(3)
+						.AddRow("LVL", $"{friendGroups.Count} Friend Groups", "FKDR")
 						.AddSeparator();
 
 					for (var i = 0; i < friendGroups.Count; i++)
@@ -171,9 +159,7 @@ namespace Winstreak.Cli.DirectoryManager
 							friendTableBuilder.AddRow(
 								member.BedwarsLevel,
 								member.Name,
-								fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
-								Math.Round(member.OverallBedwarsStats.GetScore(), 2),
-								DetermineScoreMeaning(member.OverallBedwarsStats.GetScore(), true)
+								fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture)
 							);
 						}
 
@@ -183,9 +169,7 @@ namespace Winstreak.Cli.DirectoryManager
 					
 					friendTableBuilder
 						.AddSeparator()
-						.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty,
-							string.Empty,
-							string.Empty);
+						.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty);
 				}
 				else
 				{

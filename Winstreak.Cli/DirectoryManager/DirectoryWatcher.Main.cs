@@ -178,21 +178,20 @@ namespace Winstreak.Cli.DirectoryManager
 						case "-s":
 							SortingType = SortingType switch
 							{
-								SortType.Score => SortType.Beds,
 								SortType.Beds => SortType.Finals,
 								SortType.Finals => SortType.Fkdr,
 								SortType.Fkdr => SortType.Winstreak,
 								SortType.Winstreak => SortType.Level,
-								_ => SortType.Score
+								_ => SortType.Fkdr
 							};
 
 							Console.WriteLine($"[INFO] Sorting By: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-party":
-							Console.WriteLine(PartySession.Count > 0
-								? $"[INFO] Party Members: {string.Join(", ", PartySession.Values)}"
-								: "[INFO] Party Members: N/A");
+							Console.WriteLine($"[INFO] {PartySession.Count} Party Members");
+							foreach (var (lowercase, member) in PartySession)
+								Console.WriteLine($"\t- {member} ({lowercase})");
 							Console.WriteLine(Divider);
 							continue;
 					}
@@ -400,6 +399,8 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim()
 					.Split(JoinedParty)[0]
 					.Trim();
+				if (name[0] == '[')
+					name = name.Split(']')[1].Trim();
 				Console.WriteLine($"[INFO] {name} has joined the party.");
 
 				if (!PartySession.ContainsKey(name.ToLower()))
@@ -423,6 +424,8 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim()
 					.Split(RemovedFromParty)[0]
 					.Trim();
+				if (name[0] == '[')
+					name = name.Split(']')[1].Trim();
 				Console.WriteLine($"[INFO] {name} has been removed from the party.");
 
 				PartySession.Remove(name.ToLower());
@@ -461,6 +464,8 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim()
 					.Split(TheyLeftParty)[0]
 					.Trim();
+				if (name[0] == '[')
+					name = name.Split(']')[1].Trim();
 				Console.WriteLine($"[INFO] {name} has left the party!");
 
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
@@ -508,7 +513,7 @@ namespace Winstreak.Cli.DirectoryManager
 				await ProcessLobbyScreenshotAsync(names, TimeSpan.FromMinutes(0));
 				return;
 			}
-			
+
 			// /p list used.
 			// Guaranteed to have a party leader.
 			if (logImp.Contains("Party Leader") && logImp.Contains("Party Members (")
