@@ -10,7 +10,7 @@ namespace Winstreak.Cli.DirectoryManager
 	public static partial class DirectoryWatcher
 	{
 		public static string HelpInfo = new StringBuilder()
-			.Append("[INFO] Current Command List.")
+			.Append("Current Command List.")
 			.AppendLine()
 			.Append("> -clear OR -c: Clears the console.")
 			.AppendLine()

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
+using Winstreak.Cli.Utility;
 using Winstreak.Cli.Utility.ConsoleTable;
 using Winstreak.Core.Extensions;
 using Winstreak.Core.LogReader;
@@ -44,10 +45,9 @@ namespace Winstreak.Cli.DirectoryManager
 
 			if (GuiScale == 0)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(
-					"[ERROR] Please set a non-automatic GUI scale in your Minecraft settings and then restart the program.");
-				Console.ResetColor();
+				OutputDisplayer.WriteLine(LogType.Error, "Please set a non-automatic " +
+				                                         "GUI scale in your Minecraft settings " +
+				                                         "and then restart the program.");
 				return;
 			}
 
@@ -62,22 +62,21 @@ namespace Winstreak.Cli.DirectoryManager
 #endif
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
 			
-			Console.WriteLine("[INFO] Attempting to connect to Hypixel's API...");
+			OutputDisplayer.WriteLine(LogType.Info, "Attempting to connect to Hypixel's API...");
 			var res = await ValidateApiKey(file.HypixelApiKey);
-			Console.WriteLine(res 
-				? "[INFO] Connected to Hypixel's API." 
-				: "[INFO] Unable to connect to Hypixel's API. Using Plancke.");
-			Console.WriteLine("[INFO] Ready.");
+			OutputDisplayer.WriteLine(LogType.Info, res 
+				? "Connected to Hypixel's API." 
+				: "Unable to connect to Hypixel's API. Using Plancke.");
+			OutputDisplayer.WriteLine(LogType.Info, "Ready.");
 			Console.WriteLine(Divider);
-			
-			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
-			Console.WriteLine($"[INFO] Logs Folder Set: {Config.PathToLogsFolder}");
-			Console.WriteLine(
-				$"[INFO] {Config.ExemptPlayers.Count} Exempt Players Set.");
+
+			OutputDisplayer.WriteLine(LogType.Info, $"Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+			OutputDisplayer.WriteLine(LogType.Info, $"Logs Folder Set: {Config.PathToLogsFolder}");
+			OutputDisplayer.WriteLine(LogType.Info, $"{Config.ExemptPlayers.Count} Exempt Players Set.");
 			Console.WriteLine();
-			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
-			Console.WriteLine("[INFO] Need help? Type -h in here!");
-			Console.WriteLine("[INFO] To view current configuration, type -config in here!");
+			OutputDisplayer.WriteLine(LogType.Info, "To use, simply take a screenshot in Minecraft by pressing F2.");
+			OutputDisplayer.WriteLine(LogType.Info, "Need help? Type -h in here!");
+			OutputDisplayer.WriteLine(LogType.Info, "To view current configuration, type -config in here!");
 			Console.WriteLine(Divider);
 
 			// make all lowercase for ease of comparison 
@@ -121,25 +120,25 @@ namespace Winstreak.Cli.DirectoryManager
 					switch (input.ToLower().Trim())
 					{
 						case "-config":
-							Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
-							Console.WriteLine($"[INFO] Minecraft Logs Folder Set: {Config.PathToLogsFolder}");
-							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
-							Console.WriteLine(
-								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
-							Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
-							Console.WriteLine(
-								$"[INFO] Checking Friends? {(ApiKeyValid && file.CheckFriends ? "Yes" : "No")}");
-							Console.WriteLine();
-							Console.WriteLine(
-								$"[INFO] Suppress Error Messages: {(Config.SuppressErrorMessages ? "Yes" : "No")}");
-							Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
-							Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
-							Console.WriteLine($"[INFO] Strict Parser? {(Config.StrictParser ? "Yes" : "No")}");
+							var configTable = new Table(2)
+								.AddRow("Name", "Value")
+								.AddSeparator()
+								.AddRow("MC Folder", Config.PathToMinecraftFolder)
+								.AddRow("Logs Folder", Config.PathToLogsFolder)
+								.AddRow("API Key Valid?", ApiKeyValid)
+								.AddRow("Delete Screenshots?", file.DeleteScreenshot)
+								.AddRow("Checking Friends?", ApiKeyValid && file.CheckFriends)
+								.AddRow("Suppress Errors?", Config.SuppressErrorMessages)
+								.AddRow("Screenshot Delay?", Config.SuppressErrorMessages)
+								.AddRow("GUI Scale", GuiScale)
+								.AddRow("Strict Parser?", Config.StrictParser);
+							Console.WriteLine(configTable.ToString());
+							Console.WriteLine($"Exempt Players: {Config.ExemptPlayers.ToReadableString()}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-help":
 						case "-h":
-							Console.WriteLine(HelpInfo);
+							OutputDisplayer.WriteLine(LogType.Info, HelpInfo);
 							Console.WriteLine(Divider);
 							continue;
 						case "-clear":
@@ -148,26 +147,30 @@ namespace Winstreak.Cli.DirectoryManager
 							continue;
 						case "-tc":
 							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
-							Console.WriteLine(ShouldClearBeforeCheck
-								? "[INFO] Console will be cleared once a screenshot is provided."
-								: "[INFO] Console will not be cleared once a screenshot is provided.");
+							OutputDisplayer.WriteLine(LogType.Info, ShouldClearBeforeCheck
+								? "Console will be cleared once a screenshot is provided."
+								: "Console will not be cleared once a screenshot is provided.");
 							Console.WriteLine(Divider);
 							continue;
 						case "-status":
 							var valid = HypixelApi != null && ApiKeyValid;
-							Console.WriteLine(
-								$"[INFO] Hypixel API: {(valid ? "Valid" : "Invalid")}");
-							Console.WriteLine(valid
-								? $"[INFO] Usage: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
-								: "[INFO] Usage: Unlimited (Plancke)");
-							Console.WriteLine($"[INFO] Player Cache Length: {CachedPlayerData.Length}");
-							Console.WriteLine($"[INFO] Friend Cache Length: {CachedFriendsData.Length}");
-							Console.WriteLine($"[INFO] Sort Mode: {SortingType}");
+							var usage = valid
+								? $"{HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
+								: "Unlimited (Plancke)";
+							var statusTable = new Table(2)
+								.AddRow("Name", "Value")
+								.AddSeparator()
+								.AddRow("API Key Valid?", valid)
+								.AddRow("Usage", usage)
+								.AddRow("Player Cache Count", CachedPlayerData.Length)
+								.AddRow("Friend Cache Count", CachedFriendsData.Length)
+								.AddRow("Sort Mode", SortingType);
+							Console.WriteLine(statusTable.ToString());
 							Console.WriteLine(Divider);
 							continue;
 						case "-clearcache":
 						case "-emptycache":
-							Console.WriteLine("[INFO] Cache has been cleared.");
+							OutputDisplayer.WriteLine(LogType.Info, "Cache has been cleared.");
 							CachedPlayerData.Empty();
 							CachedFriendsData.Empty();
 							CachedGuildData.Empty();
@@ -185,18 +188,18 @@ namespace Winstreak.Cli.DirectoryManager
 								_ => SortType.Fkdr
 							};
 
-							Console.WriteLine($"[INFO] Sorting By: {SortingType}");
+							OutputDisplayer.WriteLine(LogType.Info, $"Sorting By: {SortingType}");
 							Console.WriteLine(Divider);
 							continue;
 						case "-party":
-							Console.WriteLine($"[INFO] {PartySession.Count} Party Members");
+							OutputDisplayer.WriteLine(LogType.Info, $"[INFO] {PartySession.Count} Party Members");
 							foreach (var (lowercase, member) in PartySession)
 								Console.WriteLine($"\t- {member} ({lowercase})");
 							Console.WriteLine(Divider);
 							continue;
 					}
 
-					Console.WriteLine(HelpInfo);
+					OutputDisplayer.WriteLine(LogType.Info, HelpInfo);
 					Console.WriteLine(Divider);
 					continue;
 				}
@@ -430,7 +433,10 @@ namespace Winstreak.Cli.DirectoryManager
 
 				PartySession.Remove(name.ToLower());
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
+				{
+					Console.WriteLine(Divider);
 					return;
+				}
 
 				Config.ExemptPlayers.Remove(name.ToLower());
 				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
@@ -469,7 +475,10 @@ namespace Winstreak.Cli.DirectoryManager
 				Console.WriteLine($"[INFO] {name} has left the party!");
 
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
+				{
+					Console.WriteLine(Divider);
 					return;
+				}
 				
 				PartySession.Remove(name.ToLower());
 				Config.ExemptPlayers.Remove(name.ToLower());
