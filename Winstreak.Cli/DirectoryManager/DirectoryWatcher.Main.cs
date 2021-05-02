@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
 using Winstreak.Cli.Utility;
@@ -199,9 +200,15 @@ namespace Winstreak.Cli.DirectoryManager
 							continue;
 						case "-stats":
 						case "-statistics":
-							OutputDisplayer.WriteLine(LogType.Info, $"As of {StartedInstance:HH:mm:ss}, here are the items that you have purchased.");
+							var curTimeFormatted = DateTime.Now.ToString("HH:mm:ss");
+							var purchasedMade = ItemStatistics.Values.Sum();
+							var basicStats = new StringBuilder()
+								.Append($"Winstreak.NET started at {StartedInstance:HH:mm:ss}.")
+								.AppendLine()
+								.Append($"As of {curTimeFormatted}, you have made {purchasedMade} purchases.");
+							Console.WriteLine(basicStats.ToString());
 							foreach (var (item, qty) in ItemStatistics)
-								Console.WriteLine($"\t {qty}x {item}");
+								Console.WriteLine($"- {qty}x {item}");
 							Console.WriteLine(Divider);
 							continue;
 					}
