@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Winstreak.Cli.Utility;
 using Winstreak.Cli.Utility.ConsoleTable;
 using Winstreak.Core.Profile;
 using Winstreak.Core.WebApi.Plancke;
@@ -187,8 +188,8 @@ namespace Winstreak.Cli.DirectoryManager
 			if (friendTableBuilder != null)
 				Console.WriteLine(friendTableBuilder.ToString());
 
-			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalMilliseconds} Milliseconds.");
-			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
+			OutputDisplayer.WriteLine(LogType.Info, $"Image Processing Time: {timeTaken.TotalMilliseconds} MS.");
+			OutputDisplayer.WriteLine(LogType.Info, $"API Requests Time: {apiRequestTime.TotalSeconds} SEC.");
 			Console.WriteLine(Divider);
 		}
 	}

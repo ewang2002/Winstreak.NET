@@ -6,7 +6,7 @@ namespace Winstreak.Cli.Utility
 	public static class OutputDisplayer
 	{
 		/// <summary>
-		/// Writes to the Console.
+		/// Writes to the Console. This will also include a correctly formatted timestamp.
 		/// </summary>
 		/// <typeparam name="T">The content type..</typeparam>
 		/// <param name="lt">The log type.</param>
@@ -19,15 +19,15 @@ namespace Winstreak.Cli.Utility
 			switch (lt)
 			{
 				case LogType.Info:
-					sb.Append("[INFO] ");
+					sb.Append("[Info] ");
 					break;
 				case LogType.Error:
 					Console.ForegroundColor = ConsoleColor.DarkRed;
-					sb.Append("[ERROR] ");
+					sb.Append("[Error] ");
 					break;
 				case LogType.Warning:
 					Console.ForegroundColor = ConsoleColor.DarkYellow;
-					sb.Append("[WARNING] ");
+					sb.Append("[Warn] ");
 					break;
 			}
 

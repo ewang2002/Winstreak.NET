@@ -192,9 +192,16 @@ namespace Winstreak.Cli.DirectoryManager
 							Console.WriteLine(Divider);
 							continue;
 						case "-party":
-							OutputDisplayer.WriteLine(LogType.Info, $"[INFO] {PartySession.Count} Party Members");
+							OutputDisplayer.WriteLine(LogType.Info, $"{PartySession.Count} Party Members");
 							foreach (var (lowercase, member) in PartySession)
 								Console.WriteLine($"\t- {member} ({lowercase})");
+							Console.WriteLine(Divider);
+							continue;
+						case "-stats":
+						case "-statistics":
+							OutputDisplayer.WriteLine(LogType.Info, $"As of {StartedInstance:HH:mm:ss}, here are the items that you have purchased.");
+							foreach (var (item, qty) in ItemStatistics)
+								Console.WriteLine($"\t {qty}x {item}");
 							Console.WriteLine(Divider);
 							continue;
 					}
@@ -404,7 +411,7 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim();
 				if (name[0] == '[')
 					name = name.Split(']')[1].Trim();
-				Console.WriteLine($"[INFO] {name} has joined the party.");
+				OutputDisplayer.WriteLine(LogType.Info, $"{name} has joined the party.");
 
 				if (!PartySession.ContainsKey(name.ToLower()))
 					PartySession.Add(name.ToLower(), name);
@@ -412,7 +419,7 @@ namespace Winstreak.Cli.DirectoryManager
 				if (!Config.ExemptPlayers.Contains(name.ToLower()))
 				{
 					Config.ExemptPlayers.Add(name.ToLower());
-					Console.WriteLine($"[INFO] \"{name}\" has been added to your exempt list.");
+					OutputDisplayer.WriteLine(LogType.Info, $"\"{name}\" has been added to your exempt list.");
 				}
 
 				Console.WriteLine(Divider);
@@ -429,7 +436,7 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim();
 				if (name[0] == '[')
 					name = name.Split(']')[1].Trim();
-				Console.WriteLine($"[INFO] {name} has been removed from the party.");
+				OutputDisplayer.WriteLine(LogType.Info, $"{name} has been removed from the party.");
 
 				PartySession.Remove(name.ToLower());
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
@@ -439,7 +446,7 @@ namespace Winstreak.Cli.DirectoryManager
 				}
 
 				Config.ExemptPlayers.Remove(name.ToLower());
-				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
+				OutputDisplayer.WriteLine(LogType.Info, $"\"{name}\" has been removed from your exempt list.");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -447,7 +454,7 @@ namespace Winstreak.Cli.DirectoryManager
 			// You left the party.
 			if (!logImp.Contains(":") && (logImp.Contains(YouLeftParty) || logImp.Contains(DisbandParty)))
 			{
-				Console.WriteLine("[INFO] You left your current party!");
+				OutputDisplayer.WriteLine(LogType.Info, "You left your current party!");
 				foreach (var (lowerName, name) in PartySession)
 				{
 					if (NamesInExempt.Contains(lowerName))
@@ -472,7 +479,7 @@ namespace Winstreak.Cli.DirectoryManager
 					.Trim();
 				if (name[0] == '[')
 					name = name.Split(']')[1].Trim();
-				Console.WriteLine($"[INFO] {name} has left the party!");
+				OutputDisplayer.WriteLine(LogType.Info, $"{name} has left the party!");
 
 				if (NamesInExempt.Any(x => string.Equals(x, name, StringComparison.CurrentCultureIgnoreCase)))
 				{
@@ -482,7 +489,7 @@ namespace Winstreak.Cli.DirectoryManager
 				
 				PartySession.Remove(name.ToLower());
 				Config.ExemptPlayers.Remove(name.ToLower());
-				Console.WriteLine($"[INFO] \"{name}\" has been removed from your exempt list.");
+				OutputDisplayer.WriteLine(LogType.Info, $"\"{name}\" has been removed from your exempt list.");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -490,7 +497,7 @@ namespace Winstreak.Cli.DirectoryManager
 			// Disband
 			if (!logImp.Contains(':') && logImp.Contains(DisbandAlert))
 			{
-				Console.WriteLine("[INFO] The party was disbanded!");
+				OutputDisplayer.WriteLine(LogType.Info, "The party was disbanded!");
 				foreach (var (lowerName, name) in PartySession)
 				{
 					if (NamesInExempt.Contains(lowerName))
@@ -518,7 +525,7 @@ namespace Winstreak.Cli.DirectoryManager
 					.ToList();
 
 				if (names.Count == 0) return;
-				Console.WriteLine("[INFO] Received /who Command Output.");
+				OutputDisplayer.WriteLine(LogType.Info, "Received /who Command Output.");
 				await ProcessLobbyScreenshotAsync(names, TimeSpan.FromMinutes(0));
 				return;
 			}
@@ -528,7 +535,7 @@ namespace Winstreak.Cli.DirectoryManager
 			if (logImp.Contains("Party Leader") && logImp.Contains("Party Members (")
 			                                    && logImp[..30].Trim() == "-----------------------------")
 			{
-				Console.WriteLine("[INFO] Party List Output Received.");
+				OutputDisplayer.WriteLine(LogType.Info, "Party List Output Received.");
 				var allPeople = logImp.Split(Environment.NewLine)
 					.Where(x => x != "-----------------------------")
 					.Where(x => (x.Contains("Party Leader")
@@ -540,7 +547,7 @@ namespace Winstreak.Cli.DirectoryManager
 						.Where(z => z.Length != 0)
 						.ToArray())
 					.ToArray();
-				Console.WriteLine($"[INFO] Parsed Members: {string.Join(", ", allPeople)}");
+				OutputDisplayer.WriteLine(LogType.Info, $"Parsed Members: {string.Join(", ", allPeople)}");
 				foreach (var player in allPeople)
 				{
 					var parsedName = player.Contains(']')
@@ -565,11 +572,11 @@ namespace Winstreak.Cli.DirectoryManager
 			if (!logImp.Contains(":") && logImp.StartsWith(ApiKeyInfo))
 			{
 				Config.HypixelApiKey = logImp.Split(ApiKeyInfo)[1].Trim();
-				Console.WriteLine("[INFO] Received new API key. Attempting to connect...");
+				OutputDisplayer.WriteLine(LogType.Info, "Received new API key. Attempting to connect...");
 				var res = await ValidateApiKey(Config.HypixelApiKey);
-				Console.WriteLine(res 
-					? "[INFO] Connected to Hypixel's API." 
-					: "[INFO] Unable to connect to Hypixel's API. Using Plancke.");
+				OutputDisplayer.WriteLine(LogType.Info, res 
+					? "Connected to Hypixel's API." 
+					: "Unable to connect to Hypixel's API. Using Plancke.");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -586,6 +593,19 @@ namespace Winstreak.Cli.DirectoryManager
 #if DEBUG
 				Console.WriteLine($"Command Used: {command}");
 #endif
+			}
+
+			// You purchased...
+			if (logImp.StartsWith(YouPurchased) && !logImp.Contains(':'))
+			{
+				var item = logImp
+					.Split(YouPurchased)[1]
+					.Split(Environment.NewLine)[0]
+					.Trim();
+				if (ItemStatistics.ContainsKey(item))
+					ItemStatistics[item]++;
+				else
+					ItemStatistics.Add(item, 1);
 			}
 		}
 
@@ -617,9 +637,7 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				if (!init)
 				{
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine("[ERROR] Unable to read the image.");
-					Console.ResetColor();
+					OutputDisplayer.WriteLine(LogType.Error, "Unable to read the image.");
 					Console.WriteLine(Divider);
 					return;
 				}
@@ -631,9 +649,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 			catch (Exception ex)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"[ERROR] An unknown error occurred. Error Information:\n{ex}");
-				Console.ResetColor();
+				OutputDisplayer.WriteLine(LogType.Error, $"An unknown error occurred. Error Information:\n{ex}");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -654,7 +670,7 @@ namespace Winstreak.Cli.DirectoryManager
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
 
-			Console.WriteLine($"[INFO] Checking Screenshot: {fileInfo.Name}");
+			OutputDisplayer.WriteLine(LogType.Info, $"Checking Screenshot: {fileInfo.Name}");
 			var processingTime = new Stopwatch();
 			processingTime.Start();
 			// parse time
@@ -695,7 +711,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 			if (parsedNames.Count == 0)
 			{
-				Console.WriteLine("[INFO] No parseable names found. Skipping.");
+				OutputDisplayer.WriteLine(LogType.Info, "No parseable names found. Skipping.");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -727,10 +743,8 @@ namespace Winstreak.Cli.DirectoryManager
 					await ProcessLobbyScreenshotAsync(parsedNames[TeamColor.Unknown], timeTaken);
 				else
 				{
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine(
-						"[ERROR] An error occurred with the parse results. Please take another screenshot.");
-					Console.ResetColor();
+					OutputDisplayer.WriteLine(LogType.Error,
+						"An error occurred with the parse results. Please take another screenshot.");
 					Console.WriteLine(Divider);
 				}
 			}

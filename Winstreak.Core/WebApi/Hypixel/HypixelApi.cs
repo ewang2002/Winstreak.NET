@@ -14,6 +14,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 {
 	public class HypixelApi
 	{
+		private const int RateLimitOffset = 3;
 		private const string LookedNameUpRecentlyCause = "You have already looked up this name recently";
 
 		/// <summary>
@@ -70,7 +71,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// <returns>The .NET object corresponding to type "T".</returns>
 		private async Task<T> SendRequestAsync<T>(string urlInfo)
 		{
-			if (RequestsMade + 3 > MaximumRequestsInRateLimit)
+			if (RequestsMade + 1 > MaximumRequestsInRateLimit)
 				throw new Exception("You have hit the rate limit.");
 
 			using var reqMsgInfo = new HttpRequestMessage
@@ -200,7 +201,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 					continue;
 				}
 
-				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
+				if (tempReqMade + RateLimitOffset > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(uuid);
 					continue;
@@ -256,7 +257,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 					continue;
 				}
 
-				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
+				if (tempReqMade + RateLimitOffset > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(name);
 					continue;
@@ -280,14 +281,14 @@ namespace Winstreak.Core.WebApi.Hypixel
 				// Case 1: Did we search this person up more times than is allowed?
 				// Hypixel has a rate limit where if you send >1 request per minute or so for the
 				// same person, you will not get that data.
-				if (!finishedReq.Success && finishedReq.Cause != null && finishedReq.Cause == LookedNameUpRecentlyCause)
+				if (!finishedReq.Success && finishedReq.Cause is LookedNameUpRecentlyCause)
 				{
 					unableToSearch.Add(actualNamesToLookUp[i]);
 					continue;
 				}
 
 				// Case 2: We did find a name.
-				if (finishedReq.Success && finishedReq.Player != null)
+				if (finishedReq.Success && finishedReq.Player is not null)
 				{
 					responses.Add(new PlayerProfile(finishedReq));
 					CachedPlayerData.TryAdd(finishedReq.Player.DisplayName, new PlayerProfile(finishedReq));

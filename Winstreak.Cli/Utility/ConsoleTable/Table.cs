@@ -24,7 +24,7 @@ namespace Winstreak.Cli.Utility.ConsoleTable
 		private const string HorizontalLine = "─";
 		private const string VerticalLine = "│";
 
-		private static readonly Regex AnsiRegex = new Regex(@"\x1B\[[^@-~]*[@-~]");
+		private static readonly Regex AnsiRegex = new(@"\x1B\[[^@-~]*[@-~]");
 
 		/// <summary>
 		/// The rows in this table.

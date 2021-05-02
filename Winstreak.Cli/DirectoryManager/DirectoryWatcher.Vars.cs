@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Winstreak.Cli.Configuration;
@@ -24,11 +25,13 @@ namespace Winstreak.Cli.DirectoryManager
 			.Append("> -emptycache OR -clearcache: Empties the cache.")
 			.AppendLine()
 			.Append(
-				"> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data. By default, this is set to the Score value.")
+				"> -sortmode OR -sort OR -s: Changes the way the program sorts the presented data.")
 			.AppendLine()
 			.Append("> -help OR -h: Shows this menu.")
 			.AppendLine()
 			.Append("> -quit OR -q: Quits the program.")
+			.AppendLine()
+			.Append("> -stats OR -statistics: Shows basic statistics.")
 			.ToString();
 
 		public static readonly string Divider = "===================================";
@@ -46,6 +49,8 @@ namespace Winstreak.Cli.DirectoryManager
 		public static readonly string DisbandAlert = "The party was disbanded because all invited expired and the " +
 		                                             "party was empty";
 
+		public static readonly string YouPurchased = "You purchased ";
+
 		// Configuration files
 		public static ConfigFile Config;
 		public static DirectoryInfo McScreenshotsPath;
@@ -61,6 +66,8 @@ namespace Winstreak.Cli.DirectoryManager
 		public static MinecraftLogReader LogReader;
 		// Keep in mind that the user can only be in one party at any given time.
 		public static Dictionary<string, string> PartySession = new();
+		public static Dictionary<string, int> ItemStatistics = new();
+		public static DateTime StartedInstance = DateTime.Now;
 		
 		// API Key stuff
 		public static HypixelApi HypixelApi;
