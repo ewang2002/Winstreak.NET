@@ -12,6 +12,9 @@ PATH_TO_MC_FOLDER=C:\Users\ewang\AppData\Roaming\.minecraftold
 # latest.log (or latest.txt) file that is constantly updated while
 # Minecraft is running. If none is specified, this will default to
 # the logs folder in PATH_TO_MC_FOLDER.
+#
+# For Lunar: C:\Users\username\.lunarclient\offline\files\1.8\logs
+# For Badlion: C:\Users\username\AppData\Roaming\.minecraft\logs\blclient\minecraft
 PATH_TO_LOGS_FOLDER= 
 
 

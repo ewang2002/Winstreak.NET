@@ -53,6 +53,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 		// Configuration files
 		public static ConfigFile Config;
+		public static string[] ConfigRaw;
 		public static DirectoryInfo McScreenshotsPath;
 
 		// General properties

@@ -584,6 +584,19 @@ namespace Winstreak.Cli.DirectoryManager
 				OutputDisplayer.WriteLine(LogType.Info, res 
 					? "Connected to Hypixel's API." 
 					: "Unable to connect to Hypixel's API. Using Plancke.");
+				if (res && Config.FileData != default)
+				{
+					// Overwrite old API key.
+					for (var i = 0; i < ConfigRaw.Length; i++)
+					{
+						if (!ConfigRaw[i].StartsWith("HYPIXEL_API_KEY=")) 
+							continue;
+						ConfigRaw[i] = $"HYPIXEL_API_KEY={Config.HypixelApiKey}";
+						break;
+					}
+
+					await File.WriteAllLinesAsync(Config.FileData.FullName, ConfigRaw);
+				}
 				Console.WriteLine(Divider);
 				return;
 			}

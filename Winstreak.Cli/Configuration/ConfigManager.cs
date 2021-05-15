@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Winstreak.Cli.DirectoryManager;
 
 namespace Winstreak.Cli.Configuration
 {
@@ -16,6 +17,7 @@ namespace Winstreak.Cli.Configuration
 		{
 			var configFile = new ConfigFile
 			{
+				FileData = info,
 				ClearConsole = true,
 				PathToLogsFolder = string.Empty,
 				ExemptPlayers = new List<string>(),
@@ -29,6 +31,7 @@ namespace Winstreak.Cli.Configuration
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
+			DirectoryWatcher.ConfigRaw = lines;
 			lines = lines
 				.Where(x => !x.StartsWith('#'))
 				.ToArray();

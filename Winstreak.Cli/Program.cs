@@ -36,6 +36,7 @@ namespace Winstreak.Cli
 			// default values
 			var configurationFile = new ConfigFile
 			{
+				FileData = default,
 				HypixelApiKey = string.Empty,
 				ClearConsole = false,
 				ExemptPlayers = new List<string>(),
