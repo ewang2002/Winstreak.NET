@@ -118,7 +118,8 @@ namespace Winstreak.Cli.DirectoryManager
 					if (input.ToLower() == "-q" || input.ToLower() == "-quit")
 						break;
 
-					switch (input.ToLower().Trim())
+					var arguments = input.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+					switch (arguments[0].ToLower().Trim())
 					{
 						case "-config":
 							var configTable = new Table(2)
@@ -205,10 +206,32 @@ namespace Winstreak.Cli.DirectoryManager
 							var basicStats = new StringBuilder()
 								.Append($"Winstreak.NET started at {StartedInstance:HH:mm:ss}.")
 								.AppendLine()
-								.Append($"As of {curTimeFormatted}, you have made {purchasedMade} purchases.");
-							Console.WriteLine(basicStats.ToString());
+								.Append($"As of {curTimeFormatted}, you have made {purchasedMade} purchases.")
+								.AppendLine();
 							foreach (var (item, qty) in ItemStatistics)
-								Console.WriteLine($"- {qty}x {item}");
+								basicStats.Append($"- {qty}x {item}").AppendLine();
+
+							Console.WriteLine(basicStats.ToString());
+							// Save 
+							if (arguments.Length > 1 && (arguments[1] == "d" || arguments[1] == "s"))
+							{
+								var dir = Directory.Exists(AppContext.BaseDirectory)
+									? new DirectoryInfo(AppContext.BaseDirectory)
+									: default;
+								if (Config.FileData is {Directory: { }})
+									dir = Config.FileData.Directory;
+								if (dir is null)
+									OutputDisplayer.WriteLine(LogType.Error, "Couldn't find a folder to save to.");
+								else
+								{
+									var time = $"{DateTime.Now.Hour}{DateTime.Now.Minute}{DateTime.Now.Second}";
+									var fileName = $"bw_shop_stats_{time}.txt";
+									var path = Path.Join(dir.FullName, fileName);
+									await File.WriteAllTextAsync(path, basicStats.ToString());
+									OutputDisplayer.WriteLine(LogType.Info, $"Saved stats to: {path}");
+								}
+							}
+
 							Console.WriteLine(Divider);
 							continue;
 					}

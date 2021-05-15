@@ -32,6 +32,10 @@ namespace Winstreak.Cli.DirectoryManager
 			.Append("> -quit OR -q: Quits the program.")
 			.AppendLine()
 			.Append("> -stats OR -statistics: Shows basic statistics.")
+			.AppendLine()
+			.Append("\tOptional Argument:")
+			.AppendLine()
+			.Append("\t\t- s: Saves yours statistics to a file. Usage: -stats s")
 			.ToString();
 
 		public static readonly string Divider = "===================================";
