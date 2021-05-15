@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Winstreak.Core.Profile.Calculations;
 
 namespace Winstreak.Core.Profile
 {
@@ -31,6 +33,24 @@ namespace Winstreak.Core.Profile
 			PlayersInTeam = players;
 			TeamColor = color;
 			NickedPlayers = nicked;
+		}
+
+		/// <summary>
+		/// Calculates the team's "threat" score. 
+		/// </summary>
+		/// <returns>The team's "threat" score.</returns>
+		public double CalculateScore()
+		{
+			var sumFd = PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalDeaths);
+			var sumFk = PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
+			var sumBeds = PlayersInTeam.Sum(x => x.OverallBedwarsStats.BrokenBeds);
+
+			return PlayerCalculator.GetScore(
+				sumFd == 0
+					? (true, -1.0)
+					: (false, sumFk / (double)sumFd),
+				sumBeds
+			);
 		}
 	}
 }

@@ -63,8 +63,7 @@ namespace Winstreak.Cli.DirectoryManager
 		// General properties
 		public static int GuiScale;
 		public static bool ShouldClearBeforeCheck;
-		public static SortType SortingType = SortType.Fkdr;
-		public static bool UseSummaryView = true;
+		public static SortType SortingType = SortType.Score;
 
 		// Things to keep in mind
 		public static string[] NamesInExempt;

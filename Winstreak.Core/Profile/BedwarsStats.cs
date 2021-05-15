@@ -1,4 +1,6 @@
-﻿namespace Winstreak.Core.Profile
+﻿using Winstreak.Core.Profile.Calculations;
+
+namespace Winstreak.Core.Profile
 {
 	public readonly struct BedwarsStats
 	{
@@ -102,5 +104,12 @@
 				b1.Losses + b2.Losses,
 				b1.BrokenBeds + b2.BrokenBeds
 			);
+
+		/// <summary>
+		/// Gets the person's "perceived" danger score. 
+		/// </summary>
+		/// <returns>The person's "perceived" danger score.</returns>
+		public double GetScore()
+			=> PlayerCalculator.GetScore(GetFkdr(), BrokenBeds);
 	}
 }

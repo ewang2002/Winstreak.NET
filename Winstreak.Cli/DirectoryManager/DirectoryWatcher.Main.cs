@@ -183,11 +183,12 @@ namespace Winstreak.Cli.DirectoryManager
 						case "-s":
 							SortingType = SortingType switch
 							{
+								SortType.Score => SortType.Beds,
 								SortType.Beds => SortType.Finals,
 								SortType.Finals => SortType.Fkdr,
 								SortType.Fkdr => SortType.Winstreak,
 								SortType.Winstreak => SortType.Level,
-								_ => SortType.Fkdr
+								_ => SortType.Score
 							};
 
 							OutputDisplayer.WriteLine(LogType.Info, $"Sorting By: {SortingType}");

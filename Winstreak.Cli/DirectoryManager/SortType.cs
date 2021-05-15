@@ -6,6 +6,7 @@
 		Beds,
 		Finals,
 		Fkdr,
-		Level
+		Level,
+		Score
 	}
 }
