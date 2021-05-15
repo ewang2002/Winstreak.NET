@@ -29,15 +29,18 @@ namespace Winstreak.Core.Profile.Calculations
 		/// <param name="bedsBroken">The number of broken beds.</param>
 		/// <param name="level">The person's level.</param>
 		/// <returns>The "danger" score of this person.</returns>
-		public static double GetScore((bool fdZero, double fkdr) fkdrVal, int finals, double bedsBroken, int level)
+		public static double GetScore((bool fdZero, double fkdr) fkdrVal, int finals, double bedsBroken, double level)
 		{
-			var bedLevelVal = bedsBroken / (level + 1);
-			var (fdZero, fkdr) = fkdrVal;
-			var finalKillDeath = fdZero ? finals : fkdr;
-			var finalVVal = Math.Pow(Math.Pow(finalKillDeath, 1.5) * (Math.Pow(finals, 0.5) / 2), 0.5)
-				* (finalKillDeath / 2) + 1;
+			var fkdr = fkdrVal.fdZero
+				? 0
+				: fkdrVal.fkdr;
+			if (fkdr == 0)
+				return 0;
 
-			return finalVVal * Math.Max(1, bedLevelVal); 
+			var killRatio = Math.Pow(fkdrVal.fkdr, 1.4)
+			                * Math.Pow(finals / 1.5, 0.90 + Math.Pow(fkdr, 0.03) - 1);
+			var bedLevel = 1 + Math.Pow(bedsBroken * level / 100, 0.1) - 0.90;
+			return Math.Pow(killRatio, 0.5) * bedLevel;
 		}
 	}
 }

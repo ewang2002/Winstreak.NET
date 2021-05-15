@@ -134,7 +134,9 @@ namespace Winstreak.Cli.DirectoryManager
 			tableBuilder.AddSeparator();
 			var ttlScore = PlayerCalculator.GetScore(
 				totalStats.GetFkdr(),
-				totalStats.BrokenBeds
+				totalStats.FinalKills,
+				totalStats.BrokenBeds,
+				levels
 			);
 
 			var totalWinLossRatio = totalStats.GetWinLossRatio();

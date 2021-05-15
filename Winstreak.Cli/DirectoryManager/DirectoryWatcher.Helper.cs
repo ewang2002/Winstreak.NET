@@ -28,10 +28,11 @@ namespace Winstreak.Cli.DirectoryManager
 			return score switch
 			{
 				<= 20 => TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi,
-				> 20 and <= 40 => TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi,
-				> 40 and <= 60 => TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi,
-				> 60 and <= 80 => TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi,
-				_ => TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi
+				> 20 and <= 45 => TextBrightGreenAnsi + (isPlayer ? "Okay" : "Somewhat Fine") + ResetAnsi,
+				> 45 and <= 80 => TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Competitive") + ResetAnsi,
+				> 80 and <= 150 => TextYellowAnsi + (isPlayer ? "Very Good" : "Competitive") + ResetAnsi,
+				> 150 and <= 500 => TextBrightRedAnsi + (isPlayer ? "Sweaty" : "Very Competitive") + ResetAnsi,
+				_ => TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Immediately") + ResetAnsi
 			};
 		}
 

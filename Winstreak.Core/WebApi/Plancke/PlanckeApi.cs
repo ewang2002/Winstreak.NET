@@ -174,7 +174,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(soloDataArr[4]),
 					int.Parse(soloDataArr[6]),
 					int.Parse(soloDataArr[7]),
-					int.Parse(soloDataArr[9])
+					int.Parse(soloDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -202,7 +203,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(doubleDataArr[4]),
 					int.Parse(doubleDataArr[6]),
 					int.Parse(doubleDataArr[7]),
-					int.Parse(doubleDataArr[9])
+					int.Parse(doubleDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -230,7 +232,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(threeDataArr[4]),
 					int.Parse(threeDataArr[6]),
 					int.Parse(threeDataArr[7]),
-					int.Parse(threeDataArr[9])
+					int.Parse(threeDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -259,7 +262,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(fourDataArr[4]),
 					int.Parse(fourDataArr[6]),
 					int.Parse(fourDataArr[7]),
-					int.Parse(fourDataArr[9])
+					int.Parse(fourDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)

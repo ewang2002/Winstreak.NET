@@ -97,7 +97,8 @@ namespace Winstreak.Core.Profile
 					(int) apiResponse.Player.Stats.Bedwars.SolosFinalDeaths,
 					(int) apiResponse.Player.Stats.Bedwars.SolosWins,
 					(int) apiResponse.Player.Stats.Bedwars.SolosLosses,
-					(int) apiResponse.Player.Stats.Bedwars.SolosBrokenBeds
+					(int) apiResponse.Player.Stats.Bedwars.SolosBrokenBeds,
+					BedwarsExpLevel.GetLevelFromExp(apiResponse.Player.Stats.Bedwars.Experience)
 				);
 
 				EightTwoBedwarsStats = new BedwarsStats(
@@ -107,7 +108,8 @@ namespace Winstreak.Core.Profile
 					(int) apiResponse.Player.Stats.Bedwars.DoublesFinalDeaths,
 					(int) apiResponse.Player.Stats.Bedwars.DoublesWins,
 					(int) apiResponse.Player.Stats.Bedwars.DoublesLosses,
-					(int) apiResponse.Player.Stats.Bedwars.DoublesBrokenBeds
+					(int) apiResponse.Player.Stats.Bedwars.DoublesBrokenBeds,
+					BedwarsExpLevel.GetLevelFromExp(apiResponse.Player.Stats.Bedwars.Experience)
 				);
 
 				FourThreeBedwarsStats = new BedwarsStats(
@@ -117,7 +119,8 @@ namespace Winstreak.Core.Profile
 					(int) apiResponse.Player.Stats.Bedwars.ThreesFinalDeaths,
 					(int) apiResponse.Player.Stats.Bedwars.ThreesWins,
 					(int) apiResponse.Player.Stats.Bedwars.ThreesLosses,
-					(int) apiResponse.Player.Stats.Bedwars.ThreesBrokenBeds
+					(int) apiResponse.Player.Stats.Bedwars.ThreesBrokenBeds,
+					BedwarsExpLevel.GetLevelFromExp(apiResponse.Player.Stats.Bedwars.Experience)
 				);
 
 				FourFourBedwarsStats = new BedwarsStats(
@@ -127,7 +130,8 @@ namespace Winstreak.Core.Profile
 					(int) apiResponse.Player.Stats.Bedwars.FoursFinalDeaths,
 					(int) apiResponse.Player.Stats.Bedwars.FoursWins,
 					(int) apiResponse.Player.Stats.Bedwars.FoursLosses,
-					(int) apiResponse.Player.Stats.Bedwars.FoursBrokenBeds
+					(int) apiResponse.Player.Stats.Bedwars.FoursBrokenBeds,
+					BedwarsExpLevel.GetLevelFromExp(apiResponse.Player.Stats.Bedwars.Experience)
 				);
 
 				OverallBedwarsStats = EightOneBedwarsStats

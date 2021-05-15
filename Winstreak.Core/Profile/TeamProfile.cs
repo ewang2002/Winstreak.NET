@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Winstreak.Core.Profile.Calculations;
 
@@ -44,12 +45,14 @@ namespace Winstreak.Core.Profile
 			var sumFd = PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalDeaths);
 			var sumFk = PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
 			var sumBeds = PlayersInTeam.Sum(x => x.OverallBedwarsStats.BrokenBeds);
-
+			var sumLvl = PlayersInTeam.Sum(x => x.OverallBedwarsStats.Level);
 			return PlayerCalculator.GetScore(
 				sumFd == 0
 					? (true, -1.0)
 					: (false, sumFk / (double)sumFd),
-				sumBeds
+				sumFk,
+				sumBeds,
+				sumLvl
 			);
 		}
 	}
