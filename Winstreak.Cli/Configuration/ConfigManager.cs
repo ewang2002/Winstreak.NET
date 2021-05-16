@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +28,8 @@ namespace Winstreak.Cli.Configuration
 				DeleteScreenshot = false,
 				CheckFriends = true,
 				SuppressErrorMessages = false,
-				StrictParser = false
+				StrictParser = false,
+				YourIgn = string.Empty
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
@@ -50,7 +52,11 @@ namespace Winstreak.Cli.Configuration
 
 				var prop = propVal[0].Trim();
 				var val = string.Join('=', propVal.Skip(1)).Trim();
-
+				if (prop == "PATH_TO_LOGS_FOLDER")
+				{
+					Console.WriteLine(val);
+					Console.WriteLine(Directory.Exists(val));
+				}
 				switch (prop)
 				{
 					case "PATH_TO_MC_FOLDER" when Directory.Exists(val):
@@ -86,6 +92,9 @@ namespace Winstreak.Cli.Configuration
 						break;
 					case "PARSER_STRICT":
 						configFile.StrictParser = int.TryParse(val, out var v9) && v9 == 1;
+						break;
+					case "YOUR_IGN":
+						configFile.YourIgn = val;
 						break;
 				}
 			}

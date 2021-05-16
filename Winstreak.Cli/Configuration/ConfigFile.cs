@@ -16,5 +16,6 @@ namespace Winstreak.Cli.Configuration
 		public bool CheckFriends { get; set; }
 		public bool SuppressErrorMessages { get; set; }
 		public bool StrictParser { get; set; }
+		public string YourIgn { get; set; }
 	}
 }

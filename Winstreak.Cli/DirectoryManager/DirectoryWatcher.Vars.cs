@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Winstreak.Cli.Configuration;
 using Winstreak.Core.LogReader;
+using Winstreak.Core.Profile;
 using Winstreak.Core.WebApi.Hypixel;
 
 namespace Winstreak.Cli.DirectoryManager
@@ -58,6 +59,7 @@ namespace Winstreak.Cli.DirectoryManager
 		// Configuration files
 		public static ConfigFile Config;
 		public static string[] ConfigRaw;
+		public static PlayerProfile YourProfile;
 		public static DirectoryInfo McScreenshotsPath;
 
 		// General properties
@@ -68,6 +70,7 @@ namespace Winstreak.Cli.DirectoryManager
 		// Things to keep in mind
 		public static string[] NamesInExempt;
 		public static MinecraftLogReader LogReader;
+
 		// Keep in mind that the user can only be in one party at any given time.
 		public static Dictionary<string, string> PartySession = new();
 		public static Dictionary<string, int> ItemStatistics = new();

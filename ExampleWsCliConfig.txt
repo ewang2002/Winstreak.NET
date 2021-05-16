@@ -72,3 +72,8 @@ SUPPRESS_ERROR_MSGS=0
 # 1 = true (Enable); 0 = false (Disable)
 # Default Value=0
 PARSER_STRICT=0
+
+# The IGN that you want to track. If you specify your IGN, Winstreak will also keep 
+# track of the number of final kills, deaths, broken beds, etc you have gained since
+# opening WS. 
+YOUR_IGN=

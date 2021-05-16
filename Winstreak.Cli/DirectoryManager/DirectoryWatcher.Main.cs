@@ -17,6 +17,7 @@ using Winstreak.Core.Extensions;
 using Winstreak.Core.LogReader;
 using Winstreak.Core.Parsers.ImageParser;
 using Winstreak.Core.Parsers.ImageParser.Imaging;
+using Winstreak.Core.Profile.Calculations;
 using static Winstreak.Core.WebApi.CachedData;
 using Winstreak.Core.WebApi.Hypixel;
 using Winstreak.Core.WebApi.Plancke;
@@ -55,7 +56,7 @@ namespace Winstreak.Cli.DirectoryManager
 			var version = Assembly.GetEntryAssembly()?.GetName().Version;
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
 			Console.WriteLine($"Winstreak For Hypixel Bedwars");
-			if (version != null)
+			if (version is not null)
 				Console.WriteLine($"Version: {version}");
 			Console.WriteLine("By CM19 & icicl");
 #if DEBUG
@@ -365,15 +366,23 @@ namespace Winstreak.Cli.DirectoryManager
 					Console.WriteLine($"> Winstreak: {profiles[0].Winstreak}");
 					Console.WriteLine($"> Network Level: {profiles[0].NetworkLevel}");
 					Console.WriteLine($"> Karma: {profiles[0].Karma}");
+
+					var score = PlayerCalculator.GetScore(overallFkdr, overall.FinalKills, 
+						overall.BrokenBeds, overall.Level);
+					Console.WriteLine($"> WS Score: {Math.Round(score, 3)}");
+					Console.WriteLine($"> WS Classification: {DetermineScoreMeaning(score, true)}");
 					Console.WriteLine($"> First Joined: {profiles[0].FirstJoined:MM/dd/yyyy hh:mm tt}");
 				}
 				else
 				{
-					var table = new Table(6)
-						.AddRow("LVL", "Username", "FKDR", "Beds", "W/L", "WS")
+					var table = new Table(8)
+						.AddRow("LVL", "Username", "FKDR", "Beds", "W/L", "WS", "Score", "Classification")
 						.AddSeparator();
 					foreach (var bedwarsData in profiles)
 					{
+						var score = PlayerCalculator.GetScore(bedwarsData.OverallBedwarsStats.GetFkdr(),
+							bedwarsData.OverallBedwarsStats.FinalKills, bedwarsData.OverallBedwarsStats.BrokenBeds,
+							bedwarsData.OverallBedwarsStats.Level);
 						table.AddRow(
 							bedwarsData.BedwarsLevel,
 							bedwarsData.Name,
@@ -390,7 +399,9 @@ namespace Winstreak.Cli.DirectoryManager
 										(double) bedwarsData.OverallBedwarsStats.Wins /
 										bedwarsData.OverallBedwarsStats.Losses, 2)
 									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.Winstreak
+							bedwarsData.Winstreak,
+							Math.Round(score, 3),
+							DetermineScoreMeaning(score, true)
 						);
 					}
 
@@ -403,6 +414,8 @@ namespace Winstreak.Cli.DirectoryManager
 							table.AddRow(
 								"N/A",
 								erroredPlayer,
+								"N/A",
+								"N/A",
 								"N/A",
 								"N/A",
 								"N/A",
@@ -430,7 +443,8 @@ namespace Winstreak.Cli.DirectoryManager
 			// Determine if the message is legit.
 			if (!IsValidLogMessage(text, out var logImp))
 				return;
-
+			Console.WriteLine(logImp);
+			Console.WriteLine("=====");
 			// Handle various cases.
 			// Joined the party
 			if (!logImp.Contains(":") && logImp.Contains(JoinedParty))

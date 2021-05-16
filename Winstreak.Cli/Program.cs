@@ -46,7 +46,8 @@ namespace Winstreak.Cli
 				DeleteScreenshot = false,
 				CheckFriends = true,
 				SuppressErrorMessages = false,
-				StrictParser = false
+				StrictParser = false,
+				YourIgn = string.Empty
 			};
 
 			if (configFileInfo != null)
