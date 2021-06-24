@@ -42,19 +42,20 @@ namespace Winstreak.Cli.DirectoryManager
 		public static readonly string Divider = "===================================";
 		
 		
-		public static readonly string JoinedParty = " joined the party.";
-		public static readonly string RemovedFromParty = " has been removed from the party.";
-		public static readonly string YouLeftParty = "You left the party.";
-		public static readonly string TheyLeftParty = " has left the party.";
-		public static readonly string OnlinePrefix = "ONLINE: ";
-		public static readonly string CantFindPlayer = "Can't find a player by the name of";
-		public static readonly string CantFindPlayerAp = CantFindPlayer + " '";
-		public static readonly string ApiKeyInfo = "Your new API key is ";
-		public static readonly string DisbandParty = "has disbanded the party!";
-		public static readonly string DisbandAlert = "The party was disbanded because all invited expired and the " +
-		                                             "party was empty";
+		public const string JoinedParty = " joined the party.";
+		public const string RemovedFromParty = " has been removed from the party.";
+		public const string YouLeftParty = "You left the party.";
+		public const string TheyLeftParty = " has left the party.";
+		public const string OnlinePrefix = "ONLINE: ";
+		public const string CantFindPlayer = "Can't find a player by the name of";
+		public const string CantFindPlayerAp = CantFindPlayer + " '";
+		public const string ApiKeyInfo = "Your new API key is ";
+		public const string DisbandParty = "has disbanded the party!";
+		public const string DisbandAlert = "The party was disbanded because all invited expired and the " +
+		                                   "party was empty";
 
-		public static readonly string YouPurchased = "You purchased ";
+		public const string YouPurchased = "You purchased ";
+		public const string FellIntoVoid = "fell into the void.";
 
 		// Configuration files
 		public static ConfigFile Config;
@@ -74,6 +75,7 @@ namespace Winstreak.Cli.DirectoryManager
 		// Keep in mind that the user can only be in one party at any given time.
 		public static Dictionary<string, string> PartySession = new();
 		public static Dictionary<string, int> ItemStatistics = new();
+		public static Dictionary<string, int> VoidDeaths = new();
 		public static DateTime StartedInstance = DateTime.Now;
 		
 		// API Key stuff

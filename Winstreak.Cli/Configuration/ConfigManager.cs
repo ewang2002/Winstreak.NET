@@ -52,11 +52,6 @@ namespace Winstreak.Cli.Configuration
 
 				var prop = propVal[0].Trim();
 				var val = string.Join('=', propVal.Skip(1)).Trim();
-				if (prop == "PATH_TO_LOGS_FOLDER")
-				{
-					Console.WriteLine(val);
-					Console.WriteLine(Directory.Exists(val));
-				}
 				switch (prop)
 				{
 					case "PATH_TO_MC_FOLDER" when Directory.Exists(val):

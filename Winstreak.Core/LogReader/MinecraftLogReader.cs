@@ -30,7 +30,7 @@ namespace Winstreak.Core.LogReader
 				throw new DirectoryNotFoundException("Log folder not found.");
 
 			if (!File.Exists(Path.Join(pathToLogs, "latest.log")))
-				File.Create("latest.log");
+				File.Create(Path.Join(pathToLogs, "latest.log"));
 
 			IsStarted = false;
 			_disposed = false;
