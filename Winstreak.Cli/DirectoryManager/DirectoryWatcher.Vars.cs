@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Winstreak.Cli.Configuration;
-using Winstreak.Core.LogReader;
+using Winstreak.Core.Logging;
 using Winstreak.Core.Profile;
 using Winstreak.Core.WebApi.Hypixel;
 
@@ -40,7 +40,8 @@ namespace Winstreak.Cli.DirectoryManager
 			.ToString();
 
 		public static readonly string Divider = "===================================";
-		
+
+		public const int UsernameMaxLen = 16;
 		
 		public const string JoinedParty = " joined the party.";
 		public const string RemovedFromParty = " has been removed from the party.";
@@ -56,6 +57,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 		public const string YouPurchased = "You purchased ";
 		public const string FellIntoVoid = "fell into the void.";
+		public const string FellIntoVoidFinal = "fell into the void. FINAL KILL!";
 
 		// Configuration files
 		public static ConfigFile Config;
@@ -70,7 +72,12 @@ namespace Winstreak.Cli.DirectoryManager
 
 		// Things to keep in mind
 		public static string[] NamesInExempt;
+		
 		public static MinecraftLogReader LogReader;
+
+#if DEBUG
+		public static StreamWriter DebugLogger;
+#endif
 
 		// Keep in mind that the user can only be in one party at any given time.
 		public static Dictionary<string, string> PartySession = new();

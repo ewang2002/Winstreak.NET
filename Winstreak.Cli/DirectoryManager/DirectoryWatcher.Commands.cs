@@ -167,7 +167,7 @@ namespace Winstreak.Cli.DirectoryManager
 							if (inPartyDict.Count > 0)
 							{
 								var inPartyTable = new Table(2)
-									.AddRow("Name (Party)", "Deaths by Falling into Void")
+									.AddRow("Name (P)", "Void")
 									.AddSeparator();
 								foreach (var (name, count) in inPartyDict)
 									inPartyTable.AddRow(name, count);
@@ -177,7 +177,7 @@ namespace Winstreak.Cli.DirectoryManager
 							if (notInPartyDict.Count > 0)
 							{
 								var notInParty = new Table(2)
-									.AddRow("Name (Not in Party)", "Deaths by Falling into Void")
+									.AddRow("Name (NP)", "Void")
 									.AddSeparator();
 								foreach (var (name, count) in notInPartyDict)
 									notInParty.AddRow(name, count);

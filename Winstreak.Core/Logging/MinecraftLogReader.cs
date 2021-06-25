@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Timers;
 
-namespace Winstreak.Core.LogReader
+namespace Winstreak.Core.Logging
 {
 	/// <summary>
 	/// The MinecraftLogReader is designed to provide an easy way to continuously read the Minecraft log file.

@@ -15,28 +15,48 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <param name="text">The text.</param>
 		private static async void LogUpdate(object source, string text)
 		{
-			// Filter out any garbage
-			var parsedText = string.Join(Environment.NewLine, text.Split(Environment.NewLine)
-				.Where(x => !x.StartsWith("You will respawn in")));
-
 			// Determine if the message is legit.
-			if (!IsValidLogMessage(parsedText, out var logImp))
+			if (!IsValidLogMessage(text, out var logImp))
 				return;
 
+			// Filter out any garbage values.
+			logImp = string.Join(Environment.NewLine, logImp.Split(Environment.NewLine)
+				.Where(x => !x.StartsWith("You will respawn in") 
+				            && !x.StartsWith("The game starts in")
+				            && !(x.Contains("has joined") && x.EndsWith(")!"))
+				            && !(x.StartsWith("You will respawn in") && x.EndsWith("seconds!"))));
+			
 			// Handle fell into void and purchases.
-			if (logImp.Contains(FellIntoVoid) || logImp.Contains(YouPurchased))
+			if (logImp.Contains(FellIntoVoid) || logImp.Contains(YouPurchased) || logImp.Contains(FellIntoVoidFinal))
 			{
 				var entries = logImp.Split(Environment.NewLine).ToList();
+#if DEBUG
+				var identifier = new Random().Next();
+				await DebugLogger.WriteLineAsync();
+				await DebugLogger.LogWriteLineAsync($"[{identifier}] Received Message: {logImp}");
+				await DebugLogger.LogWriteLineAsync($"[{identifier}] Parsed: {string.Join(" || ", entries)}");
+#endif
+				
 				var indicesToRemove = new List<int>();
 				for (var i = 0; i < entries.Count; i++)
 				{
 					var entry = entries[i];
+#if DEBUG
+					await DebugLogger.LogWriteLineAsync($"[{identifier}] Got Entry: {entry}");
+#endif
+					
 					if (entry.Contains(":")) continue;
 
 					// xxx fell into the void.
-					if (entry.EndsWith(FellIntoVoid))
+					if (entry.EndsWith(FellIntoVoid) || entry.EndsWith(FellIntoVoidFinal))
 					{
 						var name = logImp.Split(FellIntoVoid)[0].Trim();
+#if DEBUG
+						await DebugLogger.LogWriteLineAsync($"[{identifier}] Void - Name: {name}");
+#endif
+						
+						if (name.Length > UsernameMaxLen) continue; 
+						
 						if (VoidDeaths.ContainsKey(name)) VoidDeaths[name]++;
 						else VoidDeaths.Add(name, 1);
 						indicesToRemove.Add(i);
@@ -47,10 +67,11 @@ namespace Winstreak.Cli.DirectoryManager
 					if (entry.StartsWith(YouPurchased))
 					{
 						var item = entry.Split(YouPurchased)[1].Trim();
-						if (ItemStatistics.ContainsKey(item))
-							ItemStatistics[item]++;
-						else
-							ItemStatistics.Add(item, 1);
+#if DEBUG
+						await DebugLogger.LogWriteLineAsync($"[{identifier}] Item - Name: {item}");
+#endif
+						if (ItemStatistics.ContainsKey(item)) ItemStatistics[item]++;
+						else ItemStatistics.Add(item, 1);
 						indicesToRemove.Add(i);
 					}
 				}
@@ -217,6 +238,11 @@ namespace Winstreak.Cli.DirectoryManager
 					.Where(name => !Config.ExemptPlayers.Contains(name.ToLower()))
 					.ToList();
 
+#if DEBUG
+				await DebugLogger.LogWriteLineAsync($"/who Received: {logImp}");
+				await DebugLogger.LogWriteLineAsync($"Parsed: {string.Join(" | ", names)}");
+				await DebugLogger.WriteLineAsync();
+#endif
 				if (names.Count == 0) return;
 				OutputDisplayer.WriteLine(LogType.Info, "Received /who Command Output.");
 				await ProcessLobbyScreenshotAsync(names, TimeSpan.FromMinutes(0));

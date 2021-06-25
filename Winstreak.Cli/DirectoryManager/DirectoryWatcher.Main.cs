@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
 using Winstreak.Cli.Utility;
 using Winstreak.Cli.Utility.ConsoleTable;
-using Winstreak.Core.LogReader;
+using Winstreak.Core.Logging;
 using Winstreak.Core.Parsers.ImageParser;
 using Winstreak.Core.Parsers.ImageParser.Imaging;
 
@@ -98,6 +98,17 @@ namespace Winstreak.Cli.DirectoryManager
 			LogReader = new MinecraftLogReader(Config.PathToLogsFolder);
 			LogReader.OnLogUpdate += LogUpdate;
 			LogReader.Start();
+
+			// Logger
+#if DEBUG
+			DebugLogger = new StreamWriter(
+				Path.Join(Config.PathToMinecraftFolder, $"ws_debug_logs_{DateTime.Now:h_mm_ss}.txt"),
+				true
+			) {AutoFlush = true};
+
+			OutputDisplayer.WriteLine(LogType.Info, $"Debug log enabled.");
+			await DebugLogger.LogWriteLineAsync("Winstreak Debug Started.");
+#endif
 
 			// infinite loop for command processing
 			while (true)
