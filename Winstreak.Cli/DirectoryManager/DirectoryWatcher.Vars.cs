@@ -37,6 +37,8 @@ namespace Winstreak.Cli.DirectoryManager
 			.Append("\tOptional Argument:")
 			.AppendLine()
 			.Append("\t\t- s: Saves yours statistics to a file. Usage: -stats s")
+			.AppendLine()
+			.Append("> -void OR -voiddeaths: Shows people that have died by falling into the void.")
 			.ToString();
 
 		public static readonly string Divider = "===================================";

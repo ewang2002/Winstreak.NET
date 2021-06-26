@@ -16,9 +16,9 @@
     <PackageProjectUrl>https://github.com/ewang2002/Winstreak.NET</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <OutputType>Library</OutputType>
-    <PackageVersion>1.2.0</PackageVersion>
+    <PackageVersion>3.1.0</PackageVersion>
     <Version>3.0.0</Version>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <AssemblyVersion>3.1.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
