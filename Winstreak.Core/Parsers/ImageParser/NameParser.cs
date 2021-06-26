@@ -54,7 +54,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <summary>
 		/// Finds the start of the name.
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>True if we can find the start of a new character. False otherwise.</returns>
 		private bool FindStartOfName()
 		{
 			var y = StartingPoint.Y;
@@ -253,6 +253,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 						// if the determined color wasn't defined, define it. 
 						if (determinedColor != default)
 							continue;
+						
 						colorDict = colorDict.OrderByDescending(pair => pair.Value)
 							.ToDictionary(kv => kv.Key, kv => kv.Value);
 

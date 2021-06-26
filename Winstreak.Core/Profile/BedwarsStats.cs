@@ -40,6 +40,11 @@ namespace Winstreak.Core.Profile
 		public readonly int BrokenBeds;
 
 		/// <summary>
+		/// The player's level.
+		/// </summary>
+		public readonly double Level;
+
+		/// <summary>
 		/// A constructor that takes in stats for this player.
 		/// </summary>
 		/// <param name="kills">The number of kills.</param>
@@ -49,8 +54,9 @@ namespace Winstreak.Core.Profile
 		/// <param name="wins">The number of wins.</param>
 		/// <param name="losses">The number of deaths.</param>
 		/// <param name="beds">The number of beds broken.</param>
+		/// <param name="level">The person's level.</param>
 		public BedwarsStats(int kills, int deaths, int finalKills, int finalDeaths, int wins, int losses,
-			int beds)
+			int beds, double level)
 		{
 			Kills = kills;
 			Deaths = deaths;
@@ -59,6 +65,7 @@ namespace Winstreak.Core.Profile
 			Wins = wins;
 			Losses = losses;
 			BrokenBeds = beds;
+			Level = level;
 		}
 
 		/// <summary>
@@ -77,7 +84,7 @@ namespace Winstreak.Core.Profile
 		public (bool dZero, double kdr) GetKdr() => Deaths == 0
 			// to avoid getting exception
 			? (true, -1)
-			: (false, Kills / (double)Deaths);
+			: (false, Kills / (double) Deaths);
 
 		/// <summary>
 		/// Gets the person's FKDR. 
@@ -89,27 +96,28 @@ namespace Winstreak.Core.Profile
 			: (false, FinalKills / (double) FinalDeaths);
 
 		/// <summary>
-		/// Gets the person's "perceived" danger score. 
-		/// </summary>
-		/// <returns>The person's "perceived" danger score.</returns>
-		public double GetScore()
-			=> PlayerCalculator.GetScore(GetFkdr(), BrokenBeds);
-
-		/// <summary>
 		/// Adds two BedwarsInformation objects.
 		/// </summary>
 		/// <param name="b1">The first object.</param>
 		/// <param name="b2">The second object.</param>
 		/// <returns>The new object.</returns>
 		public static BedwarsStats operator +(BedwarsStats b1, BedwarsStats b2)
-			=> new BedwarsStats(
+			=> new(
 				b1.Kills + b2.Kills,
 				b1.Deaths + b2.Deaths,
 				b1.FinalKills + b2.FinalKills,
 				b1.FinalDeaths + b2.FinalDeaths,
 				b1.Wins + b2.Wins,
 				b1.Losses + b2.Losses,
-				b1.BrokenBeds + b2.BrokenBeds
+				b1.BrokenBeds + b2.BrokenBeds,
+				b1.Level
 			);
+
+		/// <summary>
+		/// Gets the person's "perceived" danger score. 
+		/// </summary>
+		/// <returns>The person's "perceived" danger score.</returns>
+		public double GetScore()
+			=> PlayerCalculator.GetScore(GetFkdr(), FinalKills, BrokenBeds, Level);
 	}
 }

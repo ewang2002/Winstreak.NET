@@ -1,22 +1,19 @@
-﻿#define TEST_NEW_PARSER
+﻿#define USE_NEW_PARSER
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
+using Winstreak.Cli.Utility;
 using Winstreak.Cli.Utility.ConsoleTable;
-using Winstreak.Core.Extensions;
+using Winstreak.Core.Logging;
 using Winstreak.Core.Parsers.ImageParser;
 using Winstreak.Core.Parsers.ImageParser.Imaging;
-using static Winstreak.Core.WebApi.CachedData;
-using Winstreak.Core.WebApi.Hypixel;
-using Winstreak.Core.WebApi.Plancke;
 
 namespace Winstreak.Cli.DirectoryManager
 {
@@ -38,33 +35,21 @@ namespace Winstreak.Cli.DirectoryManager
 				: Directory.CreateDirectory(pathToScreenshots);
 			ShouldClearBeforeCheck = file.ClearConsole;
 
-			if (file.HypixelApiKey != string.Empty)
-			{
-				HypixelApi = new HypixelApi(file.HypixelApiKey);
-
-				var apiKeyValidationInfo = await HypixelApi.ValidateApiKeyAsync();
-				ApiKeyValid = apiKeyValidationInfo.Success && apiKeyValidationInfo.Record != null;
-
-				if (ApiKeyValid)
-					HypixelApi.RequestsMade = apiKeyValidationInfo.Record!.QueriesInPastMin;
-			}
-
 			// Get gui scale
 			GuiScale = ParserHelper.GetGuiScale(Config.PathToMinecraftFolder);
 
 			if (GuiScale == 0)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(
-					"[ERROR] Please set a non-automatic GUI scale in your Minecraft settings and then restart the program.");
-				Console.ResetColor();
+				OutputDisplayer.WriteLine(LogType.Error, "Please set a non-automatic " +
+				                                         "GUI scale in your Minecraft settings " +
+				                                         "and then restart the program.");
 				return;
 			}
 
 			var version = Assembly.GetEntryAssembly()?.GetName().Version;
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
 			Console.WriteLine($"Winstreak For Hypixel Bedwars");
-			if (version != null)
+			if (version is not null)
 				Console.WriteLine($"Version: {version}");
 			Console.WriteLine("By CM19 & icicl");
 #if DEBUG
@@ -72,23 +57,28 @@ namespace Winstreak.Cli.DirectoryManager
 #endif
 			Console.WriteLine("%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%");
 
+			OutputDisplayer.WriteLine(LogType.Info, "Attempting to connect to Hypixel's API...");
+			var res = await ValidateApiKey(file.HypixelApiKey);
+			OutputDisplayer.WriteLine(LogType.Info, res
+				? "Connected to Hypixel's API."
+				: "Unable to connect to Hypixel's API. Using Plancke.");
+			OutputDisplayer.WriteLine(LogType.Info, "Ready.");
+			Console.WriteLine(Divider);
+
+			OutputDisplayer.WriteLine(LogType.Info, $"Minecraft Folder Set: {Config.PathToMinecraftFolder}");
+			OutputDisplayer.WriteLine(LogType.Info, $"Logs Folder Set: {Config.PathToLogsFolder}");
+			OutputDisplayer.WriteLine(LogType.Info, $"{Config.ExemptPlayers.Count} Exempt Players Set.");
 			Console.WriteLine();
-			Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}.");
-			Console.WriteLine(
-				$"[INFO] {Config.DangerousPlayers.Length} Dangerous & {Config.ExemptPlayers.Length} Exempt Players Set.");
-			Console.WriteLine();
-			Console.WriteLine("[INFO] To use, simply take a screenshot in Minecraft by pressing F2.");
-			Console.WriteLine("[INFO] Need help? Type -h in here!");
-			Console.WriteLine("[INFO] To view current configuration, type -config in here!");
-			Console.WriteLine("=========================");
+			OutputDisplayer.WriteLine(LogType.Info, "To use, simply take a screenshot in Minecraft by pressing F2.");
+			OutputDisplayer.WriteLine(LogType.Info, "Need help? Type -h in here!");
+			OutputDisplayer.WriteLine(LogType.Info, "To view current configuration, type -config in here!");
+			Console.WriteLine(Divider);
 
 			// make all lowercase for ease of comparison 
 			Config.ExemptPlayers = Config.ExemptPlayers
 				.Select(x => x.ToLower())
-				.ToArray();
-			Config.DangerousPlayers = Config.DangerousPlayers
-				.Select(x => x.ToLower())
-				.ToArray();
+				.ToList();
+			NamesInExempt = Config.ExemptPlayers.ToArray();
 
 			// init watcher
 			using var watcher = new FileSystemWatcher
@@ -104,273 +94,30 @@ namespace Winstreak.Cli.DirectoryManager
 			};
 			watcher.Created += OnChangedAsync;
 
+			// Log time
+			LogReader = new MinecraftLogReader(Config.PathToLogsFolder);
+			LogReader.OnLogUpdate += LogUpdate;
+			LogReader.Start();
+
+			// Logger
+#if DEBUG
+			DebugLogger = new StreamWriter(
+				Path.Join(Config.PathToMinecraftFolder, $"ws_debug_logs_{DateTime.Now:h_mm_ss}.txt"),
+				true
+			) {AutoFlush = true};
+
+			OutputDisplayer.WriteLine(LogType.Info, $"Debug log enabled.");
+			await DebugLogger.LogWriteLineAsync("Winstreak Debug Started.");
+#endif
+
 			// infinite loop for command processing
 			while (true)
 			{
-				var input = (Console.ReadLine() ?? string.Empty).Trim();
-				if (input == string.Empty)
-					continue;
-
-				if (input.StartsWith('-'))
-				{
-					// quit program
-					if (input.ToLower() == "-q" || input.ToLower() == "-quit")
-						break;
-
-					switch (input.ToLower().Trim())
-					{
-						case "-config":
-							Console.WriteLine($"[INFO] Minecraft Folder Set: {Config.PathToMinecraftFolder}");
-							Console.WriteLine(
-								$"[INFO] Dangerous Players Set: {Config.DangerousPlayers.ToReadableString()}");
-							Console.WriteLine($"[INFO] Exempt Players Set: {Config.ExemptPlayers.ToReadableString()}");
-							Console.WriteLine(
-								$"[INFO] Using Hypixel API: {(ApiKeyValid ? "Yes" : "No")}");
-							Console.WriteLine($"[INFO] Delete Screenshot? {(file.DeleteScreenshot ? "Yes" : "No")}");
-							Console.WriteLine(
-								$"[INFO] Checking Friends? {(ApiKeyValid && file.CheckFriends ? "Yes" : "No")}");
-							Console.WriteLine();
-							Console.WriteLine(
-								$"[INFO] Suppress Error Messages: {(Config.SuppressErrorMessages ? "Yes" : "No")}");
-							Console.WriteLine($"[INFO] Screenshot Delay Set: {Config.ScreenshotDelay} MS");
-							Console.WriteLine($"[INFO] Using Gui Scale: {GuiScale}");
-							Console.WriteLine(Divider);
-							continue;
-						case "-help":
-						case "-h":
-							Console.WriteLine(HelpInfo);
-							Console.WriteLine(Divider);
-							continue;
-						case "-clear":
-						case "-c":
-							Console.Clear();
-							continue;
-						case "-tc":
-							ShouldClearBeforeCheck = !ShouldClearBeforeCheck;
-							Console.WriteLine(ShouldClearBeforeCheck
-								? "[INFO] Console will be cleared once a screenshot is provided."
-								: "[INFO] Console will not be cleared once a screenshot is provided.");
-							Console.WriteLine(Divider);
-							continue;
-						case "-status":
-							var valid = HypixelApi != null && ApiKeyValid;
-							Console.WriteLine(
-								$"[INFO] Hypixel API: {(valid ? "Valid" : "Invalid")}");
-							Console.WriteLine(valid
-								? $"[INFO] Usage: {HypixelApi.RequestsMade}/{HypixelApi.MaximumRequestsInRateLimit}"
-								: "[INFO] Usage: Unlimited (Plancke)");
-							Console.WriteLine($"[INFO] Player Cache Length: {CachedPlayerData.Length}");
-							Console.WriteLine($"[INFO] Friend Cache Length: {CachedFriendsData.Length}");
-							Console.WriteLine($"[INFO] Sort Mode: {SortingType}");
-							Console.WriteLine(Divider);
-							continue;
-						case "-emptycache":
-							Console.WriteLine("[INFO] Cache has been cleared.");
-							CachedPlayerData.Empty();
-							CachedFriendsData.Empty();
-							CachedGuildData.Empty();
-							Console.WriteLine(Divider);
-							continue;
-						case "-sortmode":
-						case "-sort":
-						case "-s":
-							SortingType = SortingType switch
-							{
-								SortType.Score => SortType.Beds,
-								SortType.Beds => SortType.Finals,
-								SortType.Finals => SortType.Fkdr,
-								SortType.Fkdr => SortType.Winstreak,
-								SortType.Winstreak => SortType.Level,
-								_ => SortType.Score
-							};
-
-							Console.WriteLine($"[INFO] Sorting By: {SortingType}");
-							Console.WriteLine(Divider);
-							continue;
-					}
-
-					Console.WriteLine(HelpInfo);
-					Console.WriteLine(Divider);
-					continue;
-				}
-
-				if (input.Contains('-') || input.Contains('\\'))
-					continue;
-
-				var ignsToCheck = input.Split(" ")
-					.Select(x => x.Trim())
-					.Where(x => x != string.Empty)
-					.ToList();
-
-				// check ign
-				var checkTime = new Stopwatch();
-				checkTime.Start();
-				var (profiles, nicked) = await PlanckeApi
-					.GetMultipleProfilesFromPlancke(ignsToCheck);
-
-				if (profiles.Count == 1)
-				{
-					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($"[{profiles[0].BedwarsLevel}] {profiles[0].Name}");
-					Console.ResetColor();
-
-					var eightOne = profiles[0].EightOneBedwarsStats;
-					var eightOneKdr = eightOne.GetKdr();
-					var eightOneFkdr = eightOne.GetFkdr();
-					var eightOneWlr = eightOne.GetWinLossRatio();
-
-					var eightTwo = profiles[0].EightTwoBedwarsStats;
-					var eightTwoKdr = eightTwo.GetKdr();
-					var eightTwoFkdr = eightTwo.GetFkdr();
-					var eightTwoWlr = eightTwo.GetWinLossRatio();
-
-					var fourThree = profiles[0].FourThreeBedwarsStats;
-					var fourThreeKdr = fourThree.GetKdr();
-					var fourThreeFkdr = fourThree.GetFkdr();
-					var fourThreeWlr = fourThree.GetWinLossRatio();
-
-					var fourFour = profiles[0].FourFourBedwarsStats;
-					var fourFourKdr = fourFour.GetKdr();
-					var fourFourFkdr = fourFour.GetFkdr();
-					var fourFourWlr = fourFour.GetWinLossRatio();
-
-					var overall = profiles[0].OverallBedwarsStats;
-					var overallKdr = overall.GetKdr();
-					var overallFkdr = overall.GetFkdr();
-					var overallWlr = overall.GetWinLossRatio();
-
-					var table = new Table(11)
-						.AddRow("Type", "Kills", "Deaths", "KDR", "F Kills", "F Deaths", "FKDR", "Wins",
-							"Losses", "WLR", "Beds")
-						.AddSeparator()
-						.AddRow("Solos", eightOne.Kills, eightOne.Deaths,
-							eightOneKdr.dZero
-								? "-"
-								: Math.Round(eightOneKdr.kdr, 2) + "",
-							eightOne.FinalKills, eightOne.FinalDeaths,
-							eightOneFkdr.fdZero
-								? "-"
-								: Math.Round(eightOneFkdr.fkdr, 2) + "",
-							eightOne.Wins, eightOne.Losses,
-							eightOneWlr.lZero
-								? "-"
-								: Math.Round(eightOneWlr.wlr, 2) + "",
-							eightOne.BrokenBeds)
-						.AddSeparator()
-						.AddRow("Doubles", eightTwo.Kills, eightTwo.Deaths,
-							eightTwoKdr.dZero
-								? "-"
-								: Math.Round(eightTwoKdr.kdr, 2) + "",
-							eightTwo.FinalKills, eightTwo.FinalDeaths,
-							eightTwoFkdr.fdZero
-								? "-"
-								: Math.Round(eightTwoFkdr.fkdr, 2) + "",
-							eightTwo.Wins, eightTwo.Losses,
-							eightTwoWlr.lZero
-								? "-"
-								: Math.Round(eightTwoWlr.wlr, 2) + "",
-							eightTwo.BrokenBeds)
-						.AddSeparator()
-						.AddRow("3v3v3v3", fourThree.Kills, fourThree.Deaths,
-							fourThreeKdr.dZero
-								? "-"
-								: Math.Round(fourThreeKdr.kdr, 2) + "",
-							fourThree.FinalKills, fourThree.FinalDeaths,
-							fourThreeFkdr.fdZero
-								? "-"
-								: Math.Round(fourThreeFkdr.fkdr, 2) + "",
-							fourThree.Wins, fourThree.Losses,
-							fourThreeWlr.lZero
-								? "-"
-								: Math.Round(fourThreeWlr.wlr, 2) + "",
-							fourThree.BrokenBeds)
-						.AddSeparator()
-						.AddRow("4v4v4v4", fourFour.Kills, fourFour.Deaths,
-							fourFourKdr.dZero
-								? "-"
-								: Math.Round(fourFourKdr.kdr, 2) + "",
-							fourFour.FinalKills, fourFour.FinalDeaths,
-							fourFourFkdr.fdZero
-								? "-"
-								: Math.Round(fourFourFkdr.fkdr, 2) + "",
-							fourFour.Wins, fourFour.Losses,
-							fourFourWlr.lZero
-								? "-"
-								: Math.Round(fourFourWlr.wlr, 2) + "",
-							fourFour.BrokenBeds)
-						.AddSeparator()
-						.AddRow("Overall", overall.Kills, overall.Deaths,
-							overallKdr.dZero
-								? "-"
-								: Math.Round(overallKdr.kdr, 2) + "",
-							overall.FinalKills, overall.FinalDeaths,
-							overallFkdr.fdZero
-								? "-"
-								: Math.Round(overallFkdr.fkdr, 2) + "",
-							overall.Wins, overall.Losses,
-							overallWlr.lZero
-								? "-"
-								: Math.Round(overallWlr.wlr, 2) + "",
-							overall.BrokenBeds);
-
-					Console.WriteLine(table.ToString());
-					Console.WriteLine($"> Winstreak: {profiles[0].Winstreak}");
-					Console.WriteLine($"> Network Level: {profiles[0].NetworkLevel}");
-					Console.WriteLine($"> Karma: {profiles[0].Karma}");
-					Console.WriteLine($"> First Joined: {profiles[0].FirstJoined:MM/dd/yyyy hh:mm tt}");
-				}
-				else
-				{
-					var table = new Table(6)
-						.AddRow("LVL", "Username", "FKDR", "Beds", "W/L", "WS")
-						.AddSeparator();
-					foreach (var bedwarsData in profiles)
-					{
-						table.AddRow(
-							bedwarsData.BedwarsLevel,
-							bedwarsData.Name,
-							bedwarsData.OverallBedwarsStats.FinalDeaths == 0
-								? "N/A"
-								: Math.Round(
-										(double) bedwarsData.OverallBedwarsStats.FinalKills /
-										bedwarsData.OverallBedwarsStats.FinalDeaths, 2)
-									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.OverallBedwarsStats.BrokenBeds,
-							bedwarsData.OverallBedwarsStats.Losses == 0
-								? "N/A"
-								: Math.Round(
-										(double) bedwarsData.OverallBedwarsStats.Wins /
-										bedwarsData.OverallBedwarsStats.Losses, 2)
-									.ToString(CultureInfo.InvariantCulture),
-							bedwarsData.Winstreak
-						);
-					}
-
-					if (nicked.Count > 0)
-					{
-						if (profiles.Count > 0)
-							table.AddSeparator();
-
-						foreach (var erroredPlayer in nicked)
-							table.AddRow(
-								"N/A",
-								erroredPlayer,
-								"N/A",
-								"N/A",
-								"N/A",
-								"N/A"
-							);
-					}
-
-					Console.WriteLine(table.ToString());
-				}
-
-				checkTime.Stop();
-				Console.WriteLine();
-				Console.WriteLine($"> Time Taken: {checkTime.Elapsed.TotalSeconds} Seconds.");
-				Console.WriteLine(Divider);
+				if (!await RunCommandLoop())
+					break;
 			}
 		}
+
 
 		/// <summary>
 		/// Method that is to be executed when a file is created.
@@ -400,12 +147,11 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				if (!init)
 				{
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine("[ERROR] Unable to read the image.");
-					Console.ResetColor();
+					OutputDisplayer.WriteLine(LogType.Error, "Unable to read the image.");
 					Console.WriteLine(Divider);
 					return;
 				}
+
 				await Task.Delay(Config.ScreenshotDelay);
 				await OnChangeFileAsync(e, false);
 				return;
@@ -413,14 +159,12 @@ namespace Winstreak.Cli.DirectoryManager
 
 			catch (Exception ex)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"[ERROR] An unknown error occurred. Error Information:\n{ex}");
-				Console.ResetColor();
+				OutputDisplayer.WriteLine(LogType.Error, $"An unknown error occurred. Error Information:\n{ex}");
 				Console.WriteLine(Divider);
 				return;
 			}
 
-			await ProcessScreenshotAsync(bitmap, e.Name);
+			await ProcessScreenshotAsync(bitmap, e.FullPath);
 			bitmap.Dispose();
 		}
 
@@ -428,26 +172,56 @@ namespace Winstreak.Cli.DirectoryManager
 		/// Processes the screenshot that was provided.
 		/// </summary>
 		/// <param name="bitmap">The screenshot as a Bitmap.</param>
-		/// <param name="name">The name of the screenshot.</param>
+		/// <param name="path">The name of the screenshot.</param>
 		/// <returns>Nothing.</returns>
-		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string name)
+		private static async Task ProcessScreenshotAsync(Bitmap bitmap, string path)
 		{
+			var fileInfo = new FileInfo(path);
 			if (ShouldClearBeforeCheck)
 				Console.Clear();
 
-			Console.WriteLine($"[INFO] Checking Screenshot: {name}");
+			OutputDisplayer.WriteLine(LogType.Info, $"Checking Screenshot: {fileInfo.Name}");
 			var processingTime = new Stopwatch();
 			processingTime.Start();
 			// parse time
-#if TEST_NEW_PARSER
-			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale);
+#if USE_NEW_PARSER
+			using INameParser parser = new EnhancedNameParser(bitmap, GuiScale, Config.StrictParser);
 #else
 			using INameParser parser = new NameParser(bitmap, GuiScale);
 #endif
 			var allNames = parser.ParseNames(Config.ExemptPlayers);
-			if (allNames.Count == 0)
+			// Remove all '[ ]'
+			var parsedNames = new Dictionary<TeamColor, IList<string>>();
+			foreach (var (color, names) in allNames)
 			{
-				Console.WriteLine("[INFO] No parseable names found. Skipping.");
+				parsedNames.Add(color, new List<string>());
+				foreach (var name in names)
+				{
+					if (!name.Contains('[') && !name.Contains(']'))
+					{
+						parsedNames[color].Add(name);
+						continue;
+					}
+
+					// If it contains [ or ] but not both, then it's defective. 
+					if (name.Contains('[') ^ name.Contains(']'))
+						continue;
+
+					var nameNoTag = name.Split("]")[1];
+					if (nameNoTag.Contains("["))
+						nameNoTag = nameNoTag.Split("[")[0];
+
+					nameNoTag = nameNoTag.Trim();
+					if (nameNoTag == string.Empty)
+						continue;
+
+					parsedNames[color].Add(nameNoTag);
+				}
+			}
+
+			if (parsedNames.Count == 0)
+			{
+				OutputDisplayer.WriteLine(LogType.Info, "No parseable names found. Skipping.");
 				Console.WriteLine(Divider);
 				return;
 			}
@@ -455,32 +229,41 @@ namespace Winstreak.Cli.DirectoryManager
 			// end parse
 			processingTime.Stop();
 			var timeTaken = processingTime.Elapsed;
-			var parsedPeople = allNames.Sum(x => x.Value.Count);
-			var basicInfoSb = new StringBuilder()
-				.Append("[INFO] Screenshot Parse Summary:").AppendLine()
-				.Append($"\t- Type: {(parser.IsLobby ? "Lobby" : "Game")}").AppendLine()
-				.Append($"\t- Players: {parsedPeople}").AppendLine()
-				.Append($"\t- Groups: {allNames.Count}");
-			Console.WriteLine(basicInfoSb);
-			
+			var parsedPeople = parsedNames.Sum(x => x.Value.Count);
+			var entries = new[]
+			{
+				$"Type: {(parser.IsLobby ? "Lobby" : "Game")}",
+				$"Players: {parsedPeople}"
+			};
+			Console.WriteLine("[" + string.Join(", ", entries) + "]");
+
+			if (HypixelApi is not null && ApiKeyValid)
+			{
+				var res = await HypixelApi.ValidateApiKeyAsync();
+				if (!res.Success)
+				{
+					HypixelApi = null;
+					ApiKeyValid = false;
+				}
+			}
+
 			if (parser.IsLobby)
 			{
-				if (allNames.ContainsKey(TeamColor.Unknown))
-					await ProcessLobbyScreenshotAsync(allNames[TeamColor.Unknown], timeTaken);
+				if (parsedNames.ContainsKey(TeamColor.Unknown))
+					await ProcessLobbyScreenshotAsync(parsedNames[TeamColor.Unknown], timeTaken);
 				else
 				{
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine(
-						"[ERROR] An error occurred with the parse results. Please take another screenshot.");
-					Console.ResetColor();
+					OutputDisplayer.WriteLine(LogType.Error,
+						"An error occurred with the parse results. Please take another screenshot.");
+					Console.WriteLine(Divider);
 				}
 			}
 			else
-				await ProcessInGameScreenshotAsync(allNames, timeTaken);
+				await ProcessInGameScreenshotAsync(parsedNames, timeTaken);
 
 #if !DEBUG
 			if (Config.DeleteScreenshot)
-				File.Delete(path);
+				fileInfo.Delete();
 #endif
 		}
 	}

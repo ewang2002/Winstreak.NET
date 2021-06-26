@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon>winstreak_logo.ico</ApplicationIcon>
     <NoWin32Manifest>true</NoWin32Manifest>
     <Nullable>disable</Nullable>
@@ -10,17 +10,20 @@
     <Company>ACHS Discord</Company>
     <Description>Winstreak is a program that is designed to ensure you, the player, can maintain a winstreak in Hypixel's popular Bedwars game.</Description>
     <Copyright>Edward Wang</Copyright>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PackageProjectUrl>https://github.com/ewang2002/Winstreak.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ewang2002/Winstreak.NET</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <PackageTags>minecraft, hypixel, hypixel-bedwars, bedwars</PackageTags>
-    <Version>3.1.0</Version>
-    <AssemblyVersion>3.1.0</AssemblyVersion>
-    <FileVersion>3.1.0</FileVersion>
+    <Version>5.0.1</Version>
+    <AssemblyVersion>5.1.0</AssemblyVersion>
+    <FileVersion>5.1.0</FileVersion>
     <RootNamespace>Winstreak.Cli</RootNamespace>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <PackageVersion>3.1.0</PackageVersion>
+    <PackageVersion>5.1.0</PackageVersion>
+    <Product>Winstreak.Cli</Product>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -34,8 +37,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="System.Drawing.Common" Version="5.0.0">
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
   </ItemGroup>

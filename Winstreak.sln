@@ -8,12 +8,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F46F6B8B-94A3-4925-AD54-9674C3FE445C}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		ascii.png = ascii.png
 		ExampleWsCliConfig.txt = ExampleWsCliConfig.txt
 		README.md = README.md
 		..\..\..\ws_github.png = ..\..\..\ws_github.png
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Winstreak.Core", "Winstreak.Core\Winstreak.Core.csproj", "{CA29DB18-D7D1-4A76-ADA5-B95764A648D2}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Winstreak.MiscHelper", "Winstreak.MiscHelper\Winstreak.MiscHelper.pyproj", "{7662B489-A9F5-410B-8DF6-ABD9BA85BC1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +32,8 @@ Global
 		{CA29DB18-D7D1-4A76-ADA5-B95764A648D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA29DB18-D7D1-4A76-ADA5-B95764A648D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA29DB18-D7D1-4A76-ADA5-B95764A648D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7662B489-A9F5-410B-8DF6-ABD9BA85BC1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7662B489-A9F5-410B-8DF6-ABD9BA85BC1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

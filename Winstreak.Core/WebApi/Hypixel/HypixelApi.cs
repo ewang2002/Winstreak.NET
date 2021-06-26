@@ -1,4 +1,5 @@
-﻿using System;
+﻿// TODO need to look into adjusting requests to account for 503 errors, rate limits, etc.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -13,6 +14,9 @@ namespace Winstreak.Core.WebApi.Hypixel
 {
 	public class HypixelApi
 	{
+		private const int RateLimitOffset = 3;
+		private const string LookedNameUpRecentlyCause = "You have already looked up this name recently";
+
 		/// <summary>
 		/// The maximum number of requests that can be made in "HypixelRateLimit"
 		/// </summary>
@@ -33,6 +37,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// </summary>
 		public int RequestsMade { get; set; }
 
+		// The API key. 
 		private readonly string _apiKey;
 
 		/// <summary>
@@ -64,7 +69,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// <typeparam name="T">The class to deserialize the JSON to.</typeparam>
 		/// <param name="urlInfo">Any arguments; for example, "player?name=name</param>
 		/// <returns>The .NET object corresponding to type "T".</returns>
-		public async Task<T> SendRequestAsync<T>(string urlInfo)
+		private async Task<T> SendRequestAsync<T>(string urlInfo)
 		{
 			if (RequestsMade + 1 > MaximumRequestsInRateLimit)
 				throw new Exception("You have hit the rate limit.");
@@ -81,12 +86,13 @@ namespace Winstreak.Core.WebApi.Hypixel
 			if (!RateLimitTimer.Enabled)
 			{
 				RateLimitTimer.Start();
-				RateLimitTimer.Elapsed += (sender, args) =>
+				RateLimitTimer.Elapsed += (_, _) =>
 				{
 					RateLimitTimer.Stop();
 					RequestsMade = 0;
 				};
 			}
+
 			RequestsMade++;
 
 			var str = await resp.Content.ReadAsStringAsync();
@@ -101,7 +107,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// </summary>
 		/// <param name="name">The name to look up.</param>
 		/// <returns>The results.</returns>
-		public async Task<HypixelPlayerApiResponse> GetPlayerInfoAsync(string name) 
+		public async Task<HypixelPlayerApiResponse> GetPlayerInfoAsync(string name)
 			=> await SendRequestAsync<HypixelPlayerApiResponse>($"player?name={name}&");
 
 		/// <summary>
@@ -125,7 +131,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// </summary>
 		/// <param name="uuids">The Uuids to look up.</param>
 		/// <returns>A tuple containing all responses and list of uuids that couldn't be processed due to rate limit issues.</returns>
-		public async Task<(IList<(string uuid, FriendsApiResponse friends)> responses, 
+		public async Task<(IList<(string uuid, FriendsApiResponse friends)> responses,
 				IList<string> unableToSearch)>
 			GetAllFriendsAsync(IList<string> uuids)
 		{
@@ -167,9 +173,9 @@ namespace Winstreak.Core.WebApi.Hypixel
 					continue;
 
 				responses.Add((actualUuidToLookUp[i], finishedReq));
-				// TODO is this the correct way to do it? 
 				CachedFriendsData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromMinutes(45));
 			}
+
 			return (responses, unableToSearch);
 		}
 
@@ -195,7 +201,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 					continue;
 				}
 
-				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
+				if (tempReqMade + RateLimitOffset > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(uuid);
 					continue;
@@ -216,12 +222,13 @@ namespace Winstreak.Core.WebApi.Hypixel
 			for (var i = 0; i < completedRequests.Length; i++)
 			{
 				var finishedReq = completedRequests[i];
-				if (!finishedReq.Success || finishedReq.Guild == null) 
+				if (!finishedReq.Success || finishedReq.Guild == null)
 					continue;
 
 				responses.Add(finishedReq);
 				CachedGuildData.TryAdd(actualUuidToLookUp[i], finishedReq, TimeSpan.FromHours(1));
 			}
+
 			return (responses, unableToSearch);
 		}
 
@@ -250,7 +257,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 					continue;
 				}
 
-				if (tempReqMade + 1 > MaximumRequestsInRateLimit)
+				if (tempReqMade + RateLimitOffset > MaximumRequestsInRateLimit)
 				{
 					unableToSearch.Add(name);
 					continue;
@@ -260,7 +267,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 				actualNamesToLookUp.Add(name);
 			}
 
-			if (actualNamesToLookUp.Count == 0) 
+			if (actualNamesToLookUp.Count == 0)
 				return (responses, nicked, unableToSearch);
 
 			var requests = actualNamesToLookUp
@@ -271,12 +278,23 @@ namespace Winstreak.Core.WebApi.Hypixel
 			for (var i = 0; i < completedRequests.Length; i++)
 			{
 				var finishedReq = completedRequests[i];
-				if (finishedReq.Success && finishedReq.Player != null)
+				// Case 1: Did we search this person up more times than is allowed?
+				// Hypixel has a rate limit where if you send >1 request per minute or so for the
+				// same person, you will not get that data.
+				if (!finishedReq.Success && finishedReq.Cause is LookedNameUpRecentlyCause)
+				{
+					unableToSearch.Add(actualNamesToLookUp[i]);
+					continue;
+				}
+
+				// Case 2: We did find a name.
+				if (finishedReq.Success && finishedReq.Player is not null)
 				{
 					responses.Add(new PlayerProfile(finishedReq));
 					CachedPlayerData.TryAdd(finishedReq.Player.DisplayName, new PlayerProfile(finishedReq));
 					NameUuid.TryAdd(finishedReq.Player.DisplayName, finishedReq.Player.Uuid);
 				}
+				// Case 3: Nicked.
 				else
 					nicked.Add(actualNamesToLookUp[i]);
 			}

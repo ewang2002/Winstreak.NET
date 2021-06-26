@@ -8,18 +8,21 @@
 # Example=C:\Path\To\Minecraft\Folder
 PATH_TO_MC_FOLDER=C:\Users\ewang\AppData\Roaming\.minecraftold
 
+# Path to the Minecraft logs folder. This folder should contain a
+# latest.log (or latest.txt) file that is constantly updated while
+# Minecraft is running. If none is specified, this will default to
+# the logs folder in PATH_TO_MC_FOLDER.
+#
+# For Lunar: C:\Users\username\.lunarclient\offline\files\1.8\logs
+# For Badlion: C:\Users\username\AppData\Roaming\.minecraft\logs\blclient\minecraft
+PATH_TO_LOGS_FOLDER= 
+
 
 # List of players to not check.
 # Separate multiple entries with a comma. Capitalization matters.
 # Default Value= 
 # Example=Epic,Test,EpicGamer123
 EXEMPT_PLAYERS=CM19, Fredae, stanner321, icicl, Sichrylan, hedwig10, supma, awhmily, Trev_L, whoslisa, ktvn, TheNewGJD
-
-
-# People to automatically flag as dangerous.
-# These can be for reasons like "extremely annoying"
-# or "extreme tryhard" or "alt of a tryhard." 
-DANGEROUS_PLAYERS=
 
 
 # Automatically clear console when a screenshot is provided. 1 = true, 0 = false 
@@ -46,7 +49,7 @@ HYPIXEL_API_KEY=
 # Whether to delete the screenshot after processing or not.
 # 1 = true (Delete); 0 = false (Keep)
 # Default Value=0
-DELETE_SCREENSHOT=0
+DELETE_SCREENSHOT=1
 
 
 # Whether to check friends or not. You must use Hypixel's API (input
@@ -60,3 +63,17 @@ CHECK_FRIENDS=1
 # Whether to suppress error messages or not. 
 # Default Value=0
 SUPPRESS_ERROR_MSGS=0
+
+
+# Whether to use strict mode for the name parser. If true, this will result in
+# more accurate parsing results in exchange for a significant performance hit
+# (Think 150-350 milliseconds per parse as opposed to 6-30 milliseconds). By
+# default, this is false.
+# 1 = true (Enable); 0 = false (Disable)
+# Default Value=0
+PARSER_STRICT=0
+
+# The IGN that you want to track. If you specify your IGN, Winstreak will also keep 
+# track of the number of final kills, deaths, broken beds, etc you have gained since
+# opening WS. 
+YOUR_IGN=

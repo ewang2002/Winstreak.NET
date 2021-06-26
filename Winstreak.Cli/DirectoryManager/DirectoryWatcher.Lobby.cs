@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Winstreak.Cli.Utility;
 using Winstreak.Cli.Utility.ConsoleTable;
 using Winstreak.Core.Profile;
 using Winstreak.Core.Profile.Calculations;
@@ -51,7 +52,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 				// request leftover data from plancke
 				var (profilesPlancke, nickedPlancke) = await PlanckeApi
-					.GetMultipleProfilesFromPlancke(unableToSearch);
+					.GetMultipleProfilesFromPlanckeAsync(unableToSearch);
 
 				foreach (var playerInfo in profilesPlancke)
 				{
@@ -69,7 +70,7 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				// request data from plancke
 				var (profilesPlancke, nickedPlancke) = await PlanckeApi
-					.GetMultipleProfilesFromPlancke(names.ToList());
+					.GetMultipleProfilesFromPlanckeAsync(names.ToList());
 
 				foreach (var playerInfo in profilesPlancke)
 				{
@@ -97,11 +98,9 @@ namespace Winstreak.Cli.DirectoryManager
 			{
 				var fkdr = playerInfo.OverallBedwarsStats.GetFkdr();
 				var score = playerInfo.OverallBedwarsStats.GetScore();
-				var playerName = Config.DangerousPlayers.Contains(playerInfo.Name.ToLower())
-					? BackgroundBrightYellowAnsi + playerInfo.Name + ResetAnsi
-					: playerInfo.Name;
+				var playerName = playerInfo.Name;
 
-				if ((DateTime.Now - playerInfo.FirstJoined).TotalDays < 7)
+				if ((DateTime.Now - playerInfo.FirstJoined).TotalDays <= 7)
 					playerName = TextBrightBlackAnsi + playerName + ResetAnsi;
 
 				tableBuilder.AddRow(
@@ -119,7 +118,7 @@ namespace Winstreak.Cli.DirectoryManager
 					DetermineScoreMeaning(score, true)
 				);
 			}
-			
+
 			foreach (var nickedPlayer in nickedPlayers)
 				tableBuilder.AddRow(
 					BackgroundRedAnsi + "N/A" + ResetAnsi,
@@ -135,7 +134,9 @@ namespace Winstreak.Cli.DirectoryManager
 			tableBuilder.AddSeparator();
 			var ttlScore = PlayerCalculator.GetScore(
 				totalStats.GetFkdr(),
-				totalStats.BrokenBeds
+				totalStats.FinalKills,
+				totalStats.BrokenBeds,
+				levels
 			);
 
 			var totalWinLossRatio = totalStats.GetWinLossRatio();
@@ -182,7 +183,7 @@ namespace Winstreak.Cli.DirectoryManager
 						if (i + 1 != friendGroups.Count)
 							friendTableBuilder.AddSeparator();
 					}
-					
+
 					friendTableBuilder
 						.AddSeparator()
 						.AddRow(string.Empty, $"{nameFriendsUnable.Count} Names Not Checked", string.Empty,
@@ -205,8 +206,8 @@ namespace Winstreak.Cli.DirectoryManager
 			if (friendTableBuilder != null)
 				Console.WriteLine(friendTableBuilder.ToString());
 
-			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalMilliseconds} Milliseconds.");
-			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
+			OutputDisplayer.WriteLine(LogType.Info, $"Image Processing Time: {timeTaken.TotalMilliseconds} MS.");
+			OutputDisplayer.WriteLine(LogType.Info, $"API Requests Time: {apiRequestTime.TotalSeconds} SEC.");
 			Console.WriteLine(Divider);
 		}
 	}

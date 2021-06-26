@@ -16,7 +16,7 @@ namespace Winstreak.Core.WebApi.Plancke
 		/// </summary>
 		/// <param name="name">The name to look up.</param>
 		/// <returns>A tuple containing the name of the person and his or her profile (null if the player doesn't exist).</returns>
-		public static async Task<(string name, PlayerProfile profile)> GetProfileFromPlancke(string name)
+		public static async Task<(string name, PlayerProfile profile)> GetProfileFromPlanckeAsync(string name)
 		{
 			if (ApiClient.DefaultRequestHeaders.Contains("X-Forwarded-For"))
 				ApiClient.DefaultRequestHeaders.Remove("X-Forwarded-For");
@@ -174,7 +174,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(soloDataArr[4]),
 					int.Parse(soloDataArr[6]),
 					int.Parse(soloDataArr[7]),
-					int.Parse(soloDataArr[9])
+					int.Parse(soloDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -202,7 +203,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(doubleDataArr[4]),
 					int.Parse(doubleDataArr[6]),
 					int.Parse(doubleDataArr[7]),
-					int.Parse(doubleDataArr[9])
+					int.Parse(doubleDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -230,7 +232,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(threeDataArr[4]),
 					int.Parse(threeDataArr[6]),
 					int.Parse(threeDataArr[7]),
-					int.Parse(threeDataArr[9])
+					int.Parse(threeDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -243,7 +246,8 @@ namespace Winstreak.Core.WebApi.Plancke
 				.Split("4v4v4v4")[1]
 				.Split("4v4")[0]
 				.Replace("</th><td>", "")
-				.Replace("</td></tr><tr>", "");
+				.Replace("</td></tr><tr>", "")
+				.Split("<td colspan=")[0];
 			var fourDataArr = fourData
 				.Replace(",", "")
 				.Split(new[] {"</td>", "<td>"}, StringSplitOptions.RemoveEmptyEntries);
@@ -258,7 +262,8 @@ namespace Winstreak.Core.WebApi.Plancke
 					int.Parse(fourDataArr[4]),
 					int.Parse(fourDataArr[6]),
 					int.Parse(fourDataArr[7]),
-					int.Parse(fourDataArr[9])
+					int.Parse(fourDataArr[9]),
+					bedwarsLevel
 				);
 			}
 			catch (Exception)
@@ -282,8 +287,8 @@ namespace Winstreak.Core.WebApi.Plancke
 		/// </summary>
 		/// <param name="names">The names to look up.</param>
 		/// <returns>A tuple containing all profiles and any names that resulted in an error.</returns>
-		public static async Task<(IList<PlayerProfile> profiles, ISet<string> nicked)> GetMultipleProfilesFromPlancke(
-			IList<string> names)
+		public static async Task<(IList<PlayerProfile> profiles, ISet<string> nicked)> 
+			GetMultipleProfilesFromPlanckeAsync(IList<string> names)
 		{
 			var profiles = new List<PlayerProfile>();
 			var namesToCheck = new List<string>();
@@ -300,7 +305,7 @@ namespace Winstreak.Core.WebApi.Plancke
 			}
 
 			var requests = namesToCheck
-				.Select(GetProfileFromPlancke)
+				.Select(GetProfileFromPlanckeAsync)
 				.ToArray();
 
 			var profileData = await Task.WhenAll(requests);
@@ -308,7 +313,7 @@ namespace Winstreak.Core.WebApi.Plancke
 			var nicked = new HashSet<string>();
 			foreach (var (name, profile) in profileData)
 			{
-				if (profile == null)
+				if (profile is null)
 				{
 					nicked.Add(name);
 					continue;

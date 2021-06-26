@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Winstreak.Cli.Utility;
 using Winstreak.Cli.Utility.ConsoleTable;
 using Winstreak.Core.Parsers.ImageParser;
 using Winstreak.Core.Profile;
@@ -45,7 +46,7 @@ namespace Winstreak.Cli.DirectoryManager
 					if (unableToSearch.Count != 0)
 					{
 						var (profilePlancke, nickedPlancke) = await PlanckeApi
-							.GetMultipleProfilesFromPlancke(unableToSearch);
+							.GetMultipleProfilesFromPlanckeAsync(unableToSearch);
 						
 						teamStats.AddRange(profilePlancke);
 						people.AddRange(profilePlancke);
@@ -55,7 +56,7 @@ namespace Winstreak.Cli.DirectoryManager
 				else
 				{
 					var (profilePlancke, nickedPlancke) = await PlanckeApi
-						.GetMultipleProfilesFromPlancke(value);
+						.GetMultipleProfilesFromPlanckeAsync(value);
 
 					teamStats.AddRange(profilePlancke);
 					people.AddRange(profilePlancke);
@@ -90,7 +91,7 @@ namespace Winstreak.Cli.DirectoryManager
 
 			var totalPeople = teamInfo.Sum(x => x.PlayersInTeam.Count + x.NickedPlayers.Count);
 			var table = new Table(10);
-			table.AddRow("Rank", "LVL", $"{totalPeople} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment", 
+			table.AddRow("Rank", "LVL", $"{totalPeople} Players", "Finals", "Beds", "FKDR", "WS", "Score", "Assessment",
 					"G")
 				.AddSeparator();
 			for (var i = 0; i < teamInfo.Count; i++)
@@ -126,7 +127,7 @@ namespace Winstreak.Cli.DirectoryManager
 					result.PlayersInTeam.Sum(x => x.OverallBedwarsStats.BrokenBeds),
 					totalDeaths == 0
 						? "N/A"
-						: Math.Round((double) totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
+						: Math.Round((double)totalFinals / totalDeaths, 2).ToString(CultureInfo.InvariantCulture),
 					string.Empty,
 					Math.Round(result.CalculateScore(), 2),
 					DetermineScoreMeaning(result.CalculateScore(), true),
@@ -141,9 +142,7 @@ namespace Winstreak.Cli.DirectoryManager
 					table.AddRow(
 						string.Empty,
 						teammate.BedwarsLevel == -1 ? "N/A" : teammate.BedwarsLevel.ToString(),
-						ansiColorToUse + (Config.DangerousPlayers.Contains(teammate.Name.ToLower())
-							? $"(!) {teammate.Name}"
-							: teammate.Name) + ResetAnsi,
+						ansiColorToUse + teammate.Name + ResetAnsi,
 						teammate.OverallBedwarsStats.FinalKills,
 						teammate.OverallBedwarsStats.BrokenBeds,
 						fkdr.fdZero ? "N/A" : Math.Round(fkdr.fkdr, 2).ToString(CultureInfo.InvariantCulture),
@@ -183,8 +182,8 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			Console.WriteLine(table.ToString());
-			Console.WriteLine($"[INFO] Image Processing Time: {timeTaken.TotalMilliseconds} Milliseconds.");
-			Console.WriteLine($"[INFO] API Requests Time: {apiRequestTime.TotalSeconds} Sec.");
+			OutputDisplayer.WriteLine(LogType.Info, $"Image Processing Time: {timeTaken.TotalMilliseconds} MS.");
+			OutputDisplayer.WriteLine(LogType.Info, $"API Requests Time: {apiRequestTime.TotalSeconds} SEC.");
 			Console.WriteLine(Divider);
 		}
 	}

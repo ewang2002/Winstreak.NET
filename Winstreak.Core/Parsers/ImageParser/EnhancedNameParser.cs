@@ -1,4 +1,10 @@
-﻿using System.Collections.Generic;
+﻿#define OVERRIDE_DEBUG
+#if DEBUG && !OVERRIDE_DEBUG
+using System;
+#endif
+
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -19,7 +25,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 		private readonly UnmanagedImage _img;
 		private readonly int _guiWidth;
 
-		private bool _calledBefore;
+		private bool _calledFindNameBefore;
+		private bool _calledFindFunc;
 
 		// We set the max iterations to 10
 		// Theoretically, there will be 4 (8 if in-game) columns possible of player names. 
@@ -28,8 +35,9 @@ namespace Winstreak.Core.Parsers.ImageParser
 		private Point _startingPoint;
 		private Point _endPoint;
 
-		#endregion
+		private Predicate<Color> _colorFunc;
 
+		#endregion
 
 		/// <summary>
 		/// Whether the screenshot represents a lobby.
@@ -39,15 +47,70 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <summary>
 		/// Instantiates a new EnhancedNameParser object with the specified Bitmap and GUI scale.
 		/// </summary>
-		/// <param name="image">The bitmap.</param>
-		/// <param name="guiScale">The GUI scale.</param>
-		public EnhancedNameParser(Bitmap image, int guiScale = 2)
+		/// <param name="image">The bitmap. This is the screenshot that will be parsed.</param>
+		/// <param name="guiScale">The GUI scale. By default, this is set to 2, which is the normal display.</param>
+		/// <param name="strict">Whether to find a specific color function before processing. If false, (which is the
+		/// default), then this will normally parse an image, considering all possible colors at once. However, if
+		/// true, then a specific set of colors will be used instead to parse an image. This will increase accuracy
+		/// of the parse results at the expense of a performance decrease (which can be up to 20x slower).</param>
+		public EnhancedNameParser(Bitmap image, int guiScale = 2, bool strict = false)
 		{
 			_img = UnmanagedImage.FromManagedImage(image);
 			_guiWidth = guiScale;
 			_startingPoint = new Point(4, 20 * _guiWidth);
+			
 			var maxY = 20 * _guiWidth + 9 * _guiWidth * 22;
 			_endPoint = new Point(_img.Width - 4, maxY > _img.Height - 4 ? _img.Height - 4 : maxY);
+			_colorFunc = c => IsValidRankColor(c) || IsValidTeamColor(c);
+
+			if (strict) DetermineFunction();
+		}
+
+		/// <summary>
+		/// Attempts to find the best color identifier function to use. 
+		/// </summary>
+		private void DetermineFunction()
+		{
+			if (_calledFindFunc) return;
+			_calledFindFunc = true;
+
+			var teamColor = 0;
+			var rankColor = 0;
+
+			for (var y = _startingPoint.Y; y < _endPoint.Y; y += 9 * _guiWidth)
+			for (var x = _startingPoint.X; x < _endPoint.X; x++)
+			{
+				var ttlBytes = new StringBuilder();
+				var tempX = x;
+				do
+				{
+					var columnBytes = new StringBuilder();
+					for (var dy = 0; dy < 8 * _guiWidth && tempX < _endPoint.X; dy += _guiWidth)
+					{
+						var pixel = _img[tempX, y + dy];
+						columnBytes.Append(_colorFunc(pixel) || Color.White.IsRgbEqualTo(pixel)
+							? "1"
+							: "0");
+					}
+
+					ttlBytes.Append(columnBytes);
+					tempX += _guiWidth;
+
+					if (tempX >= _img.Width)
+						break;
+				} while (ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000");
+
+				ttlBytes = new StringBuilder(ttlBytes.ToString()[..(ttlBytes.Length - 8)]);
+				if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
+					continue;
+
+				var color = _img[x, y];
+				if (IsValidRankColor(color)) rankColor++;
+				if (IsValidTeamColor(color)) teamColor++;
+			}
+
+			if (rankColor > teamColor) _colorFunc = IsValidRankColor;
+			else if (teamColor > rankColor) _colorFunc = IsValidTeamColor;
 		}
 
 		/// <summary>
@@ -56,23 +119,24 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// <returns></returns>
 		private bool FindStartOfName()
 		{
-			if (_iterations > 10)
+			// Because there can never be more than 10 columns. 
+			if (_iterations++ > 10)
 				return false;
 
+			// To prevent potential out-of-bounds errors. 
 			if (_startingPoint.X + 1 > _img.Width)
 				return false;
 
 			var y = _startingPoint.Y;
 			var realX = -1;
 			var startX = _startingPoint.X + 1;
-			var endX = _calledBefore
+			var endX = _calledFindNameBefore
 				? startX + 150 * _guiWidth
 				: _endPoint.X;
 
-			if (!_calledBefore)
-				_calledBefore = true;
+			if (!_calledFindNameBefore)
+				_calledFindNameBefore = true;
 
-			_iterations++;
 			for (; y <= _endPoint.Y; y += 9 * _guiWidth)
 			{
 				for (var x = startX; x < endX && x < _endPoint.X; x++)
@@ -110,9 +174,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 						for (var dy = 0; dy < 8 * _guiWidth && tempX < _endPoint.X; dy += _guiWidth)
 						{
 							var pixel = _img[tempX, y + dy];
-							columnBytes.Append(IsValidRankColor(pixel)
-							                   || IsValidTeamColor(pixel)
-							                   || Color.White.IsRgbEqualTo(pixel)
+							columnBytes.Append(_colorFunc(pixel) || Color.White.IsRgbEqualTo(pixel)
 								? "1"
 								: "0");
 						}
@@ -124,10 +186,9 @@ namespace Winstreak.Core.Parsers.ImageParser
 							return false;
 					} while (ttlBytes.ToString()[(ttlBytes.Length - 8)..] != "00000000");
 
-					ttlBytes = new StringBuilder(ttlBytes.ToString().Substring(0, ttlBytes.Length - 8));
+					ttlBytes = new StringBuilder(ttlBytes.ToString()[..(ttlBytes.Length - 8)]);
 					if (!BinaryToCharactersMap.ContainsKey(ttlBytes.ToString()))
 						continue;
-
 					realX = x;
 					break;
 				}
@@ -157,8 +218,8 @@ namespace Winstreak.Core.Parsers.ImageParser
 			var names = new Dictionary<TeamColor, IList<string>>();
 			var longestX = -1;
 			var tempNames = new Dictionary<TeamColor, List<(string name, bool isRed)>>();
-			var hasCompletedOneIteration = false; 
-			
+			var hasCompletedOneIteration = false;
+
 			// iterate over each column 
 			while (FindStartOfName())
 			{
@@ -195,8 +256,6 @@ namespace Winstreak.Core.Parsers.ImageParser
 							{
 								var color = _img[x, y + dy];
 
-								var isRankColor = IsValidRankColor(color);
-								var isTeamColor = IsValidTeamColor(color);
 								var isWhiteTemp = Color.White.IsRgbEqualTo(color);
 								var isDeterminedColor = determinedColor != default
 								                        && determinedColor.IsRgbEqualTo(color)
@@ -209,7 +268,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 								// not default), then we ONLY check and see if the pixel
 								// is equal to "isDeterminedColor"
 								var isPixelCorrect = determinedColor == default
-									? isRankColor || isWhiteTemp || isTeamColor
+									? _colorFunc(color) || isWhiteTemp
 									: isDeterminedColor;
 
 								// if we have a valid pixel
@@ -263,6 +322,11 @@ namespace Winstreak.Core.Parsers.ImageParser
 							// name means that we're in a game.
 							if (BinaryToCharactersMap[ttlBytes.ToString()][0] == ' ')
 								x += 5 * _guiWidth;
+							else if (BinaryToCharactersMap[ttlBytes.ToString()] == "]")
+							{
+								name.Append(' ');
+								x += 4 * _guiWidth;
+							}
 
 							// if the determined color wasn't defined, define it. 
 							if (determinedColor != default)
@@ -280,13 +344,17 @@ namespace Winstreak.Core.Parsers.ImageParser
 
 					// this is our final name.
 					var finalName = name.ToString();
+#if DEBUG && !OVERRIDE_DEBUG
+					Console.WriteLine(finalName);
+#endif
+
 					// if the name string is empty, then it's invalid
 					if (finalName.Trim() == string.Empty)
 					{
 						numEmpty++;
 						if (numEmpty > 5)
 							break;
-						
+
 						continue;
 					}
 
@@ -349,7 +417,7 @@ namespace Winstreak.Core.Parsers.ImageParser
 					hasCompletedOneIteration = true;
 					_endPoint = new Point(_img.Width - _startingPoint.X, y + 9 * _guiWidth);
 				}
-				
+
 				_startingPoint = new Point(longestX, 20 * _guiWidth);
 			} // end of outer while loop 
 
@@ -370,6 +438,33 @@ namespace Winstreak.Core.Parsers.ImageParser
 		/// Disposes the image.
 		/// </summary>
 		public void Dispose() => _img?.Dispose();
+
+		/// <summary>
+		/// Checks whether the pixel specified has the Lunar logo. 
+		/// </summary>
+		/// <param name="x">The x-coordinate.</param>
+		/// <param name="y">The y-coordinate.</param>
+		/// <returns>Whether the Lunar logo is in that same line as specified by the coordinates.</returns>
+		public bool IsLunar(int x, int y)
+		{
+			if (x + 4 * _guiWidth > _img.Width || y + 6 * _guiWidth > _img.Height)
+				return false;
+
+			return _img[x + _guiWidth, y + 2 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + _guiWidth, y + 3 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + _guiWidth, y + 4 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + _guiWidth, y + 5 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 2 * _guiWidth, y + 3 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 2 * _guiWidth, y + 4 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 2 * _guiWidth, y + 6 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 2 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 4 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 5 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 3 * _guiWidth, y + 6 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 4 * _guiWidth, y + 5 * _guiWidth].IsRgbEqualTo(Color.White)
+			       && _img[x + 4 * _guiWidth, y + 6 * _guiWidth].IsRgbEqualTo(Color.White);
+		}
 
 		/// <summary>
 		/// Whether the color specified is a valid color.

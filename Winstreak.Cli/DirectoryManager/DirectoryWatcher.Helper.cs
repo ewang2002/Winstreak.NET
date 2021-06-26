@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Winstreak.Cli.Utility;
 using Winstreak.Core.Profile;
+using Winstreak.Core.WebApi.Hypixel;
 using static Winstreak.Core.WebApi.CachedData;
 using Winstreak.Core.WebApi.Hypixel.Definitions;
 using Winstreak.Core.WebApi.Mojang;
@@ -23,16 +25,17 @@ namespace Winstreak.Cli.DirectoryManager
 		/// <returns>What the score means in the situation.</returns>
 		private static string DetermineScoreMeaning(double score, bool isPlayer)
 		{
-			if (score <= 20)
-				return TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi;
-			if (score > 20 && score <= 40)
-				return TextBrightGreenAnsi + (isPlayer ? "Decent" : "Pretty Safe") + ResetAnsi;
-			if (score > 40 && score <= 60)
-				return TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Safe") + ResetAnsi;
-			if (score > 60 && score <= 80)
-				return TextYellowAnsi + (isPlayer ? "Professional" : "Not Safe") + ResetAnsi;
-			return TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Now") + ResetAnsi;
+			return score switch
+			{
+				<= 20 => TextGreenAnsi + (isPlayer ? "Bad" : "Safe") + ResetAnsi,
+				> 20 and <= 45 => TextBrightGreenAnsi + (isPlayer ? "Okay" : "Somewhat Fine") + ResetAnsi,
+				> 45 and <= 80 => TextBrightYellowAnsi + (isPlayer ? "Good" : "Somewhat Competitive") + ResetAnsi,
+				> 80 and <= 150 => TextYellowAnsi + (isPlayer ? "Very Good" : "Competitive") + ResetAnsi,
+				> 150 and <= 500 => TextBrightRedAnsi + (isPlayer ? "Sweaty" : "Very Competitive") + ResetAnsi,
+				_ => TextRedAnsi + (isPlayer ? "Tryhard" : "Leave Immediately") + ResetAnsi
+			};
 		}
+
 
 		/// <summary>
 		/// Returns a function that can be used to sort Bedwars stats.
@@ -44,14 +47,15 @@ namespace Winstreak.Cli.DirectoryManager
 				SortType.Beds => data => data.OverallBedwarsStats.BrokenBeds,
 				SortType.Finals => data => data.OverallBedwarsStats.FinalKills,
 				SortType.Fkdr => data =>
-					data.OverallBedwarsStats.FinalDeaths == 0 
-						? data.OverallBedwarsStats.FinalKills 
-						: data.OverallBedwarsStats.FinalKills / (double) data.OverallBedwarsStats.FinalDeaths,
+					data.OverallBedwarsStats.FinalDeaths == 0
+						? data.OverallBedwarsStats.FinalKills
+						: data.OverallBedwarsStats.FinalKills / (double)data.OverallBedwarsStats.FinalDeaths,
 				SortType.Score => data => data.OverallBedwarsStats.GetScore(),
 				SortType.Winstreak => data => data.Winstreak,
 				SortType.Level => data => data.BedwarsLevel,
 				_ => throw new ArgumentOutOfRangeException()
 			};
+
 
 		/// <summary>
 		/// Returns a function that can be used to sort team stats.
@@ -67,7 +71,8 @@ namespace Winstreak.Cli.DirectoryManager
 					var fd = data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalDeaths);
 					var fk = data.PlayersInTeam.Sum(x => x.OverallBedwarsStats.FinalKills);
 					return fd == 0 ? fk : fk / (double) fd;
-				},
+				}
+				,
 				SortType.Score => data => data.CalculateScore(),
 				SortType.Winstreak => data => data.PlayersInTeam.Sum(x => x.Winstreak),
 				SortType.Level => data => data.PlayersInTeam.Sum(x => x.BedwarsLevel),
@@ -88,7 +93,7 @@ namespace Winstreak.Cli.DirectoryManager
 			// groups of friends
 			var friendGroups = new List<IList<PlayerProfile>>();
 
-			if (HypixelApi == null || !ApiKeyValid)
+			if (HypixelApi is null || !ApiKeyValid)
 				return (friendGroups, nameFriendsUnable);
 
 			var friendsData = new List<(string uuid, FriendsApiResponse friends)>();
@@ -214,6 +219,97 @@ namespace Winstreak.Cli.DirectoryManager
 			}
 
 			return -1;
+		}
+
+		/// <summary>
+		/// Validates the API key.
+		/// </summary>
+		/// <param name="key">The API key.</param>
+		/// <returns>Whether the API key is valid.</returns>
+		public static async Task<bool> ValidateApiKey(string key)
+		{
+			if (key == string.Empty)
+				return false;
+
+			try
+			{
+				HypixelApi = new HypixelApi(key);
+
+				var apiKeyValidationInfo = await HypixelApi.ValidateApiKeyAsync();
+				ApiKeyValid = apiKeyValidationInfo.Success && apiKeyValidationInfo.Record != null;
+
+				if (!ApiKeyValid)
+					return false;
+
+				HypixelApi.RequestsMade = apiKeyValidationInfo.Record!.QueriesInPastMin;
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Checks if a Minecraft log message is valid.
+		/// </summary>
+		/// <param name="text">The unparsed text.</param>
+		/// <param name="res">The parsed text.</param>
+		/// <returns>Whether the log message is valid.</returns>
+		private static bool IsValidLogMessage(string text, out string res)
+		{
+			res = null;
+			if (!text.Contains("[CHAT]")) return false;
+#if DEBUG && PRINT
+			Console.WriteLine(text);
+			Console.WriteLine("========");
+#endif
+
+			var ranges = new[]
+			{
+				// [Client thread/INFO]:
+				(11, 11 + 21),
+				// [main/INFO]:
+				(11, 11 + 12)
+			};
+
+			(int min, int max) minMax = (-1, -1);
+			var targetStr = string.Empty;
+
+			foreach (var (min, max) in ranges)
+			{
+				if (text.Length < max || !text[min..max].EndsWith("/INFO]:"))
+					continue;
+				minMax = (min, max);
+				targetStr = text[min..max];
+				break;
+			}
+
+			if (minMax.max == -1 && minMax.min == -1)
+				return false;
+
+			var fullyParsedStr = new StringBuilder();
+			var isValid = false;
+			foreach (var line in text.Split(Environment.NewLine))
+			{
+				var parsedLine = line;
+				if (parsedLine[minMax.min..minMax.max] == targetStr)
+					parsedLine = parsedLine[minMax.max..].Trim();
+				if (parsedLine.StartsWith("[CHAT]"))
+				{
+					fullyParsedStr.Append(parsedLine[6..].Trim()).AppendLine();
+					isValid = true;
+					continue;
+				}
+
+				fullyParsedStr.Append(parsedLine).AppendLine();
+			}
+
+			if (!isValid)
+				return false;
+
+			res = fullyParsedStr.ToString().Trim();
+			return true;
 		}
 	}
 }
