@@ -29,6 +29,8 @@ namespace Winstreak.Cli.Utility
 					Console.ForegroundColor = ConsoleColor.DarkYellow;
 					sb.Append("[Warn] ");
 					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(lt), lt, null);
 			}
 
 			sb.Append(content);

@@ -46,7 +46,7 @@ namespace Winstreak.Cli.WSMain
 							.AddRow("Delete Screenshots?", Config.DeleteScreenshot)
 							.AddRow("Checking Friends?", ApiKeyValid && Config.CheckFriends)
 							.AddRow("Suppress Errors?", Config.SuppressErrorMessages)
-							.AddRow("Screenshot Delay?", Config.SuppressErrorMessages)
+							.AddRow("Screenshot Delay?", Config.ScreenshotDelay)
 							.AddRow("GUI Scale", GuiScale)
 							.AddRow("Strict Parser?", Config.StrictParser);
 						Console.WriteLine(configTable.ToString());
