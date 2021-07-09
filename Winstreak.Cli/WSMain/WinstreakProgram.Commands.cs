@@ -13,9 +13,9 @@ using static Winstreak.Core.WebApi.CachedData;
 using Winstreak.Core.WebApi.Hypixel;
 using Winstreak.Core.WebApi.Plancke;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		/// <summary>
 		/// A function that is executed in a loop. Handles commands.

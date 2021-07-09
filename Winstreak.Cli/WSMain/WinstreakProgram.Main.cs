@@ -15,9 +15,9 @@ using Winstreak.Core.Logging;
 using Winstreak.Core.Parsers.ImageParser;
 using Winstreak.Core.Parsers.ImageParser.Imaging;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		/// <summary>
 		/// The "main" entry point for the program. This is where the program will be executing from.

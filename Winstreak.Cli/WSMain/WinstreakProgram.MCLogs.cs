@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using Winstreak.Cli.Utility;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		/// <summary>
 		/// The method that is responsible for interpreting the Minecraft log messages.

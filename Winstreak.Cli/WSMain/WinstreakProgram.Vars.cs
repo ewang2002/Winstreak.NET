@@ -7,9 +7,9 @@ using Winstreak.Core.Logging;
 using Winstreak.Core.Profile;
 using Winstreak.Core.WebApi.Hypixel;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		public static string HelpInfo = new StringBuilder()
 			.Append("Current Command List.")

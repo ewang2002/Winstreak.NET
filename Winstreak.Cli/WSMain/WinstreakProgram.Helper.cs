@@ -11,9 +11,9 @@ using Winstreak.Core.WebApi.Hypixel.Definitions;
 using Winstreak.Core.WebApi.Mojang;
 using static Winstreak.Cli.Utility.ConsoleTable.AnsiConstants;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		#region Minor Stuff
 

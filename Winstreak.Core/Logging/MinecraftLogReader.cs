@@ -49,7 +49,7 @@ namespace Winstreak.Core.Logging
 				Enabled = false
 			};
 
-			_timer.Elapsed += (_, __) => CheckForUpdates();
+			_timer.Elapsed += (_, _) => CheckForUpdates();
 		}
 
 		/// <summary>
