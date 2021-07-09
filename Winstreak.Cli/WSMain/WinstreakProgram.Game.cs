@@ -11,9 +11,9 @@ using Winstreak.Core.Profile;
 using Winstreak.Core.WebApi.Plancke;
 using static Winstreak.Cli.Utility.ConsoleTable.AnsiConstants;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		/// <summary>
 		/// Checks all teams in a game to see which team may potentially be dangerous. 

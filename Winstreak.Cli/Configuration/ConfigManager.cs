@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Winstreak.Cli.DirectoryManager;
+using Winstreak.Cli.WSMain;
 
 namespace Winstreak.Cli.Configuration
 {
@@ -33,7 +32,7 @@ namespace Winstreak.Cli.Configuration
 			};
 
 			var lines = await File.ReadAllLinesAsync(info.FullName);
-			DirectoryWatcher.ConfigRaw = lines;
+			WinstreakProgram.ConfigRaw = lines;
 			lines = lines
 				.Where(x => !x.StartsWith('#'))
 				.ToArray();

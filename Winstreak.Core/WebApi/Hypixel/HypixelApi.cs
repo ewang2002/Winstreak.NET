@@ -71,7 +71,7 @@ namespace Winstreak.Core.WebApi.Hypixel
 		/// <returns>The .NET object corresponding to type "T".</returns>
 		private async Task<T> SendRequestAsync<T>(string urlInfo)
 		{
-			if (RequestsMade + 1 > MaximumRequestsInRateLimit)
+			if (RequestsMade + 2 > MaximumRequestsInRateLimit)
 				throw new Exception("You have hit the rate limit.");
 
 			using var reqMsgInfo = new HttpRequestMessage

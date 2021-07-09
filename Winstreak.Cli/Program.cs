@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Winstreak.Cli.Configuration;
-using Winstreak.Cli.DirectoryManager;
+using Winstreak.Cli.WSMain;
 using Winstreak.Cli.Utility;
 
 namespace Winstreak.Cli
@@ -91,7 +91,7 @@ namespace Winstreak.Cli
 				return;
 			}
 
-			await DirectoryWatcher.RunAsync(configurationFile);
+			await WinstreakProgram.RunAsync(configurationFile);
 			OutputDisplayer.WriteLine(LogType.Info, "Program has been terminated. " +
 			                                        "Press ENTER to close this program.");
 			Console.ReadLine();

@@ -16,12 +16,12 @@
     <RepositoryType>Github</RepositoryType>
     <PackageTags>minecraft, hypixel, hypixel-bedwars, bedwars</PackageTags>
     <Version>5.0.1</Version>
-    <AssemblyVersion>5.1.0</AssemblyVersion>
-    <FileVersion>5.1.0</FileVersion>
+    <AssemblyVersion>5.1.1</AssemblyVersion>
+    <FileVersion>5.1.1</FileVersion>
     <RootNamespace>Winstreak.Cli</RootNamespace>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <PackageVersion>5.1.0</PackageVersion>
+    <PackageVersion>5.1.1</PackageVersion>
     <Product>Winstreak.Cli</Product>
     <IsPackable>false</IsPackable>
   </PropertyGroup>

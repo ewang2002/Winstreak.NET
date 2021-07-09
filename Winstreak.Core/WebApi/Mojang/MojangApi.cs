@@ -71,7 +71,7 @@ namespace Winstreak.Core.WebApi.Mojang
 			if (!RateLimitTimer.Enabled)
 			{
 				RateLimitTimer.Start();
-				RateLimitTimer.Elapsed += (sender, args) =>
+				RateLimitTimer.Elapsed += (_, _) =>
 				{
 					RateLimitTimer.Stop();
 					RequestsMade = 0;
@@ -115,7 +115,7 @@ namespace Winstreak.Core.WebApi.Mojang
 			if (!RateLimitTimer.Enabled)
 			{
 				RateLimitTimer.Start();
-				RateLimitTimer.Elapsed += (sender, args) =>
+				RateLimitTimer.Elapsed += (_, _) =>
 				{
 					RateLimitTimer.Stop();
 					RequestsMade = 0;

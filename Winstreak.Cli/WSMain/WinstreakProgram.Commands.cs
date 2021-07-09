@@ -13,9 +13,9 @@ using static Winstreak.Core.WebApi.CachedData;
 using Winstreak.Core.WebApi.Hypixel;
 using Winstreak.Core.WebApi.Plancke;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		/// <summary>
 		/// A function that is executed in a loop. Handles commands.
@@ -46,7 +46,7 @@ namespace Winstreak.Cli.DirectoryManager
 							.AddRow("Delete Screenshots?", Config.DeleteScreenshot)
 							.AddRow("Checking Friends?", ApiKeyValid && Config.CheckFriends)
 							.AddRow("Suppress Errors?", Config.SuppressErrorMessages)
-							.AddRow("Screenshot Delay?", Config.SuppressErrorMessages)
+							.AddRow("Screenshot Delay?", Config.ScreenshotDelay)
 							.AddRow("GUI Scale", GuiScale)
 							.AddRow("Strict Parser?", Config.StrictParser);
 						Console.WriteLine(configTable.ToString());

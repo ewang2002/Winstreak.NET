@@ -13,9 +13,9 @@ using Winstreak.Core.WebApi.Plancke;
 using static Winstreak.Cli.Utility.ConsoleTable.AnsiConstants;
 using static Winstreak.Core.WebApi.CachedData;
 
-namespace Winstreak.Cli.DirectoryManager
+namespace Winstreak.Cli.WSMain
 {
-	public static partial class DirectoryWatcher
+	public static partial class WinstreakProgram
 	{
 		/// <summary>
 		/// Checks to see if a lobby is suitable enough for an "easy" game.

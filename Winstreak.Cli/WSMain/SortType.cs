@@ -1,4 +1,4 @@
-﻿namespace Winstreak.Cli.DirectoryManager
+﻿namespace Winstreak.Cli.WSMain
 {
 	public enum SortType
 	{
