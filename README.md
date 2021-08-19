@@ -18,7 +18,7 @@ The creation of this program came as a frustration I had with Bedwars. One of th
 
 My friends and I have often dealt with these experienced players. To say the least, it was not remotely fun when we're in a game with these players. 
 
-A somewhat better solution, of course, would be putting players in lobbies with other players that have similar stats. But, of course, we all know Hypixel enjoys listening to their players.
+A somewhat better solution, of course, would be putting players in lobbies with other players that have similar stats (i.e. matchmaking). But, that has not been implemented (or, it has been poorly implemented).
 
 This program is designed, in part, to acknowledge these issue.
 
@@ -29,7 +29,7 @@ This program is designed, in part, to acknowledge these issue.
 | Game Checker  | Winstreak can check an in-game screenshot and will tell you exactly which teams you should target or be careful around. It'll check each team's stats to show you where your team stands compared to opposing teams.  | None. |
 | Group Checker | Generally speaking, people that are in coordinated parties are also friends. So, it follows that the best way to check for potential parties is to check each person's friends list. For both lobby & game checkers, Winstreak will be able to check each player's friends to see if there are any potential parties. | Hypixel API Key. | 
 | IGN Lookup | You can directly type names into the console window to get an overview of a player's stats. And of course, you can put multiple names to compare them. | None. |
-| Void Counter | Winstreak can tell you how many people have fallen into the void. Useful for making fun of those that might have fallen into the void many times. | Minecraft Logs. | 
+| Void Counter | Winstreak can tell you how many people have fallen into the void. Useful for making fun of those that might have fallen into the void many times. Note that the void counter may be off by a bit. | Minecraft Logs. | 
 | Item Tracker | Winstreak can tell you what items you have purchased throughout your session. | Minecraft Logs. |
 | /who Parser | If you don't want to take screenshots of your game for the lobby checker, you can run /who and Winstreak can parse that information and give you the lobby data. | Minecraft Logs. | 
 | Party Watcher | Winstreak will watch Minecraft chat for people joining or leaving parties. From there, Winstreak can automatically add or remove people from an exempt list (people in this list won't be tracked when you run the checker commands). | Minecraft Logs. |
@@ -61,9 +61,12 @@ Although Winstreak is *not* a mod, it may still be seen as an application that p
 
 Keep in mind that, although Winstreak might mark players as bad, the players in question may either be competent or an alternative account of a professional. It is up to *your* judgement to decide whether you can take on a lobby. Winstreak only provides *assistance*; you should not only rely on Winstreak to decide whether you stay in or leave a lobby.
 
-Winstreak can be modified to work with games like Skywars. I have no plans on making Winstreak compatible with Skywars due to both the overall broken nature of the game (many cheaters) and the fact that I don't really play Skywars.
-
 I have included the original image from the Minecraft source code that was used to determine the layout of each character. The image contains most (if not all) of the Minecraft characters. The file's name is `ascii.png`. The corresponding layout of each character can be found in the [Constants.cs](https://github.com/ewang2002/Winstreak.NET/blob/master/Winstreak.Core/Parsers/ImageParser/Constants.cs) file.
+
+## Current Status
+I have effectively stopped playing Bedwars. Thus, I will only provide critical fixes as needed. No new features will be added.
+
+This project has been made open-source. I hope someone may find this helpful. 
 
 ## Credits
 I came up with the original idea. However, [@icicl](https://github.com/icicl/) implemented the idea first and the name parser implementation is from his implementation, although I have changed parts of the code significantly to better handle potential edge cases.
@@ -71,4 +74,6 @@ I came up with the original idea. However, [@icicl](https://github.com/icicl/) i
 ## License
 All code except for the ones listed below are licensed under the MIT license.
 
-All code that is in `Winstreak.Core/Parsers/ImageParser/Imaging` was taken from the excellent [Accord.NET](https://github.com/accord-net/framework) library and modified to suit my needs. These files are licensed under the GNU Lesser General Public License.
+All code that is in `Winstreak.Core/Parsers/ImageParser/Imaging` was taken from the [Accord.NET](https://github.com/accord-net/framework) library and modified to suit my needs. These files are licensed under the [GNU Lesser General Public License](https://github.com/accord-net/framework/blob/development/LICENSE).
+
+If any licensing issues occur, please submit an Github issue.
