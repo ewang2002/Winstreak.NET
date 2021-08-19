@@ -7,7 +7,7 @@ Winstreak is a program that has several purposes in mind. It is designed to ensu
 - Can avoid lobbies that may contain potential tryhard players.
 - Can figure out which teams to target first based on overall team statistics. 
 
-Winstreak is not a mod. Winstreak is a standalone application that utilizes Minecraft's screenshot feature and tab menu to parse names. Winstreak *can* read from your Minecraft logs, but this is only to enhance your experience. Feel free to go through the source code.
+Winstreak is not a mod. Winstreak is not an overlay. Winstreak is a standalone application that utilizes Minecraft's screenshot feature and tab menu to parse names. Winstreak *can* read from your Minecraft logs, but this is only to enhance your experience. Feel free to go through the source code.
 
 ## Technologies
 - C# Programming Language.
@@ -25,8 +25,8 @@ This program is designed, in part, to acknowledge these issue.
 ## Features
 | Feature  | Details | Requirement(s) | 
 | ------------- | ------------- | ------------- | 
-| Lobby Checker  | Winstreak can check a lobby screenshot for any potential tryhards. The program will go through each player's stats and tell you if you should leave or not. | None. |
-| Game Checker  | Winstreak can check an in-game screenshot and will tell you exactly which teams you should target or be careful around. It'll check each team's stats to show you where your team stands compared to opposing teams.  | None. |
+| Lobby Checker  | Winstreak can check a lobby screenshot (take a screenshot using F2 in-game) for any potential tryhards. The program will go through each player's stats and tell you if you should leave or not. | None. |
+| Game Checker  | Winstreak can check an in-game screenshot (take a screenshot using F2 in-game) and will tell you exactly which teams you should target or be careful around. It'll check each team's stats to show you where your team stands compared to opposing teams.  | None. |
 | Group Checker | Generally speaking, people that are in coordinated parties are also friends. So, it follows that the best way to check for potential parties is to check each person's friends list. For both lobby & game checkers, Winstreak will be able to check each player's friends to see if there are any potential parties. | Hypixel API Key. | 
 | IGN Lookup | You can directly type names into the console window to get an overview of a player's stats. And of course, you can put multiple names to compare them. | None. |
 | Void Counter | Winstreak can tell you how many people have fallen into the void. Useful for making fun of those that might have fallen into the void many times. Note that the void counter may be off by a bit. | Minecraft Logs. | 
@@ -64,16 +64,20 @@ Keep in mind that, although Winstreak might mark players as bad, the players in 
 I have included the original image from the Minecraft source code that was used to determine the layout of each character. The image contains most (if not all) of the Minecraft characters. The file's name is `ascii.png`. The corresponding layout of each character can be found in the [Constants.cs](https://github.com/ewang2002/Winstreak.NET/blob/master/Winstreak.Core/Parsers/ImageParser/Constants.cs) file.
 
 ## Current Status
-I have effectively stopped playing Bedwars. Thus, I will only provide critical fixes as needed. No new features will be added.
+I have effectively stopped playing Bedwars. Thus, I will only provide critical fixes to this project as needed. No new features will be added.
 
-This project has been made open-source. I hope someone may find this helpful. 
+This project has been made open-source. I hope someone may find this helpful. If you'd like, feel free to make a copy of this codebase and make your own personal changes; just make sure you conform to the license below.
+
+### Alternatives
+These are some alternatives that I have found on Github. I do not necessarily endorse any of these; I only link them since they appear to be excellent alternatives. 
+- [Bedwarsify](https://github.com/bedwarsify/bedwarsify-overlay).
 
 ## Credits
 I came up with the original idea. However, [@icicl](https://github.com/icicl/) implemented the idea first and the name parser implementation is from his implementation, although I have changed parts of the code significantly to better handle potential edge cases.
 
 ## License
-All code except for the ones listed below are licensed under the MIT license.
+The entire codebase, except the ones listed below, is licensed under the [MIT license](https://github.com/ewang2002/Winstreak.NET/blob/master/LICENSE.txt).
 
-All code that is in `Winstreak.Core/Parsers/ImageParser/Imaging` was taken from the [Accord.NET](https://github.com/accord-net/framework) library and modified to suit my needs. These files are licensed under the [GNU Lesser General Public License](https://github.com/accord-net/framework/blob/development/LICENSE).
+All code in the `Winstreak.Core/Parsers/ImageParser/Imaging` folder was taken from the [Accord.NET](https://github.com/accord-net/framework) library and modified to suit my needs. These files are licensed under the [GNU Lesser General Public License](https://github.com/accord-net/framework/blob/development/LICENSE).
 
-If any licensing issues occur, please submit an Github issue.
+If any licensing issues occur, please submit a Github issue. Thanks!
